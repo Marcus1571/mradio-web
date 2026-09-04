@@ -1,0 +1,61 @@
+name: Bump opencode version
+
+# opencode ships as a self-contained native binary via the opencode-ai npm
+# package (see Dockerfile). The Dockerfile pins an exact version rather than
+# @latest so image builds stay reproducible; this workflow is what keeps
+# that pin from going stale. It never publishes or auto-merges anything —
+# it only opens a PR, so a real upgrade of an AI-agent CLI with LAN access
+# always gets a human look before it ships.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Monday 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Check for a newer opencode-ai release
+        id: check
+        run: |
+          current=$(grep -oP '(?<=ARG OPENCODE_VERSION=)\S+' Dockerfile)
+          latest=$(npm view opencode-ai version)
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          if [ "$current" != "$latest" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update the pinned version
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          sed -i "s/ARG OPENCODE_VERSION=.*/ARG OPENCODE_VERSION=${{ steps.check.outputs.latest }}/" Dockerfile
+
+      - name: Open a PR
+        if: steps.check.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: bump-opencode-version
+          title: "Bump opencode to ${{ steps.check.outputs.latest }}"
+          commit-message: "Bump opencode-ai ${{ steps.check.outputs.current }} -> ${{ steps.check.outputs.latest }}"
+          body: |
+            [opencode-ai](https://www.npmjs.com/package/opencode-ai) published
+            ${{ steps.check.outputs.latest }} (currently pinned:
+            ${{ steps.check.outputs.current }}).
+
+            Opened automatically by `.github/workflows/bump-opencode.yml` —
+            review the [changelog](https://github.com/sst/opencode/releases)
+            before merging; this doesn't auto-merge.

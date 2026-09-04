@@ -1,3 +1,6 @@
+# Build artifact: frontend/dist copied here by the Docker build
+backend/static/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

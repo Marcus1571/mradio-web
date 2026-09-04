@@ -1,0 +1,16 @@
+services:
+  mradio-web:
+    build: .
+    container_name: mradio-web
+    ports:
+      - "8000:8000"
+    volumes:
+      # On LT: /mnt/cache/appdata/mradio-web instead of ./data
+      - ./data:/data
+    environment:
+      # Bootstrap admin account — only used on first run (no users yet).
+      # Change these, or just sign in with them once and set a real
+      # password immediately (the app forces this on first login anyway).
+      - MRADIO_ADMIN_USERNAME=admin
+      - MRADIO_ADMIN_PASSWORD=mradio
+    restart: unless-stopped
