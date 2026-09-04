@@ -14,3 +14,6 @@ not a wrapper around the original.
 - `backend/` — FastAPI app
 - `frontend/` — Vite + React + TypeScript app
 - `Dockerfile` — multi-stage build producing one image/one port
+
+See [`KB.md`](KB.md) for deployment (Docker Compose, reverse proxy setup),
+first-login and account management, and configuring AI providers.
