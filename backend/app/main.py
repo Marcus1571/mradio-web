@@ -7,10 +7,14 @@ from fastapi.staticfiles import StaticFiles
 from .db import close_db, init_db
 from .enrichers import shutdown_all as shutdown_enrichers
 from .routers import auth as auth_router
+from .routers import config as config_router
 from .routers import enrich as enrich_router
+from .routers import favorites as favorites_router
 from .routers import settings as settings_router
+from .routers import stations as stations_router
 from .routers import stream as stream_router
 from .routers import users as users_router
+from .routers import ws as ws_router
 from .users import bootstrap_admin
 
 
@@ -30,6 +34,10 @@ app.include_router(users_router.router)
 app.include_router(stream_router.router)
 app.include_router(settings_router.router)
 app.include_router(enrich_router.router)
+app.include_router(favorites_router.router)
+app.include_router(stations_router.router)
+app.include_router(config_router.router)
+app.include_router(ws_router.router)
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 if STATIC_DIR.is_dir():
