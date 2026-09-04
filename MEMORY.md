@@ -27,6 +27,46 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
   branch it was built on is now just history — develop from `main` going
   forward.
 
+## Local development
+
+Confirmed working in-session (not theoretical) — this exact setup is how
+the whole app was verified before Docker existed at all.
+
+Backend:
+
+```bash
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+MRADIO_DATA_DIR=./data uvicorn app.main:app --reload --port 8000
+```
+
+Bootstraps `admin`/`mradio` into `./data/mradio.db` on first run (or set
+`MRADIO_ADMIN_USERNAME`/`MRADIO_ADMIN_PASSWORD` before that first run).
+
+Frontend (separate terminal):
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+`vite.config.ts` already proxies `/api` (HTTP and WebSocket) to
+`127.0.0.1:8000`, so open `http://localhost:5173` and it talks to the
+backend above with no extra config. Session cookies are `Secure`, which
+normally means HTTPS-only — `http://localhost` specifically gets a
+same-origin exception in Chrome/Firefox, confirmed working via a real
+Playwright run against this exact setup, so plain `npm run dev` logs in
+fine. Anything other than `localhost` (a LAN IP, a different hostname)
+won't get that exception and needs real HTTPS.
+
+`npm run build`, `npx tsc -b`, and `npm run lint` (oxlint) are the checks
+actually run during the build — zero errors as of the last commit. Lint
+has a handful of benign warnings (`set-state-in-effect` on standard
+fetch-on-mount hooks, a hook/component co-export in `useAuth.tsx`) that
+were reviewed and left alone on purpose, not overlooked.
+
 ## Architecture decisions worth knowing (and why)
 
 - **No self-update mechanism.** mradio's biggest chunk of complexity
@@ -100,6 +140,29 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 - **No DB migration tooling yet.** The SQLite schema has only grown
   additively so far (`backend/app/db.py`); revisit if a column ever needs
   to change shape, not before.
+
+## Gaps — not decisions, just not built yet
+
+- **No committed test suite.** Everything was verified with ad-hoc
+  scripts (fake ICY/OpenAI-compatible servers, direct FastAPI-app calls,
+  a live Playwright browser run) during the build, none of which are
+  checked into the repo. `pytest`, `vitest` — neither is set up; don't go
+  looking for a test command that doesn't exist yet. Worth adding if this
+  keeps growing, wasn't worth the scope during the initial build.
+- **No `Makefile` / `install.sh`.** Unlike mradio's local setup, there's
+  no single-command bootstrap — see "Local development" above for the
+  actual two-terminal setup.
+
+## Next steps (in order)
+
+1. `docker compose build && docker compose up` on a host with normal
+   internet access (LT, or any dev machine) — this has never actually
+   been run end-to-end. Fix whatever breaks.
+2. Once confirmed working, edit the `v0.1.0` GitHub release and uncheck
+   pre-release (or cut a new tag) — see "Status" above for why it's
+   currently marked that way.
+3. Deploy per `KB.md`: NPM proxy host (websockets toggle +
+   `proxy_buffering off`), configure AI providers from the admin page.
 
 ## Known unknowns
 
