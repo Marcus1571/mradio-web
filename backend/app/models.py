@@ -32,3 +32,20 @@ class UserUpdateRequest(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str = Field(min_length=8)
+
+
+class AISettingsUpdate(BaseModel):
+    ollama_url: str | None = None
+    ollama_model: str | None = None
+    ollama_timeout: int | None = None
+    ollama_gpu: int | None = None
+    api_base: str | None = None
+    api_key: str | None = None
+    api_model: str | None = None
+    api_timeout: int | None = None
+    opencode: str | None = None
+    opencode_timeout: int | None = None
+
+
+class ProviderSwitchRequest(BaseModel):
+    name: str
