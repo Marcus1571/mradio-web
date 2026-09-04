@@ -1,0 +1,115 @@
+.auth-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-lg);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+}
+
+.auth-brand {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2xs);
+  margin-bottom: var(--space-2xs);
+}
+
+.brand-mark {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+
+.auth-title {
+  font-size: var(--text-lg);
+  font-weight: 500;
+}
+
+.auth-hint {
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  margin-top: calc(-1 * var(--space-2xs));
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+.field input {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2xs) var(--space-xs);
+  font-size: var(--text-md);
+  color: var(--ink);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.field input:hover {
+  border-color: var(--accent-line);
+}
+
+.field input:focus-visible {
+  border-color: var(--accent);
+}
+
+.auth-error {
+  font-size: var(--text-sm);
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2xs) var(--space-sm);
+  margin: 0;
+}
+
+.auth-submit {
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius-md);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--text-md);
+  font-weight: 500;
+  transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.auth-submit:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.auth-submit:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.auth-secondary {
+  font-size: var(--text-sm);
+  color: var(--ink-3);
+  text-align: center;
+  padding: var(--space-3xs);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.auth-secondary:hover {
+  color: var(--ink);
+}
