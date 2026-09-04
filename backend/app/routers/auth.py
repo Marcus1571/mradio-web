@@ -3,9 +3,16 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from .. import auth, users
 from ..auth import SESSION_COOKIE_NAME
 from ..deps import get_current_user
-from ..models import LoginRequest, UserOut
+from ..models import ChangePasswordRequest, LoginRequest, UserOut
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+_USER_OUT_FIELDS = ("id", "username", "email", "is_admin", "disabled",
+                    "must_change_password", "created_at")
+
+
+def _user_out(user: dict) -> UserOut:
+    return UserOut(**{k: user[k] for k in _USER_OUT_FIELDS})
 
 
 @router.post("/login", response_model=UserOut)
@@ -22,8 +29,7 @@ async def login(body: LoginRequest, response: Response):
         max_age=int(auth.SESSION_TTL.total_seconds()),
         path="/",
     )
-    return UserOut(**{k: user[k] for k in
-                      ("id", "username", "email", "is_admin", "disabled", "created_at")})
+    return _user_out(user)
 
 
 @router.post("/logout")
@@ -38,5 +44,14 @@ async def logout(request: Request, response: Response,
 
 @router.get("/me", response_model=UserOut)
 async def me(user: dict = Depends(get_current_user)):
-    return UserOut(**{k: user[k] for k in
-                      ("id", "username", "email", "is_admin", "disabled", "created_at")})
+    return _user_out(user)
+
+
+@router.post("/change-password", response_model=UserOut)
+async def change_password(body: ChangePasswordRequest,
+                          user: dict = Depends(get_current_user)):
+    ok = await users.change_own_password(user["id"], body.current_password,
+                                         body.new_password)
+    if not ok:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "current password is incorrect")
+    return _user_out(await users.get_by_id(user["id"]))

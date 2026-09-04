@@ -1,7 +1,9 @@
-"""Per-user JSON data: stations.json (favorites), config.json (theme/volume/
-provider), cache.json (AI trivia cache keyed by track title). Same file
-shapes as mradio, just one directory per user instead of a single shared
-set of files.
+"""Per-user JSON data: stations.json (favorites) and config.json (theme/
+volume/provider). Same file shapes mradio already used, just one
+directory per user instead of a single shared set of files.
+
+The AI trivia cache (cache.json) is NOT here — it's shared across all
+users on purpose (see cache.py), not per-user.
 
 File I/O is synchronous (these are small files) but run off the event
 loop via asyncio.to_thread so a slow disk never blocks other requests.
@@ -9,10 +11,10 @@ The pure list-transform helpers (upsert/delete/move) do no I/O — callers
 load, mutate, then save, same pattern as the original mradio."""
 
 import asyncio
-import json
 from pathlib import Path
 
 from .db import DATA_DIR
+from .jsonstore import atomic_write_json, read_json
 from .stations import DEFAULT_STATIONS, MAX_FAV, GENRES, genre_of, is_empty_slot
 
 
@@ -28,27 +30,6 @@ def _stations_file(user_id: int) -> Path:
 
 def _config_file(user_id: int) -> Path:
     return user_dir(user_id) / "config.json"
-
-
-def _cache_file(user_id: int) -> Path:
-    return user_dir(user_id) / "cache.json"
-
-
-def _atomic_write_json(path: Path, data) -> bool:
-    try:
-        tmp = path.with_suffix(path.suffix + ".tmp")
-        tmp.write_text(json.dumps(data, indent=2))
-        tmp.replace(path)
-        return True
-    except OSError:
-        return False
-
-
-def _read_json(path: Path):
-    try:
-        return json.loads(path.read_text())
-    except (OSError, json.JSONDecodeError):
-        return None
 
 
 # ---- favorites (stations.json) --------------------------------------------
@@ -73,7 +54,7 @@ def _norm_favorites(lst: list) -> list:
 
 
 def _load_favorites_sync(user_id: int) -> list:
-    data = _read_json(_stations_file(user_id))
+    data = read_json(_stations_file(user_id))
     lst = data.get("favorites") if isinstance(data, dict) else None
     if isinstance(lst, list):
         out = _norm_favorites(lst)
@@ -86,7 +67,7 @@ def _load_favorites_sync(user_id: int) -> list:
 
 
 def _save_favorites_sync(user_id: int, lst: list) -> bool:
-    return _atomic_write_json(_stations_file(user_id), {"favorites": list(lst)})
+    return atomic_write_json(_stations_file(user_id), {"favorites": list(lst)})
 
 
 async def load_favorites(user_id: int) -> list:
@@ -147,7 +128,7 @@ def move_favorite(favs: list, src: int, dst: int) -> list:
 # ---- config (config.json) --------------------------------------------------
 
 def _load_cfg_sync(user_id: int) -> dict:
-    data = _read_json(_config_file(user_id))
+    data = read_json(_config_file(user_id))
     return data if isinstance(data, dict) else {}
 
 
@@ -156,7 +137,7 @@ def _persist_cfg_sync(user_id: int, **fields) -> bool:
     for k, v in fields.items():
         if v is not None:
             d[k] = v
-    return _atomic_write_json(_config_file(user_id), d)
+    return atomic_write_json(_config_file(user_id), d)
 
 
 async def load_cfg(user_id: int) -> dict:
@@ -165,27 +146,3 @@ async def load_cfg(user_id: int) -> dict:
 
 async def persist_cfg(user_id: int, **fields) -> bool:
     return await asyncio.to_thread(_persist_cfg_sync, user_id, **fields)
-
-
-# ---- AI trivia cache (cache.json) ------------------------------------------
-# Keyed by the raw ICY track title. Lets a repeat song be served from disk
-# instead of re-querying the LLM provider.
-
-def _load_cache_sync(user_id: int) -> dict:
-    data = _read_json(_cache_file(user_id))
-    if not isinstance(data, dict):
-        return {}
-    # keep only the most recent 800 entries on load
-    return {k: v for k, v in list(data.items())[-800:] if isinstance(v, dict)}
-
-
-def _persist_cache_sync(user_id: int, cache: dict) -> bool:
-    return _atomic_write_json(_cache_file(user_id), cache)
-
-
-async def load_cache(user_id: int) -> dict:
-    return await asyncio.to_thread(_load_cache_sync, user_id)
-
-
-async def persist_cache(user_id: int, cache: dict) -> bool:
-    return await asyncio.to_thread(_persist_cache_sync, user_id, cache)

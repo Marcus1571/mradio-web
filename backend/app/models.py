@@ -12,6 +12,7 @@ class UserOut(BaseModel):
     email: str | None
     is_admin: bool
     disabled: bool
+    must_change_password: bool
     created_at: str
 
 
@@ -26,3 +27,8 @@ class UserUpdateRequest(BaseModel):
     disabled: bool | None = None
     is_admin: bool | None = None
     password: str | None = Field(default=None, min_length=8)
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8)
