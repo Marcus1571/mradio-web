@@ -20,12 +20,50 @@ replay it immediately to a new subscriber."""
 
 import asyncio
 import logging
+import time
 
 logger = logging.getLogger("mradio.nowplaying")
 
 _queues: dict[str, list[asyncio.Queue]] = {}
 _last_station: dict[str, dict] = {}
 _last_title: dict[str, dict] = {}
+
+# Who's actually connected right now, for the admin analytics page's
+# "Live now" view — keyed by sid, populated/cleared from routers/stream.py
+# at connect/disconnect. Deliberately separate from _queues/_last_*
+# above: those exist for metadata replay to a *specific* browser tab,
+# this is a flat snapshot across *all* sessions for the admin view, and
+# doesn't need a DB round-trip since it's inherently transient (lost on
+# restart is fine — a restart also drops every active stream connection).
+_live_sessions: dict[str, dict] = {}
+
+
+def session_started(sid: str, user_id: int, username: str, station: str,
+                    genre: str, city: str | None, country: str | None,
+                    lat: float | None = None, lon: float | None = None) -> None:
+    _live_sessions[sid] = {
+        "user_id": user_id,
+        "username": username,
+        "station": station,
+        "genre": genre,
+        "city": city,
+        "country": country,
+        "lat": lat,
+        "lon": lon,
+        "connected_at": time.time(),
+    }
+
+
+def session_ended(sid: str) -> None:
+    _live_sessions.pop(sid, None)
+
+
+def live_snapshot() -> list[dict]:
+    now = time.time()
+    return [
+        {**s, "elapsed_seconds": int(now - s["connected_at"])}
+        for s in _live_sessions.values()
+    ]
 
 
 def publish(sid: str, event: dict) -> None:

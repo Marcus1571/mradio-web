@@ -40,6 +40,7 @@ export interface Config {
   mute?: boolean
   last_url?: string
   last_name?: string
+  last_genre?: Genre
   provider?: string
   language?: 'en' | 'es'
 }
@@ -78,6 +79,61 @@ export interface EnrichmentItem {
   wiki: string
   movement: number
   fail?: boolean
+}
+
+export interface LiveSession {
+  user_id: number
+  username: string
+  station: string
+  genre: Genre
+  city: string | null
+  country: string | null
+  lat: number | null
+  lon: number | null
+  elapsed_seconds: number
+}
+
+export interface HistoryEntry {
+  id: number
+  username: string
+  station_name: string
+  genre: Genre
+  started_at: string
+  ended_at: string | null
+  city: string | null
+  country: string | null
+  lat: number | null
+  lon: number | null
+}
+
+export interface StationCount {
+  station_name: string
+  plays: number
+  seconds: number | null
+}
+
+export interface GenreCount {
+  genre: Genre
+  plays: number
+  seconds: number | null
+}
+
+export interface UserCount {
+  username: string
+  plays: number
+  seconds: number | null
+}
+
+export interface DayCount {
+  day: string
+  plays: number
+}
+
+export interface AnalyticsStats {
+  top_stations: StationCount[]
+  top_genres: GenreCount[]
+  top_users: UserCount[]
+  by_day: DayCount[]
 }
 
 export type WsMessage =

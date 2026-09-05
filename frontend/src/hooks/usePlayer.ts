@@ -172,7 +172,9 @@ export function usePlayer(initialVolume?: number) {
   }, [])
 
   const streamUrl = useCallback(
-    (station: Station) => `/api/stream?url=${encodeURIComponent(station.url)}&sid=${sidRef.current}`,
+    (station: Station) =>
+      `/api/stream?url=${encodeURIComponent(station.url)}&sid=${sidRef.current}` +
+      `&genre=${encodeURIComponent(station.genre)}`,
     [],
   )
 
@@ -200,7 +202,11 @@ export function usePlayer(initialVolume?: number) {
       audio.src = streamUrl(station)
       audio.load()
       void audio.play().catch(() => undefined)
-      void api.patch('/api/config', { last_url: station.url, last_name: station.name })
+      void api.patch('/api/config', {
+        last_url: station.url,
+        last_name: station.name,
+        last_genre: station.genre,
+      })
     },
     [streamUrl],
   )

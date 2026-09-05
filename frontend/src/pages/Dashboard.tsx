@@ -11,6 +11,7 @@ import { useTranslation } from '../i18n'
 import type { Language } from '../i18n'
 import { ChangePasswordScreen } from './ChangePasswordScreen'
 import { AISettingsPage } from './AISettingsPage'
+import { AnalyticsPage } from './AnalyticsPage'
 import { UsersPage } from './UsersPage'
 import '../styles/dashboard.css'
 
@@ -33,7 +34,11 @@ export function Dashboard() {
     if (config.mute) player.toggleMute()
     if (!resumedRef.current && config.last_url) {
       resumedRef.current = true
-      player.play({ name: config.last_name || config.last_url, url: config.last_url, genre: 'other' })
+      player.play({
+        name: config.last_name || config.last_url,
+        url: config.last_url,
+        genre: config.last_genre || 'other',
+      })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config])
@@ -89,6 +94,7 @@ export function Dashboard() {
       {page === 'change-password' && <ChangePasswordScreen onDone={() => setPage('dashboard')} t={t} />}
       {page === 'users' && <UsersPage t={t} />}
       {page === 'ai-settings' && <AISettingsPage t={t} />}
+      {page === 'analytics' && <AnalyticsPage t={t} />}
     </div>
   )
 }

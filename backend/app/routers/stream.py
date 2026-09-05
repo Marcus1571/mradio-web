@@ -11,10 +11,10 @@ import socket
 from urllib.parse import urlparse
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 
-from .. import nowplaying
+from .. import history, nowplaying, stations
 from ..deps import get_active_user
 from ..icy import IcyDemuxer, parse_metaint
 
@@ -44,9 +44,14 @@ async def _reject_private_targets(hostname: str) -> None:
 
 
 @router.get("/stream")
-async def stream(url: str = Query(..., description="the station's real stream URL"),
+async def stream(request: Request,
+                 url: str = Query(..., description="the station's real stream URL"),
                  sid: str | None = Query(
                      None, description="player session id for now-playing push"),
+                 genre: str | None = Query(
+                     None, description="the station's known genre, if any "
+                     "(favorites/curated list already have one — avoids "
+                     "re-guessing it from the station name for analytics)"),
                  user: dict = Depends(get_active_user)):
     parsed = urlparse(url)
     if parsed.scheme not in ("http", "https") or not parsed.hostname:
@@ -86,6 +91,27 @@ async def stream(url: str = Query(..., description="the station's real stream UR
             "format": content_type,
         })
 
+    history_row_id: int | None = None
+    if station_name:
+        client_ip = request.client.host if request.client else None
+        resolved_genre = genre if genre in stations.GENRES else stations.genre_of(station_name)
+        history_row_id, loc = await history.start_session(
+            user["id"], station_name, url, resolved_genre, client_ip)
+        if sid:
+            nowplaying.session_started(
+                sid, user["id"], user["username"], station_name, resolved_genre,
+                (loc or {}).get("city"), (loc or {}).get("country"),
+                (loc or {}).get("lat"), (loc or {}).get("lon"))
+
+    async def cleanup():
+        logger.info("disconnected sid=%s station=%r", sid, station_name)
+        if history_row_id is not None:
+            await history.end_session(history_row_id)
+        if sid:
+            nowplaying.session_ended(sid)
+        await upstream.aclose()
+        await client.aclose()
+
     async def body():
         try:
             if metaint:
@@ -101,9 +127,16 @@ async def stream(url: str = Query(..., description="the station's real stream UR
                 async for chunk in upstream.aiter_bytes():
                     yield chunk
         finally:
-            logger.info("disconnected sid=%s station=%r", sid, station_name)
-            await upstream.aclose()
-            await client.aclose()
+            # A client disconnect closes this generator via GeneratorExit at
+            # whatever await point it's suspended on — any `await` written
+            # directly in this `finally` can get cut off mid-cleanup (e.g.
+            # the history-end-session write landing or not landing was
+            # observed to depend on exact timing, confirmed via a live
+            # Playwright test that found rows with a null `ended_at` despite
+            # the disconnect being logged). Shielding the cleanup in its own
+            # task, independent of this generator's cancellation, is the
+            # standard fix — see asyncio.shield() docs.
+            await asyncio.shield(asyncio.create_task(cleanup()))
 
     return StreamingResponse(
         body(), media_type=content_type,

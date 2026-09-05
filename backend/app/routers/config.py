@@ -16,6 +16,7 @@ class ConfigUpdate(BaseModel):
     mute: bool | None = None
     last_url: str | None = None
     last_name: str | None = None
+    last_genre: str | None = None
     language: str | None = None
 
 

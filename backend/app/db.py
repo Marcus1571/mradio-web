@@ -28,6 +28,23 @@ CREATE TABLE IF NOT EXISTS sessions (
     created_at TEXT NOT NULL,
     expires_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS play_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    station_name TEXT NOT NULL,
+    station_url TEXT NOT NULL,
+    genre TEXT NOT NULL,
+    started_at TEXT NOT NULL,
+    ended_at TEXT,
+    ip TEXT,
+    country TEXT,
+    country_code TEXT,
+    city TEXT,
+    lat REAL,
+    lon REAL
+);
+CREATE INDEX IF NOT EXISTS idx_play_history_started ON play_history(started_at);
+CREATE INDEX IF NOT EXISTS idx_play_history_user ON play_history(user_id);
 """
 
 _db: aiosqlite.Connection | None = None
