@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8] - 2026-09-05
+
+The stream-metrics row (bitrate/sample rate/format/cache/elapsed) had
+noticeably more empty space above it than below — its own top padding
+was stacking on top of the panel's outer padding. Removed the
+double-counted padding so the gap above and below the row is even.
+
 ## [0.1.7] - 2026-09-05
 
 Tightened up vertical space in the now-playing panel:
