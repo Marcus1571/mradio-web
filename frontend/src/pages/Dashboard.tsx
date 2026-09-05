@@ -33,6 +33,7 @@ export function Dashboard() {
       ? (config.language as Language)
       : 'en'
     setLanguageState(nextLanguage)
+    if (typeof config.volume === 'number') player.applySavedVolume(config.volume)
     if (config.mute) player.toggleMute()
     if (!resumedRef.current && config.last_url) {
       resumedRef.current = true

@@ -263,6 +263,20 @@ export function usePlayer(initialVolume?: number) {
     void api.patch('/api/config', { volume, mute: false })
   }, [])
 
+  /** Applies the account's saved volume once /api/config resolves —
+   * distinct from setVolume() above, which is for the user's own slider
+   * input and always re-persists (and would incorrectly clear a saved
+   * mute). usePlayer(config?.volume)'s constructor argument only seeds
+   * useState on the very first render; config always arrives async
+   * (a separate GET, after mount), so by the time it's loaded the
+   * initial value has already been locked in at the 70 default and
+   * nothing else re-applies it — this is the fix for that. */
+  const applySavedVolume = useCallback((volume: number) => {
+    const audio = audioRef.current
+    if (audio) audio.volume = volume / 100
+    setState((s) => ({ ...s, volume }))
+  }, [])
+
   const toggleMute = useCallback(() => {
     setState((s) => {
       const muted = !s.muted
@@ -279,5 +293,5 @@ export function usePlayer(initialVolume?: number) {
     wsRef.current?.send(JSON.stringify({ type: 'reenrich' }))
   }, [state.rawTitle])
 
-  return { state, play, stop, reconnect, setVolume, toggleMute, reenrich }
+  return { state, play, stop, reconnect, setVolume, applySavedVolume, toggleMute, reenrich }
 }
