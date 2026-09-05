@@ -22,5 +22,15 @@ COPY backend/app ./app
 COPY --from=frontend-build /frontend/dist ./static
 COPY --from=opencode-build /usr/local/lib/node_modules/opencode-ai/bin/opencode.exe /usr/local/bin/opencode
 
+# GeoLite2-City powers the admin analytics map (backend/app/geoip.py).
+# Pulled from a redistribution mirror (MIT-licensed repackaging of
+# MaxMind's own CC-BY-SA data) so no MaxMind account/license key is
+# needed. Refreshed whenever the image is rebuilt — see KB.md.
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && curl -fsSL -o GeoLite2-City.mmdb \
+       https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-City.mmdb \
+    && apt-get purge -y --auto-remove curl \
+    && rm -rf /var/lib/apt/lists/*
+
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips=*"]

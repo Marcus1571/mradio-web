@@ -1,6 +1,10 @@
 # Build artifact: frontend/dist copied here by the Docker build
 backend/static/
 
+# Downloaded at Docker build time (see Dockerfile) — a 60+MB binary blob
+# that doesn't belong in git history and would go stale immediately anyway.
+backend/GeoLite2-City.mmdb
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
