@@ -86,6 +86,9 @@ class Enricher:
         self.user_id = user_id
         self.queue: asyncio.Queue = asyncio.Queue()
         self.last_key: str | None = None
+        self.last_artist: str = ""
+        self.last_title: str = ""
+        self.last_performer: str = ""
         self.started: dict[str, float] = {}
         self.epoch = 0
         self.provider = ""
@@ -138,6 +141,9 @@ class Enricher:
         if not raw_title:
             return
         self.last_key = raw_title
+        self.last_artist = artist
+        self.last_title = title
+        self.last_performer = performer
         if self.provider:
             cached = await cache_store.get_cached(self.provider, self.language, raw_title)
             if cached and not cached.get("fail"):
@@ -146,6 +152,14 @@ class Enricher:
         await self.queue.put((raw_title, artist, title, performer))
 
     async def invalidate(self, raw_title: str, artist: str, title: str, performer: str) -> None:
+        # A deliberate re-ask (the "Re-ask AI" button, or a fresh provider
+        # switch below) is exactly the case the global offline cooldown
+        # shouldn't block — it exists to stop automatic background retries
+        # from hammering a genuinely down provider, not to veto a human
+        # explicitly asking again. Without this, one transient failure from
+        # ANY user on ANY provider silently no-ops every retry for 2
+        # minutes, which is indistinguishable from "AI is just broken."
+        providers.clear_offline()
         self.epoch += 1
         self.started.pop(raw_title, None)
         await self.submit(raw_title, artist, title, performer)
