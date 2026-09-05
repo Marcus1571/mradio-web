@@ -147,6 +147,15 @@
   color: var(--ink-3);
 }
 
+.admin-note a {
+  color: var(--accent-ink);
+  text-decoration: underline;
+}
+
+.admin-note a:hover {
+  text-decoration: none;
+}
+
 .settings-form {
   display: flex;
   flex-direction: column;

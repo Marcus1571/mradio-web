@@ -7,6 +7,20 @@ import '../styles/admin.css'
 
 type Provider = 'ollama' | 'openai' | 'opencode'
 
+const KB_URL = 'https://github.com/Marcus1571/mradio-web/blob/main/KB.md'
+
+function KbNote({ prefix, linkLabel, anchor, suffix }: { prefix: string; linkLabel: string; anchor: string; suffix: string }) {
+  return (
+    <p className="admin-note">
+      {prefix}{' '}
+      <a href={`${KB_URL}#${anchor}`} target="_blank" rel="noopener noreferrer">
+        {linkLabel}
+      </a>{' '}
+      {suffix}
+    </p>
+  )
+}
+
 type TestState = { status: 'idle' | 'testing' | 'success' | 'failure'; message?: string }
 
 const IDLE: TestState = { status: 'idle' }
@@ -90,7 +104,12 @@ export function AISettingsPage({ t }: { t: TFunction }) {
         <div className="settings-form">
           <div className="settings-group">
             <h2>{t('aiSettings.ollamaGroup')}</h2>
-            <p className="admin-note">{t('aiSettings.ollamaNote')}</p>
+            <KbNote
+              prefix={t('aiSettings.ollamaNotePrefix')}
+              linkLabel={t('aiSettings.ollamaNoteLink')}
+              anchor="ollama"
+              suffix={t('aiSettings.ollamaNoteSuffix')}
+            />
             <div className="settings-row">
               <label htmlFor="ollama_url">{t('aiSettings.serverUrl')}</label>
               <input
@@ -134,7 +153,12 @@ export function AISettingsPage({ t }: { t: TFunction }) {
 
           <div className="settings-group">
             <h2>{t('aiSettings.openaiGroup')}</h2>
-            <p className="admin-note">{t('aiSettings.nimNote')}</p>
+            <KbNote
+              prefix={t('aiSettings.nimNotePrefix')}
+              linkLabel={t('aiSettings.nimNoteLink')}
+              anchor="nvidia-nim-openai-compatible"
+              suffix={t('aiSettings.nimNoteSuffix')}
+            />
             <div className="settings-row">
               <label htmlFor="api_base">{t('aiSettings.apiBaseUrl')}</label>
               <input id="api_base" value={settings.api_base} onChange={(e) => field('api_base', e.target.value)} />
