@@ -42,7 +42,25 @@ build takes a few minutes; nothing is pulled from a registry, everything is
 built from this repo.
 
 The container listens on port 8000 (`ports: - "8000:8000"` in the compose
-file — change the host side if 8000 is already taken on LT).
+file — change the host side if 8000 is already taken on LT). On the actual
+LT deployment, host port 8000 was already taken by StirlingPDF, so a local
+`docker-compose.override.yml` (not committed — host-specific, lives only
+on LT) remaps it to 8123 and points the volume at
+`/mnt/cache/appdata/mradio-web/data`. Note: Compose merges `ports:` lists
+by appending, not replacing, so overriding the port requires the
+`!override` YAML merge tag (Compose 2.24+), e.g.:
+
+```yaml
+services:
+  mradio-web:
+    ports: !override
+      - "8123:8000"
+    volumes:
+      - /mnt/cache/appdata/mradio-web/data:/data
+```
+
+Without `!override`, Compose ends up trying to bind both 8000 and 8123,
+and the container fails to start because 8000 is already in use.
 
 ## 3. Reverse proxy (Nginx Proxy Manager)
 

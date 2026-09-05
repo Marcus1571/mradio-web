@@ -14,15 +14,13 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
-- **v0.1.0 tagged, marked pre-release on GitHub.** Everything below is
-  built and tested piece-by-piece (fake upstream servers, the FastAPI app
-  directly, a real browser via Playwright) — but **never run through an
-  actual `docker build`** end-to-end. The sandbox this was built in
-  couldn't reach Docker Hub's blob CDN (an egress policy wall, not a code
-  bug — registry API access worked, layer downloads didn't). First thing
-  to do in any new environment with full internet access: `docker compose
-  build && docker compose up`, watch it actually come up, then flip the
-  release off pre-release.
+- **v0.1.1 tagged and released, not pre-release.** `docker compose build
+  && docker compose up` has now been run end-to-end for real (2026-09-05,
+  on LT/UNRAID via Tailscale SSH) — the sandbox limitation that blocked
+  this for v0.1.0 (couldn't reach Docker Hub's blob CDN) doesn't apply
+  outside that sandbox. Deployed behind Nginx Proxy Manager at
+  `mradioweb.legba.myddns.rocks`, logged in, played a stream, got AI
+  liner notes via opencode — all confirmed working, not just built.
 - Merged to `main` via PR #1. The `claude/hallmark-skills-package-81d0hb`
   branch it was built on is now just history — develop from `main` going
   forward.
@@ -126,17 +124,17 @@ were reviewed and left alone on purpose, not overlooked.
 
 ## Deliberately not done (and why)
 
-- **No `CHANGELOG.md` / `BEHAVIOR.md` / `findings.md`.** The user has a
-  governance pattern from mradio using these; evaluated it directly for
-  this project and skipped three of the four pieces on purpose:
-  `CHANGELOG.md` would just duplicate what commit messages already say;
-  `BEHAVIOR.md`'s main rule ("commit and push by default") is already
-  enforced one layer up by whatever harness/session is driving the work,
-  not something the repo itself needs to restate; `findings.md` was built
-  for a different kind of work (vetting radio station candidates) that
-  doesn't exist in this project. `KB.md` (canonical reference) and this
-  file (current state) are the two pieces that actually mapped onto
-  mradio-web's needs.
+- **`CHANGELOG.md` adopted as of 0.1.1** (reversing the original decision
+  below) — the user asked for it explicitly to follow their standard
+  governance playbook across future projects too, so consistency across
+  the user's projects won out over "commit messages already say this."
+  `BEHAVIOR.md` / `findings.md` are still skipped: `BEHAVIOR.md`'s main
+  rule ("commit and push by default") is enforced one layer up by
+  whatever harness/session is driving the work, not something the repo
+  itself needs to restate; `findings.md` was built for a different kind
+  of work (vetting radio station candidates) that doesn't exist in this
+  project. `KB.md`, `MEMORY.md`, and now `CHANGELOG.md` are the pieces
+  that map onto mradio-web's needs.
 - **No DB migration tooling yet.** The SQLite schema has only grown
   additively so far (`backend/app/db.py`); revisit if a column ever needs
   to change shape, not before.
@@ -155,14 +153,16 @@ were reviewed and left alone on purpose, not overlooked.
 
 ## Next steps (in order)
 
-1. `docker compose build && docker compose up` on a host with normal
-   internet access (LT, or any dev machine) — this has never actually
-   been run end-to-end. Fix whatever breaks.
-2. Once confirmed working, edit the `v0.1.0` GitHub release and uncheck
-   pre-release (or cut a new tag) — see "Status" above for why it's
-   currently marked that way.
-3. Deploy per `KB.md`: NPM proxy host (websockets toggle +
-   `proxy_buffering off`), configure AI providers from the admin page.
+1. ~~`docker compose build && docker compose up` end-to-end~~ — done
+   2026-09-05 on LT.
+2. ~~Confirm working, drop pre-release~~ — done via the `0.1.1` release.
+3. ~~Deploy per `KB.md`~~ — done: NPM proxy host at
+   `mradioweb.legba.myddns.rocks`, port 8123 on LT (8000 was already
+   taken by StirlingPDF), websockets + `proxy_buffering off` both set.
+4. Configure AI providers beyond the bundled opencode from the admin page
+   (NIM/Ollama), if desired — not yet done.
+5. No committed test suite yet (see "Gaps" above) — still true, still not
+   urgent at this scale.
 
 ## Known unknowns
 
