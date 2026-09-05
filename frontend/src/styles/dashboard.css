@@ -148,9 +148,9 @@
 
 .dashboard {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
   gap: var(--space-lg);
-  max-width: 1240px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: var(--space-lg);
 }
@@ -175,7 +175,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-xs) var(--space-md);
   border-bottom: 1px solid var(--line);
 }
 
@@ -247,7 +247,7 @@
 }
 
 .np-body {
-  padding: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   min-height: 220px;
 }
 
@@ -316,9 +316,9 @@
 
 .trivia {
   font-size: var(--text-md);
-  line-height: 1.65;
+  line-height: 1.55;
   color: var(--ink-2);
-  max-width: 62ch;
+  max-width: 84ch;
   overflow-wrap: anywhere;
 }
 

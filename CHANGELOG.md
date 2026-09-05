@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.9] - 2026-09-05
+
+Long liner notes (the normal case — the AI is prompted for ~750-850
+characters) were wrapping into a tall, narrow column and pushing content
+below the fold. Widened the now-playing panel relative to the stations
+panel (1.4:1 → 1.7:1) and the dashboard's overall max width, and loosened
+the trivia text's own line-width cap (62ch → 84ch) so it actually
+benefits from the wider column instead of leaving the extra space
+unused. Verified with a full-length liner-notes sample: the same text
+that spanned ~18 lines before now wraps into ~7, fitting on screen
+without scrolling. Also trimmed a bit more padding around the panel
+header and body.
+
 ## [0.1.8] - 2026-09-05
 
 The stream-metrics row (bitrate/sample rate/format/cache/elapsed) had
