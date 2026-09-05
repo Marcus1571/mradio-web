@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.3.2] - 2026-09-05
+
+Added a "Recently played" trivia history to the now-playing panel — the
+last 10 AI liner-note blurbs from this session, re-readable while
+something else plays.
+
+- A horizontal filmstrip of small chips (track + station) appears below
+  the transport controls once the first trivia arrives — nothing shown
+  on an empty session. Click a chip to expand it in place, showing the
+  full trivia text and Wikipedia link exactly like the live trivia
+  block (same clamp/"show more" behavior); click again to collapse.
+  Only one entry expands at a time.
+- Session-only, in-memory, personal to each listener — no backend
+  changes, no new persistence. Re-asking AI for the currently-playing
+  track updates that track's own history entry in place rather than
+  adding a duplicate.
+- Confirmed the shared AI trivia cache already keys on language (added
+  in 0.2.1) generically, not just for the languages that existed then —
+  switching from English to Italian on the same track correctly misses
+  the cache and re-asks in the new language, no code change needed.
+
 ## [0.3.1] - 2026-09-05
 
 Added Italian as a third UI/AI language, alongside English and Spanish

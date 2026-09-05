@@ -477,6 +477,61 @@ languages (not just build/lint) per the standing lesson from 0.2.2/0.2.3
 Amsterdam/Zurich/London from seeded test data), stats bars, sparkline,
 and paginated history table, in dark, light, English, and Spanish.
 
+## Trivia history (added 2026-09-05, 0.3.2)
+
+"Recently played" — the last 10 AI trivia blurbs from the current
+session, re-readable while a different track plays. Session-only,
+in-memory, personal per listener (all confirmed with the user up
+front) — no backend changes at all.
+
+Lives entirely in `usePlayer.ts`'s `PlayerState.triviaHistory`
+(`TriviaHistoryEntry[]`, capped at `MAX_TRIVIA_HISTORY = 10`), appended
+in the existing `'enrichment'` WS-message handler — the one place
+`stationName`/`artist`/`title`/`performer` and the fresh
+`EnrichmentItem` are all simultaneously in scope. Deduped on
+`rawTitle`: a re-ask via the existing `reenrich()`/"Re-ask AI" button
+re-arrives as another `'enrichment'` message for the same `rawTitle`
+and updates that entry in place (moves to front) rather than adding a
+duplicate chip — verified with a small standalone script simulating 12
+distinct arrivals (caps at 10, drops oldest) plus a re-ask of an
+already-present entry (no duplicate, moves to front). `play()`
+deliberately does NOT clear `triviaHistory` on a station switch — it's
+scoped to the whole session, not the current station.
+
+UI: `NowPlayingPanel.tsx` gained a `TriviaHistoryStrip` local
+subcomponent (same "small subcomponent beside its one caller" style as
+`AISettingsPage.tsx`'s `TestBadge`) — a horizontal scrollable filmstrip
+of compact chips below the `.transport` bar, renders nothing at all
+when history is empty. Clicking a chip expands it inline directly
+underneath, reusing the *exact* same `.trivia`/`.trivia-actions`/
+wiki-link classes and clamp-at-280-chars "show more" behavior as the
+live current-track trivia block — a re-read blurb looks and behaves
+identically to the original, not a simplified copy. Only one chip
+expands at a time (local `expanded: string | null` state).
+
+Verified live end-to-end via Playwright with a REAL opencode-generated
+trivia blurb (not a mock) — confirmed a chip renders correctly on
+first arrival, expand/collapse toggles the right CSS classes (and the
+underlying DOM state, not just visually — checked `getAttribute('class')`
+before/after each click to rule out the lingering highlight after
+collapse being a real bug rather than the browser's own default button
+focus-ring outline, which is what it actually was), and both dark and
+light themes render the filmstrip/expanded card correctly. Building up
+a full 10-entry history live wasn't practical in one sitting (real
+radio stations change tracks every few minutes, and this app's AI
+enrichment already takes 10-90s per track even on a fast local
+opencode — both pre-existing, unrelated to this feature), so the
+cap/dedupe logic itself was additionally verified via a standalone
+Node script rather than waiting on real playback for an hour.
+
+**Confirmed, not assumed**: the shared AI trivia cache (`cache.py`,
+`provider::language::raw_title` key, added in 0.2.1) already handles
+a third language with zero code changes — the key was never hardcoded
+to a fixed set of two languages, so switching en → it on the same track
+correctly misses the cache and triggers a fresh request in the new
+language, exactly as the user asked to confirm before this feature was
+built.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
