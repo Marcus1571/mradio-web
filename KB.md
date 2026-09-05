@@ -184,6 +184,21 @@ auto-merges or pushes a new image anywhere by itself.
 
 ### Ollama
 
+**Setting up Ollama:**
+
+1. Install Ollama on the machine that will run it — see
+   [ollama.com/download](https://ollama.com/download).
+2. Pull a model to use for enrichment, e.g. `ollama pull gemma3:4b`.
+3. Confirm it's reachable from wherever this app runs — Ollama listens on
+   port `11434` by default.
+4. If the app and Ollama run on different machines, make sure Ollama
+   accepts connections from the network (not just `localhost`) and that
+   any firewall allows the port.
+5. Paste the server URL and model name into mradio-web's **AI providers**
+   page (user menu → AI providers, admin only), then **Save**.
+
+**Fields:**
+
 - **Server URL**: e.g. `http://192.168.1.10:11434` for an Ollama instance
   running on your LAN, or `http://localhost:11434` if it's on the same
   host.
