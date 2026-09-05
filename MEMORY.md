@@ -310,17 +310,27 @@ retyped it this session (`apiKeyInput` non-empty), otherwise the merge
 falls back to the real saved key that only the backend ever holds.
 
 Three provider-specific test functions in `providers.py`
-(`_test_ollama`/`_test_openai`/`_test_opencode`), all with a fixed 5s
+(`_test_ollama`/`_test_openai`/`_test_opencode`), all with a fixed 10s
 timeout independent of the configured production timeouts (a test should
 fail fast, not hang for the real 75s/30s/180s enrichment budget):
 - Ollama: `GET /api/tags`, then checks the configured model is actually
   in the returned list — a reachable server with the wrong model pulled
   is reported as a failure, not a pass, since that's what actually
   matters for enrichment to work.
-- OpenAI-compatible (NIM): a real chat-completion call with
-  `max_tokens=1`, exercising the exact code path `llm_openai` uses,
-  rather than a `/models` endpoint some OpenAI-compatible proxies don't
-  implement.
+- OpenAI-compatible (NIM): `GET /v1/models` (checks connectivity + the
+  key is accepted, matching Ollama's `/api/tags` approach), and if the
+  endpoint returns a model list, confirms the configured model is on it.
+  **Originally did a real chat-completion call instead** ("exercise the
+  real code path"), but confirmed against the real production NIM key
+  that NVIDIA's free-tier `minimaxai/minimax-m3` genuinely takes longer
+  than any sane test timeout to respond (20s+ observed) — an
+  `httpx.ReadTimeout`, which stringifies to `''`, so the failure pill
+  showed "Could not reach ...:" with nothing after the colon. `/v1/models`
+  responds in ~150ms and proves the same thing (valid key, right base
+  URL) without paying for a slow real inference call on every click.
+  `_exc_reason()` helper added so any future exception with an empty
+  `str()` falls back to showing its class name instead of a blank
+  message.
 - opencode: reuses the app's one shared `enricher._opencode`
   `OpencodeSession` instance (imported lazily inside the function to
   avoid a circular import — `enricher.py` already imports `providers` at
@@ -348,6 +358,21 @@ configured." / "No API key configured.") and a genuine success pill
 opencode binary) render correctly. **Lesson: for any UI change, actually
 look at the rendered page before calling it done — a green build/lint is
 necessary but not sufficient.**
+
+**Fixed in 0.2.4**, found testing 0.2.3 against the real production NIM
+key (not just the empty-field failure paths tested for 0.2.2/0.2.3):
+(a) the NIM test's `httpx.ReadTimeout` bug above — see the "OpenAI-
+compatible (NIM)" bullet above for the fix; (b) the "New to NIM/Ollama?"
+notes said "the project's KB.md" as plain text, not an actual link.
+`AISettingsPage.tsx` gained a small `KbNote` component rendering a real
+`<a href="https://github.com/Marcus1571/mradio-web/blob/main/KB.md#<anchor>">`
+(GitHub's own heading-slug anchors — `#ollama`, `#nvidia-nim-openai-compatible`
+— verified live to actually scroll to the right section), styled via new
+`.admin-note a` CSS. **Second lesson stacked on the first: testing only
+the "field is empty" failure path isn't enough for a feature whose whole
+point is validating real credentials — test it against a real,
+already-configured value too**, which is what surfaced the NIM timeout
+bug in the first place.
 
 ## Known unknowns
 

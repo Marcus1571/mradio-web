@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.2.4] - 2026-09-05
+
+Two more fixes found testing 0.2.3 against the real production NIM key:
+
+- The KB.md "New to NIM/Ollama?" notes were plain text — "KB.md" wasn't
+  actually clickable. Now a real link to the file's section on GitHub
+  (`.../blob/main/KB.md#nvidia-nim-openai-compatible` /
+  `.../blob/main/KB.md#ollama`), verified to scroll straight to the right
+  section.
+- The NIM ("OpenAI-compatible") Test button was failing with "Could not
+  reach ...:" and no reason after the colon. Root cause: it ran a real
+  chat completion against the configured model, and NVIDIA's free-tier
+  `minimaxai/minimax-m3` genuinely took longer than the 5s test timeout
+  to respond (confirmed up to 20s+) — an `httpx.ReadTimeout`, which
+  stringifies to an empty message, hence the blank reason. Switched the
+  test to `GET /v1/models` (checks connectivity + the key is valid,
+  matching Ollama's `/api/tags` approach) instead of paying for a real,
+  slow inference call on every click. Also added a fallback so any
+  exception with an empty message shows its type name instead of nothing.
+
 ## [0.2.3] - 2026-09-05
 
 Fixed the Test buttons shipped in 0.2.2 rendering as unstyled, button-less
