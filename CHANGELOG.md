@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.10] - 2026-09-05
+
+Trimmed the top bar's padding and the dashboard's outer padding/gap so
+the header takes up less vertical space and the panels sit closer to
+the edges of the window.
+
 ## [0.1.9] - 2026-09-05
 
 Long liner notes (the normal case — the AI is prompted for ~750-850

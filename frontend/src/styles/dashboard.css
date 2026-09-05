@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-lg);
+  padding: var(--space-xs) var(--space-md);
   border-bottom: 1px solid var(--line);
   background: var(--paper);
   position: sticky;
@@ -149,10 +149,10 @@
 .dashboard {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
-  gap: var(--space-lg);
+  gap: var(--space-md);
   max-width: 1440px;
   margin: 0 auto;
-  padding: var(--space-lg);
+  padding: var(--space-md);
 }
 
 @media (max-width: 900px) {
