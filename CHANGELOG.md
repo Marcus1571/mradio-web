@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.7] - 2026-09-06
+
+Moved the Analytics page one click closer: a **Dashboard** button now
+sits in the top bar itself (between the theme toggle and the account
+menu, admin-only), navigating straight to the same page the old
+"Analytics" entry in the user dropdown menu used to. That dropdown
+entry is now removed — the top-bar button replaces it.
+
 ## [0.3.6] - 2026-09-06
 
 Fixed the saved volume being ignored on page reload — it always reset

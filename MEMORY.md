@@ -476,8 +476,17 @@ conventions (`{ t }` prop, `admin.css` classes, `.pill` reuse). Map via
 zero-UI-dependency posture so far — no reasonable hand-rolled substitute
 for an actual map). Stats charts are hand-rolled inline SVG (bar lists +
 a sparkline polyline) — no charting library, keeping that exception
-narrow and intentional. New `Page` union member `'analytics'`, nav entry
-in `TopBar.tsx`'s admin section next to "AI providers."
+narrow and intentional. New `Page` union member `'analytics'` — the
+page itself is still called "Analytics" internally (its own `<h1>` and
+`analytics.*` i18n block are unchanged), but how it's reached from the
+UI changed in 0.3.7: originally a "Analytics" entry in the user
+dropdown menu next to "AI providers," moved 2026-09-06 to a standalone
+top-bar **Dashboard** button (between the theme toggle and the account
+chip, still `user?.is_admin`-gated, still navigates to the same
+`'analytics'` page) — the dropdown entry was removed, not duplicated.
+The now-unused `topbar.analytics` i18n key was renamed to
+`topbar.dashboard` across all four languages rather than left as a
+dead key.
 
 Verified live end-to-end via Playwright in both themes and both
 languages (not just build/lint) per the standing lesson from 0.2.2/0.2.3
