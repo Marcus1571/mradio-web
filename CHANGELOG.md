@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.7] - 2026-09-05
+
+Tightened up vertical space in the now-playing panel:
+
+- Liner notes now default to expanded ("Show more" state) instead of
+  clamped to 4 lines — no need to click through on every track.
+- Trimmed padding/margins around the stream-metrics row, performer line,
+  liner-notes actions, and the transport bar so more fits on screen
+  without scrolling.
+
 ## [0.1.6] - 2026-09-05
 
 0.1.5 fixed the now-playing WebSocket dying and never recovering, but

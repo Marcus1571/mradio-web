@@ -228,6 +228,10 @@ were reviewed and left alone on purpose, not overlooked.
     top bar, sourced from `frontend/package.json` at build time via a
     Vite `define` (`__APP_VERSION__`), so it can't drift from an actual
     release.
+11. 2026-09-05 (0.1.7): tightened vertical spacing in the now-playing
+    panel (metrics row, performer line, trivia actions, transport bar)
+    and changed liner notes to default expanded instead of clamped —
+    purely cosmetic, no behavior change.
 
 **Separately noticed while investigating (not a code bug):** the
 Ollama provider is failing on every call in production

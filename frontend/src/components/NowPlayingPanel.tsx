@@ -39,7 +39,7 @@ export function NowPlayingPanel({
 }) {
   const { providers, active, activate } = useProviders()
   const [providerOpen, setProviderOpen] = useState(false)
-  const [triviaExpanded, setTriviaExpanded] = useState(false)
+  const [triviaExpanded, setTriviaExpanded] = useState(true)
   const providerRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {

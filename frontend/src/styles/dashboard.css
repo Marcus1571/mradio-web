@@ -247,7 +247,7 @@
 }
 
 .np-body {
-  padding: var(--space-lg) var(--space-md);
+  padding: var(--space-md);
   min-height: 220px;
 }
 
@@ -277,7 +277,7 @@
   font-size: var(--text-sm);
   color: var(--ink-3);
   font-style: italic;
-  margin: 0 0 var(--space-md);
+  margin: 0 0 var(--space-sm);
 }
 
 .np-metrics {
@@ -285,9 +285,9 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-xs);
-  padding: var(--space-2xs) 0 var(--space-md);
+  padding: var(--space-2xs) 0 var(--space-sm);
   border-bottom: 1px solid var(--line);
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-sm);
 }
 
 .np-metric {
@@ -338,7 +338,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  margin-top: var(--space-sm);
+  margin-top: var(--space-xs);
   flex-wrap: wrap;
 }
 
@@ -383,7 +383,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   background: var(--paper-3);
   border-top: 1px solid var(--line);
   flex-wrap: wrap;
