@@ -19,7 +19,8 @@ from .userdata import load_cfg, persist_cfg
 PROVIDERS = providers.PROVIDERS
 
 _PROMPT_TEMPLATE = (
-    "You enrich classical-radio metadata for a live classical radio stream.\n"
+    "You enrich now-playing metadata for a live radio stream — classical, "
+    "jazz, rock, pop, or any other genre.\n"
     "{question}\n"
     "Reply with ONLY a single raw JSON object, nothing else. No markdown, "
     "no code fences, no reasoning, no explanations, no text before or "
@@ -33,9 +34,15 @@ _PROMPT_TEMPLATE = (
     'whole work: use 0 and leave "work" empty.\n'
     '- "work": the canonical name of the WHOLE work with opus/catalogue '
     'number, ONLY when "movement" is 1; otherwise "".\n'
-    '- "wiki": the exact English Wikipedia article title of the whole work '
-    'with its disambiguator, e.g. "Mazurkas, Op. 67 (Chopin)" or '
-    '"Sonata da camera No. 3 (Corelli)"; if none exists return "".\n'
+    '- "wiki": the exact English Wikipedia article title to link the '
+    'listener to, if a suitable one exists — return "" if not. For a '
+    'classical work, use the whole work with its disambiguator, e.g. '
+    '"Mazurkas, Op. 67 (Chopin)" or "Sonata da camera No. 3 (Corelli)". '
+    'For a song, single, or other non-classical track, use the article '
+    'about that song/track itself if one exists, e.g. "Hate That I Made '
+    'You Love Me" or "Who\'s Zoomin\' Who"; only fall back to "" if no '
+    'article about the specific track exists (do not substitute the '
+    "artist's own article as a fallback).\n"
     '- "trivia": 6-9 short plain sentences that weave together BOTH '
     '(a) the composer — who they were, their era/place in music '
     'history, notable relations or legacy — and (b) the piece being '
@@ -138,7 +145,8 @@ class Enricher:
                 item = dict(_FAIL_ITEM)
             elif item.get("wiki"):
                 surname = (artist.split("(")[0].split()[-1] if artist else "") or ""
-                item["wiki"] = await wiki.resolve(item["wiki"], surname)
+                resolved = await wiki.resolve(item["wiki"], surname)
+                item["wiki"] = resolved["url"] if resolved else ""
             await self._finish(raw_title, epoch, item)
 
     async def _finish(self, raw_title: str, epoch: int, item: dict) -> None:

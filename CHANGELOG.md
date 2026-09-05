@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.4] - 2026-09-05
+
+Fixed the "Read on Wikipedia" link not showing up for non-classical
+tracks (pop, soul, disco, etc.) — two separate bugs stacked on top of
+each other:
+
+- The AI prompt only ever asked for a Wikipedia link when the track was
+  part of a classical "work" (a symphony, opus, etc.) — for a plain song
+  it always returned an empty `wiki` field by design, regardless of
+  provider. The prompt now also asks for the song's own Wikipedia
+  article when there's no classical work to link to instead.
+- Separately, even when a Wikipedia article *was* found, the backend was
+  sending the frontend a `{title, url}` object where a plain URL string
+  was expected — the link element rendered, but its `href` resolved to
+  `"[object Object]"` instead of a working URL. Fixed to send the URL
+  string directly.
+
+Verified against live Wikipedia for all three tracks reported as broken
+(Ariana Grande, Aretha Franklin, Elton John & Kiki Dee) — all resolve
+correctly now.
+
 ## [0.1.3] - 2026-09-05
 
 Fixed a real playback bug found right after deploying 0.1.2: stations could

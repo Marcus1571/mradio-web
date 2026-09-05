@@ -180,6 +180,16 @@ were reviewed and left alone on purpose, not overlooked.
    `mradio.ws` loggers, visible via `docker logs`) — there was previously
    zero application-level logging, only uvicorn's access log, which made
    this bug much harder to diagnose than it should have been.
+8. Fixed 2026-09-05 (0.1.4): "Read on Wikipedia" link missing for
+   non-classical tracks. Two stacked bugs, both in `enricher.py`: (a) the
+   prompt only ever requested a `wiki` value for a classical "work" —
+   for a plain song it was empty by design regardless of provider, now
+   asks for the song's own article too; (b) even when a Wikipedia lookup
+   *did* succeed, the code stored `wiki.resolve()`'s `{title, url}` dict
+   directly instead of unwrapping it to the URL string the frontend's
+   `EnrichmentItem.wiki: string` type expects — the link rendered but
+   `href` resolved to `"[object Object]"`. Both fixed; the frontend
+   itself needed no change since its type/JSX were already correct.
 
 ## Known unknowns
 
