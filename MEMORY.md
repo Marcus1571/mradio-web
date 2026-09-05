@@ -212,6 +212,35 @@ were reviewed and left alone on purpose, not overlooked.
    firing exactly when Stop was clicked. No pause-with-a-timeout
    compromise was built — decided with the user that a live stream only
    has Play and Stop, nothing in between ("live is live").
+10. Fixed 2026-09-05 (0.1.6): 0.1.5 only fixed the WebSocket's recovery —
+    the actual audio stream had zero error/stall handling, so a dead
+    connection just went silent with nothing watching for it (confirmed
+    live: killed the backend mid-stream, no reconnect happened until this
+    fix). `usePlayer.ts`'s audio element now listens for `error`/`stalled`
+    and auto-reconnects (reusing the existing `reconnect()`), gated by the
+    same `wantsConnectionRef` so Stop still wins. Verified live —
+    killing/restarting the backend produced automatic reconnect attempts
+    ~2s apart until the connection came back. Also fixed a regression
+    from 0.1.5: native `pause` (which fires for both an intentional Stop
+    *and* the browser giving up on a dead stream) was setting `status`,
+    so an unintentional drop could get misclassified as a real Stop —
+    only `stop()` itself sets it now. Also added the app version to the
+    top bar, sourced from `frontend/package.json` at build time via a
+    Vite `define` (`__APP_VERSION__`), so it can't drift from an actual
+    release.
+
+**Separately noticed while investigating (not a code bug):** the
+Ollama provider is failing on every call in production
+(`POST http://192.168.88.8:11434/api/generate` → 404) — direct testing
+confirms the configured model `gemma3:4b` isn't pulled on that Ollama
+instance at all (`gemma3:4b` was mradio-web's stale default, copied from
+the original terminal app's docs). Models actually available there:
+`gemma4:e4b-it-qat`, `qwen3.5:9b`, `phi4-reasoning:plus`,
+`phi4-mini:latest`, `translategemma:12b`. This silently falls back to
+opencode every time (visible in logs as the `127.0.0.1:4096` opencode
+calls right after each failed Ollama call) — not broken, just wasteful.
+Fix is a one-line change in the AI providers settings page (pick one of
+the models actually pulled), not a code change.
 
 ## Known unknowns
 

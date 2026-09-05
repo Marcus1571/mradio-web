@@ -37,6 +37,7 @@ export function TopBar({
         <span className="brand-sub">dial&nbsp;room</span>
       </button>
       <div className="topbar-right">
+        <span className="app-version">v{__APP_VERSION__}</span>
         {page !== 'dashboard' && (
           <button className="text-btn" type="button" onClick={() => onNavigate('dashboard')}>
             Back to player

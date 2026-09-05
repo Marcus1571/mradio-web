@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.1.6] - 2026-09-05
+
+0.1.5 fixed the now-playing WebSocket dying and never recovering, but
+missed the actual audio stream: when the underlying connection died for
+any reason (network blip, proxy hiccup), the `<audio>` element just went
+silent with nothing watching for it — the WS reconnecting on its own
+didn't help, since it's a completely separate connection. Confirmed via
+production logs and a live test that killed and restarted the backend
+mid-stream.
+
+- The audio element now listens for `error`/`stalled` and automatically
+  reconnects (same mechanism the manual Reconnect button already used)
+  as long as the user hasn't pressed Stop — verified live: killing the
+  backend mid-stream produced automatic reconnect attempts roughly every
+  2 seconds until the connection came back, entirely on its own.
+- Fixed a related regression from 0.1.5: the native `pause` event (which
+  fires both for an intentional Stop *and* for the browser giving up on
+  a dead stream) was being used to decide playback status — meaning an
+  unintentional drop could get misclassified the same as a real Stop.
+  Only `stop()` itself sets `status: 'stopped'` now.
+- Added the app version to the top bar (top right), read from
+  `package.json` at build time so it never drifts from the actual
+  release.
+
 ## [0.1.5] - 2026-09-05
 
 Fixed the now-playing WebSocket dying silently and never recovering

@@ -61,6 +61,14 @@ export function usePlayer(initialVolume?: number) {
   const unmountedRef = useRef(false)
   const reconnectAttemptRef = useRef(0)
   const reconnectTimerRef = useRef<number | null>(null)
+  // Audio-stream recovery: an unexpected stall/error has no built-in retry
+  // (unlike the WS, which reconnects itself) — the browser just goes quiet.
+  // audioReconnectRef always points at the latest reconnect(), so the
+  // error/stalled listeners (registered once, in the effect below) can call
+  // it without needing to re-subscribe every time the current station
+  // changes.
+  const audioReconnectRef = useRef<() => void>(() => undefined)
+  const audioReconnectTimerRef = useRef<number | null>(null)
   const [state, setState] = useState<PlayerState>({
     ...INITIAL_STATE,
     volume: initialVolume ?? INITIAL_STATE.volume,
@@ -71,7 +79,10 @@ export function usePlayer(initialVolume?: number) {
     audio.volume = state.volume / 100
     audioRef.current = audio
     const onPlay = () => setState((s) => ({ ...s, status: 'playing' }))
-    const onPause = () => setState((s) => (s.status === 'stopped' ? s : { ...s, status: 'stopped' }))
+    // A native `pause` fires both for an intentional stop() and for the
+    // browser giving up on a dead/stalled stream — only stop() itself
+    // should decide `status`, so this no longer touches it. Recovery from
+    // an unintentional stall is handled by onFailure below instead.
     const onTimeUpdate = () => {
       const buffered = audio.buffered
       let bufferedAhead = 0
@@ -81,14 +92,25 @@ export function usePlayer(initialVolume?: number) {
       }
       setState((s) => ({ ...s, elapsed: audio.currentTime, bufferedAhead }))
     }
+    const onFailure = () => {
+      if (!wantsConnectionRef.current) return // user pressed Stop — leave it alone
+      if (audioReconnectTimerRef.current !== null) return // a retry is already queued
+      audioReconnectTimerRef.current = window.setTimeout(() => {
+        audioReconnectTimerRef.current = null
+        if (wantsConnectionRef.current) audioReconnectRef.current()
+      }, 2000)
+    }
     audio.addEventListener('play', onPlay)
-    audio.addEventListener('pause', onPause)
     audio.addEventListener('timeupdate', onTimeUpdate)
+    audio.addEventListener('error', onFailure)
+    audio.addEventListener('stalled', onFailure)
     return () => {
       audio.pause()
       audio.removeEventListener('play', onPlay)
-      audio.removeEventListener('pause', onPause)
       audio.removeEventListener('timeupdate', onTimeUpdate)
+      audio.removeEventListener('error', onFailure)
+      audio.removeEventListener('stalled', onFailure)
+      if (audioReconnectTimerRef.current !== null) window.clearTimeout(audioReconnectTimerRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -211,6 +233,10 @@ export function usePlayer(initialVolume?: number) {
     audio.load()
     void audio.play().catch(() => undefined)
   }, [state.station, streamUrl])
+
+  useEffect(() => {
+    audioReconnectRef.current = reconnect
+  }, [reconnect])
 
   const setVolume = useCallback((volume: number) => {
     const audio = audioRef.current
