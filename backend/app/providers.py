@@ -218,7 +218,14 @@ class OpencodeSession:
         self._proc = None
 
 
-_TEST_TIMEOUT = 5.0
+_TEST_TIMEOUT = 10.0
+
+
+def _exc_reason(exc: Exception) -> str:
+    """httpx's timeout/connection exceptions often stringify to '' (the
+    class itself is the only signal) — fall back to its name so the pill
+    never shows a message with nothing after the colon."""
+    return str(exc) or type(exc).__name__
 
 
 async def _test_ollama(settings: dict) -> tuple[bool, str]:
@@ -232,7 +239,7 @@ async def _test_ollama(settings: dict) -> tuple[bool, str]:
             r.raise_for_status()
             data = r.json()
     except (httpx.HTTPError, ValueError) as exc:
-        return False, f"Could not reach {url}: {exc}"
+        return False, f"Could not reach {url}: {_exc_reason(exc)}"
     names = {m.get("name") for m in data.get("models", [])}
     if model not in names and not any(n.startswith(model + ":") for n in names if n):
         return False, f'Server reachable, but model "{model}" is not pulled there.'
@@ -242,22 +249,28 @@ async def _test_ollama(settings: dict) -> tuple[bool, str]:
 async def _test_openai(settings: dict) -> tuple[bool, str]:
     if not settings.get("api_key"):
         return False, "No API key configured."
-    base = api_endpoint(settings.get("api_base") or "https://api.openai.com/v1",
-                        "chat/completions")
-    payload = {
-        "model": settings.get("api_model") or "gpt-4o-mini",
-        "messages": [{"role": "user", "content": "ping"}],
-        "max_tokens": 1,
-    }
+    base_url = settings.get("api_base") or "https://api.openai.com/v1"
+    models_url = api_endpoint(base_url, "models")
+    model = settings.get("api_model") or "gpt-4o-mini"
     try:
         async with httpx.AsyncClient(timeout=_TEST_TIMEOUT) as client:
-            r = await client.post(base, json=payload, headers={
+            r = await client.get(models_url, headers={
                 "Authorization": "Bearer " + settings["api_key"]})
             r.raise_for_status()
+            data = r.json()
     except httpx.HTTPStatusError as exc:
+        if exc.response.status_code in (401, 403):
+            return False, "Server rejected the API key."
         return False, f"Server responded with an error ({exc.response.status_code})."
     except httpx.HTTPError as exc:
-        return False, f"Could not reach {base}: {exc}"
+        return False, f"Could not reach {models_url}: {_exc_reason(exc)}"
+    except ValueError:
+        # Some OpenAI-compatible servers don't implement /models at all —
+        # a non-JSON 2xx response still proves the key/base URL work.
+        return True, "Connected."
+    ids = {m.get("id") for m in data.get("data", [])}
+    if ids and model not in ids:
+        return False, f'Connected, but model "{model}" was not found on this endpoint.'
     return True, "Connected."
 
 
