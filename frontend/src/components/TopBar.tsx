@@ -93,7 +93,7 @@ export function TopBar({
           aria-label={theme === 'dark' ? t('topbar.switchToLight') : t('topbar.switchToDark')}
           title={theme === 'dark' ? t('topbar.switchToLight') : t('topbar.switchToDark')}
         >
-          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+          {theme === 'dark' ? <MoonIcon /> : <SunIcon />}
         </button>
         <div className="user-menu" ref={menuRef}>
           <button className="user-chip" type="button" onClick={() => setMenuOpen((v) => !v)}>
