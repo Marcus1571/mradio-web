@@ -191,3 +191,28 @@
   font-size: var(--text-sm);
   width: 100%;
 }
+
+.test-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.test-btn {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2xs) var(--space-sm);
+  font-size: var(--text-xs);
+  color: var(--ink-2);
+  transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+
+.test-btn:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--ink-3);
+}
+
+.test-btn:disabled {
+  opacity: 0.6;
+}

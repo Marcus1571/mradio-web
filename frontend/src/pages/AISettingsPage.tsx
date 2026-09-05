@@ -108,8 +108,9 @@ export function AISettingsPage({ t }: { t: TFunction }) {
                 onChange={(e) => field('ollama_model', e.target.value)}
               />
             </div>
-            <div className="row-actions">
+            <div className="test-actions">
               <button
+                className="test-btn"
                 type="button"
                 disabled={ollamaTest.status === 'testing'}
                 onClick={() =>
@@ -152,8 +153,9 @@ export function AISettingsPage({ t }: { t: TFunction }) {
                 onChange={(e) => setApiKeyInput(e.target.value)}
               />
             </div>
-            <div className="row-actions">
+            <div className="test-actions">
               <button
+                className="test-btn"
                 type="button"
                 disabled={openaiTest.status === 'testing'}
                 onClick={() =>
@@ -181,8 +183,9 @@ export function AISettingsPage({ t }: { t: TFunction }) {
               <label htmlFor="opencode">{t('aiSettings.opencodeEnable')}</label>
               <input id="opencode" value={settings.opencode} onChange={(e) => field('opencode', e.target.value)} />
             </div>
-            <div className="row-actions">
+            <div className="test-actions">
               <button
+                className="test-btn"
                 type="button"
                 disabled={opencodeTest.status === 'testing'}
                 onClick={() =>
