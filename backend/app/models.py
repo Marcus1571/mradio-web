@@ -54,3 +54,58 @@ class ProviderSwitchRequest(BaseModel):
 class AITestResult(BaseModel):
     ok: bool
     message: str
+
+
+class LiveSession(BaseModel):
+    user_id: int
+    username: str
+    station: str
+    genre: str
+    city: str | None
+    country: str | None
+    lat: float | None
+    lon: float | None
+    elapsed_seconds: int
+
+
+class HistoryEntry(BaseModel):
+    id: int
+    username: str
+    station_name: str
+    genre: str
+    started_at: str
+    ended_at: str | None
+    city: str | None
+    country: str | None
+    lat: float | None
+    lon: float | None
+
+
+class StationCount(BaseModel):
+    station_name: str
+    plays: int
+    seconds: float | None
+
+
+class GenreCount(BaseModel):
+    genre: str
+    plays: int
+    seconds: float | None
+
+
+class UserCount(BaseModel):
+    username: str
+    plays: int
+    seconds: float | None
+
+
+class DayCount(BaseModel):
+    day: str
+    plays: int
+
+
+class AnalyticsStats(BaseModel):
+    top_stations: list[StationCount]
+    top_genres: list[GenreCount]
+    top_users: list[UserCount]
+    by_day: list[DayCount]

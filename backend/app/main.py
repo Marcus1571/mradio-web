@@ -17,6 +17,7 @@ logging.basicConfig(
 
 from .db import close_db, init_db
 from .enrichers import shutdown_all as shutdown_enrichers
+from .routers import analytics as analytics_router
 from .routers import auth as auth_router
 from .routers import config as config_router
 from .routers import enrich as enrich_router
@@ -49,6 +50,7 @@ app.include_router(favorites_router.router)
 app.include_router(stations_router.router)
 app.include_router(config_router.router)
 app.include_router(ws_router.router)
+app.include_router(analytics_router.router)
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 if STATIC_DIR.is_dir():
