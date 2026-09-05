@@ -7,7 +7,7 @@ import { TopBar } from '../components/TopBar'
 import type { Page } from '../components/TopBar'
 import { useInitialConfig } from '../hooks/useConfig'
 import { usePlayer } from '../hooks/usePlayer'
-import { useTranslation } from '../i18n'
+import { LANGUAGES, useTranslation } from '../i18n'
 import type { Language } from '../i18n'
 import { ChangePasswordScreen } from './ChangePasswordScreen'
 import { AISettingsPage } from './AISettingsPage'
@@ -29,8 +29,9 @@ export function Dashboard() {
     const nextTheme = config.theme === 'light' ? 'light' : 'dark'
     setTheme(nextTheme)
     document.documentElement.setAttribute('data-theme', nextTheme)
-    const nextLanguage: Language =
-      config.language === 'es' || config.language === 'it' ? config.language : 'en'
+    const nextLanguage: Language = LANGUAGES.some((l) => l.code === config.language)
+      ? (config.language as Language)
+      : 'en'
     setLanguageState(nextLanguage)
     if (config.mute) player.toggleMute()
     if (!resumedRef.current && config.last_url) {
