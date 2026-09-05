@@ -262,12 +262,18 @@ on LT. Test-connection now reports Ollama as `True, "Connected."`.
 correct as a generic fresh-install default; it just needs pulling before
 use, same as any Ollama model does.
 
-## Language support (added 2026-09-05, 0.2.0 + 0.2.1) — fully done
+## Language support (added 2026-09-05, 0.2.0 + 0.2.1 + 0.3.1) — fully done
 
-UI language (English/Spanish, top-bar dropdown, 0.2.0) —
-`frontend/src/i18n/` (hand-rolled `en.ts`/`es.ts`/`index.ts`, no library,
-`Dict` type widening so Spanish only has to match English's key shape,
-not its exact text). `Dashboard.tsx` owns `language` state exactly like
+UI language (English/Spanish/Italian, top-bar dropdown, 0.2.0 + Italian
+in 0.3.1) — `frontend/src/i18n/` (hand-rolled `en.ts`/`es.ts`/`it.ts`/
+`index.ts`, no library, `Dict` type widening so Spanish/Italian only
+have to match English's key shape, not its exact text). Adding a language is now a proven 5-spot pattern (confirmed doing it
+for Italian in 0.3.1): new `<lang>.ts` file, add its code to `Language`
++ `LANGUAGES` in `index.ts`, add the code to `Config.language`'s union
+in `api/types.ts`, extend `Dashboard.tsx`'s config-load fallback chain,
+and the backend's two spots (`routers/config.py`'s `_VALID_LANGUAGES`,
+`enricher.py`'s `_LANGUAGE_INSTRUCTIONS`). `Dashboard.tsx` owns
+`language` state exactly like
 `theme`, passes a bound `t()` down as a prop to every consumer — no
 React Context, matching this codebase's existing "no abstraction until
 needed" style. Persists via `PATCH /api/config`'s `language` field.
@@ -281,14 +287,15 @@ identity yet at that point to look up a saved preference for, and
 the Dashboard's user menu is a normal translated page; only the pre-auth
 render path is the exception.
 
-AI liner notes follow the UI language too (0.2.1) — `Enricher.language`
-mirrors `self.provider`'s pattern (set once in `start()` from
-`load_cfg()`, pushed live by `PATCH /api/config` into the running
-instance, not re-read from disk per-call). `_PROMPT_TEMPLATE` gained a
-`{language_instruction}` slot (English stays fully implicit — zero
-prompt-text cost — Spanish adds one line asking for the trivia field in
-Spanish while explicitly protecting `"wiki"`, which must stay the
-English Wikipedia article title for `wiki.resolve()`'s lookup).
+AI liner notes follow the UI language too (0.2.1, Italian added 0.3.1) —
+`Enricher.language` mirrors `self.provider`'s pattern (set once in
+`start()` from `load_cfg()`, pushed live by `PATCH /api/config` into the
+running instance, not re-read from disk per-call). `_PROMPT_TEMPLATE`
+gained a `{language_instruction}` slot (English stays fully implicit —
+zero prompt-text cost — Spanish/Italian each add one line asking for the
+trivia field in that language while explicitly protecting `"wiki"`,
+which must stay the English Wikipedia article title for
+`wiki.resolve()`'s lookup).
 `cache.py`'s key gained a language dimension
 (`provider::language::raw_title`) so two accounts in different
 languages don't collide on one cached blurb for the same track — old

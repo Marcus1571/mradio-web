@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.1] - 2026-09-05
+
+Added Italian as a third UI/AI language, alongside English and Spanish
+— appears in the top-bar language dropdown (🇮🇹 Italiano). AI-generated
+liner notes follow it the same way they already do for Spanish.
+
 ## [0.3.0] - 2026-09-05
 
 New admin-only **Analytics** page (user menu → Analytics) — live sessions,
