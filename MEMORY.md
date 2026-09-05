@@ -163,6 +163,14 @@ were reviewed and left alone on purpose, not overlooked.
    (NIM/Ollama), if desired — not yet done.
 5. No committed test suite yet (see "Gaps" above) — still true, still not
    urgent at this scale.
+6. Fixed 2026-09-05: Wikipedia link `rel` attribute, NIM provider defaults
+   not prefilled (now default to NVIDIA's hosted endpoint +
+   `minimaxai/minimax-m3`, matching mradio's own reasoning for that model
+   choice), genre-tag/station-name spacing in the favorites grid, and a
+   missing stream-metadata row (bitrate/sample-rate/format/cache/elapsed)
+   in the now-playing panel. **Not yet redeployed to LT** — the running
+   container there is still on the pre-fix build; redeploy via `git pull
+   && docker compose build && docker compose up -d` to pick these up.
 
 ## Known unknowns
 

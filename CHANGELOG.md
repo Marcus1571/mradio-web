@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased]
+
+Four small UI/UX bugs found reviewing the live 0.1.1 deployment against the
+original design mockup:
+
+- Wikipedia link now uses `rel="noopener noreferrer"`.
+- NIM provider fields prefill with NVIDIA's hosted endpoint and
+  `minimaxai/minimax-m3` on new installs, instead of OpenAI defaults;
+  KB.md gained the missing "how to get an API key" walkthrough, linked
+  from the AI providers page.
+- Genre tag no longer crowds the station name in the favorites grid.
+- Now-playing panel gained a stream metadata row (bitrate, sample rate,
+  format, buffer health, elapsed time) that was entirely missing before.
+
 ## [0.1.1] - 2026-09-05
 
 Confirmed working end-to-end: first real `docker compose build && docker
