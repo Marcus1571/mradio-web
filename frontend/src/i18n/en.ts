@@ -129,6 +129,7 @@ const en = {
     aiProvider: 'AI provider',
     notConfigured: 'not configured',
     none: 'none',
+    historyTitle: 'Recently played',
   },
   analytics: {
     title: 'Analytics',

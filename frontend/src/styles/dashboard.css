@@ -342,6 +342,71 @@
   flex-wrap: wrap;
 }
 
+.trivia-history {
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--line);
+}
+
+.trivia-history-strip {
+  display: flex;
+  gap: var(--space-2xs);
+  overflow-x: auto;
+  padding-bottom: var(--space-3xs);
+  scrollbar-width: thin;
+}
+
+.trivia-history-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 0 0 auto;
+  max-width: 160px;
+  padding: var(--space-2xs) var(--space-xs);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--paper);
+  text-align: left;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.trivia-history-chip:hover {
+  border-color: var(--accent-line);
+}
+
+.trivia-history-chip.active {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.trivia-history-chip-title {
+  font-size: var(--text-xs);
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trivia-history-chip-station {
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trivia-history-expanded {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--line);
+}
+
+.np-track-small {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  margin: 0 0 var(--space-2xs);
+}
+
 .wiki-link {
   display: inline-flex;
   align-items: center;

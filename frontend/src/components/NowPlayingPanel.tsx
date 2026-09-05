@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Station } from '../api/types'
 import type { TFunction } from '../i18n'
-import type { PlayerState } from '../hooks/usePlayer'
+import type { PlayerState, TriviaHistoryEntry } from '../hooks/usePlayer'
 import { useProviders } from '../hooks/useProviders'
 import { formatCache, formatElapsed, formatKHz, formatKbps } from '../utils/format'
 import {
@@ -19,6 +19,60 @@ const _PROVIDER_LABEL: Record<string, string> = {
   opencode: 'opencode',
   ollama: 'ollama',
   openai: 'NIM',
+}
+
+function TriviaHistoryStrip({ history, t }: { history: TriviaHistoryEntry[]; t: TFunction }) {
+  const [expanded, setExpanded] = useState<string | null>(null)
+  const [showFullExpanded, setShowFullExpanded] = useState(false)
+
+  if (history.length === 0) return null
+
+  const active = history.find((h) => h.rawTitle === expanded) ?? null
+
+  return (
+    <div className="trivia-history">
+      <div className="trivia-label">
+        <SparkleIcon />
+        {t('nowPlaying.historyTitle')}
+      </div>
+      <div className="trivia-history-strip">
+        {history.map((h) => (
+          <button
+            key={h.rawTitle}
+            type="button"
+            className={`trivia-history-chip ${h.rawTitle === expanded ? 'active' : ''}`}
+            onClick={() => {
+              setExpanded((cur) => (cur === h.rawTitle ? null : h.rawTitle))
+              setShowFullExpanded(false)
+            }}
+          >
+            <span className="trivia-history-chip-title">{h.title || h.rawTitle}</span>
+            <span className="trivia-history-chip-station">{h.stationName}</span>
+          </button>
+        ))}
+      </div>
+      {active && (
+        <div className="trivia-history-expanded">
+          {active.artist && <p className="np-composer">{active.artist}</p>}
+          <p className="np-track-small">{active.title || active.rawTitle}</p>
+          <p className={`trivia ${showFullExpanded ? '' : 'clamped'}`}>{active.item.trivia}</p>
+          <div className="trivia-actions">
+            {active.item.trivia.length > 280 && (
+              <button className="text-btn" type="button" onClick={() => setShowFullExpanded((v) => !v)}>
+                {showFullExpanded ? t('nowPlaying.showLess') : t('nowPlaying.showMore')}
+              </button>
+            )}
+            {active.item.wiki && (
+              <a className="wiki-link" href={active.item.wiki} target="_blank" rel="noopener noreferrer">
+                {t('nowPlaying.readOnWikipedia')}
+                <ExternalLinkIcon />
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function NowPlayingPanel({
@@ -201,6 +255,8 @@ export function NowPlayingPanel({
           )}
         </div>
       </div>
+
+      <TriviaHistoryStrip history={state.triviaHistory} t={t} />
     </section>
   )
 }

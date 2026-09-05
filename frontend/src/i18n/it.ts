@@ -131,6 +131,7 @@ const it: Dict = {
     aiProvider: 'Provider IA',
     notConfigured: 'non configurato',
     none: 'nessuno',
+    historyTitle: 'Riprodotti di recente',
   },
   analytics: {
     title: 'Analitica',
