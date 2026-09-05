@@ -572,6 +572,41 @@ correctly misses the cache and triggers a fresh request in the new
 language, exactly as the user asked to confirm before this feature was
 built.
 
+## Named-provider status message (added 2026-09-06, 0.3.4)
+
+"Asking the AI provider…" now says which one — "Asking opencode…",
+"Asking NIM…", "Asking ollama…" — via a new `nowPlaying.askingNamedProvider`
+i18n key (`{provider}` placeholder) rendered when `useProviders()`'s
+`active` is non-empty, generic message kept as the fallback.
+
+**Real bug found and fixed while building this, not assumed**: the
+provider name the frontend shows (top-right pill, and now this status
+line) came from `GET /api/enrich/providers`'s `active` field, which
+returned raw `enricher.provider` — the user's own *explicitly saved*
+preference, empty by default. A fresh account that never explicitly
+picked a provider showed "none" in the pill even while enrichment was
+correctly succeeding via opencode's automatic fallback (confirmed live:
+real trivia arrived, pill said "none" the whole time). `enricher.py`
+already had `active_provider()` (the fallback-resolved provider,
+already used internally by `_llm()`'s ordering logic) — `list_providers()`
+in `routers/enrich.py` just wasn't using it. Fixed to call
+`await enricher.active_provider()` instead. `activate_provider()`'s own
+returned `active` is deliberately left as raw `enricher.provider` —
+right after an explicit switch, that value IS the user's real choice,
+not a fallback.
+
+**Deliberately not built**: staged phase progress (asking → LLM
+responded → Wikipedia lookup → composing), which the user asked about
+directly and was talked out of after checking real timing — the LLM
+call is 10-90+ seconds of a track's enrichment time, Wikipedia
+resolution (`wiki.py`) is under a second total across all its sub-calls
+even in the slow fallback path (`_search()`'s up-to-8-request chain, see
+"AI provider connection test" section above). A phase indicator would
+show "asking" almost the entire wait and then flash through the rest
+in under a second, which reads as a stall-then-flicker, not real
+progress — not worth the new WS message types and instrumentation
+across `enricher.py`/`wiki.py` it would require.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

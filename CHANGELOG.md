@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.3.4] - 2026-09-06
+
+The "Asking the AI provider…" status while waiting for liner notes now
+names the actual provider — "Asking opencode…", "Asking NIM…", "Asking
+ollama…" — instead of a generic placeholder.
+
+- **Real bug found and fixed along the way**: the provider name shown
+  in the UI (top-right pill, and now this status line) was the user's
+  *explicitly saved* provider preference, not the one actually doing
+  the work — a fresh account with no preference set showed "none" even
+  while enrichment was quietly succeeding via opencode's automatic
+  fallback. `GET /api/enrich/providers` now reports the fallback-
+  resolved active provider (`Enricher.active_provider()`, which already
+  existed and was used elsewhere, just not here) instead of the raw
+  unset preference.
+- Considered and deliberately did not build: staged "phase" progress
+  (asking → response received → Wikipedia lookup → composing). The real
+  pipeline spends the overwhelming majority of its time in the single
+  LLM call (10–90+ seconds observed), with the Wikipedia lookup taking
+  well under a second — a phase indicator would sit on "asking" almost
+  the whole time and then flicker through the rest, which isn't a
+  meaningful improvement over just naming the provider.
+
 ## [0.3.3] - 2026-09-06
 
 Made trivia history per-user and persisted (was session-only, in-memory,
