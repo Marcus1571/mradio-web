@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.3.5] - 2026-09-06
+
+Added Portuguese as a fourth UI/AI language, alongside English,
+Spanish, and Italian — appears in the top-bar language dropdown (🇵🇹
+Português). AI-generated liner notes follow it the same way they
+already do for the other three.
+
+Also brought README.md's KB.md cross-linking up to the same standard as
+the original mradio terminal app's README: a top nav line, an early
+"full detail lives in KB.md" pointer, deep links to specific KB.md
+sections next to each relevant feature bullet, a full section-by-section
+link list under "Getting started," and a closing link to the Knowledge
+Base — previously README only had a single bare link to KB.md.
+
+Simplified `Dashboard.tsx`'s language-fallback logic to validate against
+the `LANGUAGES` list generically instead of naming each language code —
+adding a 5th language in the future shouldn't require touching that line
+again.
+
 ## [0.3.4] - 2026-09-06
 
 The "Asking the AI provider…" status while waiting for liner notes now

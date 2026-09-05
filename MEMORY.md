@@ -262,21 +262,28 @@ on LT. Test-connection now reports Ollama as `True, "Connected."`.
 correct as a generic fresh-install default; it just needs pulling before
 use, same as any Ollama model does.
 
-## Language support (added 2026-09-05, 0.2.0 + 0.2.1 + 0.3.1) — fully done
+## Language support (added 2026-09-05, 0.2.0 + 0.2.1 + 0.3.1; Portuguese + pattern cleanup 2026-09-06, 0.3.5) — fully done
 
-UI language (English/Spanish/Italian, top-bar dropdown, 0.2.0 + Italian
-in 0.3.1) — `frontend/src/i18n/` (hand-rolled `en.ts`/`es.ts`/`it.ts`/
-`index.ts`, no library, `Dict` type widening so Spanish/Italian only
-have to match English's key shape, not its exact text). Adding a language is now a proven 5-spot pattern (confirmed doing it
-for Italian in 0.3.1): new `<lang>.ts` file, add its code to `Language`
-+ `LANGUAGES` in `index.ts`, add the code to `Config.language`'s union
-in `api/types.ts`, extend `Dashboard.tsx`'s config-load fallback chain,
-and the backend's two spots (`routers/config.py`'s `_VALID_LANGUAGES`,
-`enricher.py`'s `_LANGUAGE_INSTRUCTIONS`). `Dashboard.tsx` owns
-`language` state exactly like
-`theme`, passes a bound `t()` down as a prop to every consumer — no
-React Context, matching this codebase's existing "no abstraction until
-needed" style. Persists via `PATCH /api/config`'s `language` field.
+UI language (English/Spanish/Italian/Portuguese, top-bar dropdown,
+0.2.0 + Italian in 0.3.1 + Portuguese in 0.3.5) — `frontend/src/i18n/`
+(hand-rolled `en.ts`/`es.ts`/`it.ts`/`pt.ts`/`index.ts`, no library,
+`Dict` type widening so non-English files only have to match English's
+key shape, not its exact text). Adding a language is now a proven
+6-spot pattern (confirmed for Italian in 0.3.1, then Portuguese in
+0.3.5 — see [[feedback_i18n_and_readme_kb_links]] for the durable
+checklist): new `<lang>.ts` file, add its code to `Language` +
+`LANGUAGES` in `index.ts`, add the code to `Config.language`'s union in
+`api/types.ts`, and the backend's two spots (`routers/config.py`'s
+`_VALID_LANGUAGES`, `enricher.py`'s `_LANGUAGE_INSTRUCTIONS`).
+`Dashboard.tsx`'s config-load fallback chain (previously an `===`
+chain naming each language code, needing an edit per new language) was
+**simplified in 0.3.5** to validate against `LANGUAGES` generically
+(`LANGUAGES.some((l) => l.code === config.language)`) — this spot
+should no longer need touching for future languages. `Dashboard.tsx`
+owns `language` state exactly like `theme`, passes a bound `t()` down
+as a prop to every consumer — no React Context, matching this
+codebase's existing "no abstraction until needed" style. Persists via
+`PATCH /api/config`'s `language` field.
 
 **Deliberate scope cut**: `LoginScreen.tsx` and the *forced* first-login
 `ChangePasswordScreen` (rendered pre-auth in `App.tsx`, as siblings of
@@ -287,14 +294,15 @@ identity yet at that point to look up a saved preference for, and
 the Dashboard's user menu is a normal translated page; only the pre-auth
 render path is the exception.
 
-AI liner notes follow the UI language too (0.2.1, Italian added 0.3.1) —
-`Enricher.language` mirrors `self.provider`'s pattern (set once in
-`start()` from `load_cfg()`, pushed live by `PATCH /api/config` into the
-running instance, not re-read from disk per-call). `_PROMPT_TEMPLATE`
-gained a `{language_instruction}` slot (English stays fully implicit —
-zero prompt-text cost — Spanish/Italian each add one line asking for the
-trivia field in that language while explicitly protecting `"wiki"`,
-which must stay the English Wikipedia article title for
+AI liner notes follow the UI language too (0.2.1, Italian added 0.3.1,
+Portuguese added 0.3.5) — `Enricher.language` mirrors `self.provider`'s
+pattern (set once in `start()` from `load_cfg()`, pushed live by
+`PATCH /api/config` into the running instance, not re-read from disk
+per-call). `_PROMPT_TEMPLATE` gained a `{language_instruction}` slot
+(English stays fully implicit — zero prompt-text cost — Spanish/
+Italian/Portuguese each add one line asking for the trivia field in
+that language while explicitly protecting `"wiki"`, which must stay the
+English Wikipedia article title for
 `wiki.resolve()`'s lookup).
 `cache.py`'s key gained a language dimension
 (`provider::language::raw_title`) so two accounts in different
@@ -606,6 +614,22 @@ show "asking" almost the entire wait and then flash through the rest
 in under a second, which reads as a stall-then-flicker, not real
 progress — not worth the new WS message types and instrumentation
 across `enricher.py`/`wiki.py` it would require.
+
+## README ↔ KB.md cross-linking (fixed 2026-09-06, 0.3.5)
+
+User pointed at the original terminal-app project's own README
+(`~/src/mradio/README.md`) as the reference: it links to `KB.md`
+repeatedly and deliberately — a top nav line, an early "full detail
+lives in KB.md" pointer, deep links to *specific* sections next to the
+feature they explain, a closing call-to-action link. mradio-web's
+README had exactly one bare `[KB.md](KB.md)` link before this. Fixed to
+match: top nav line, early pointer paragraph, deep links
+(`KB.md#N-section-slug`) next to each relevant "What it does" bullet, a
+full section-by-section link list under "Getting started," and a
+closing "→ Open the Knowledge Base ←" link. See
+[[feedback_i18n_and_readme_kb_links]] for the standing rule: any new
+feature that gets its own KB.md section should also get a matching
+README link, going forward.
 
 ## Known unknowns
 
