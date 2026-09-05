@@ -7,7 +7,7 @@ from ..userdata import load_cfg, persist_cfg
 
 router = APIRouter(prefix="/api/config", tags=["config"])
 
-_VALID_LANGUAGES = ("en", "es")
+_VALID_LANGUAGES = ("en", "es", "it")
 
 
 class ConfigUpdate(BaseModel):

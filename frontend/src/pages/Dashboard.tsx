@@ -29,7 +29,8 @@ export function Dashboard() {
     const nextTheme = config.theme === 'light' ? 'light' : 'dark'
     setTheme(nextTheme)
     document.documentElement.setAttribute('data-theme', nextTheme)
-    const nextLanguage: Language = config.language === 'es' ? 'es' : 'en'
+    const nextLanguage: Language =
+      config.language === 'es' || config.language === 'it' ? config.language : 'en'
     setLanguageState(nextLanguage)
     if (config.mute) player.toggleMute()
     if (!resumedRef.current && config.last_url) {
