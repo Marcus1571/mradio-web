@@ -16,6 +16,10 @@ export interface PlayerState {
   muted: boolean
   connected: boolean
   elapsed: number
+  bitrate: string | null
+  sampleRate: string | null
+  format: string | null
+  bufferedAhead: number
 }
 
 const INITIAL_STATE: PlayerState = {
@@ -32,6 +36,10 @@ const INITIAL_STATE: PlayerState = {
   muted: false,
   connected: false,
   elapsed: 0,
+  bitrate: null,
+  sampleRate: null,
+  format: null,
+  bufferedAhead: 0,
 }
 
 /** Wires an <audio> element, the /api/stream proxy, and the /api/ws
@@ -54,7 +62,15 @@ export function usePlayer(initialVolume?: number) {
     audioRef.current = audio
     const onPlay = () => setState((s) => ({ ...s, playing: true }))
     const onPause = () => setState((s) => ({ ...s, playing: false }))
-    const onTimeUpdate = () => setState((s) => ({ ...s, elapsed: audio.currentTime }))
+    const onTimeUpdate = () => {
+      const buffered = audio.buffered
+      let bufferedAhead = 0
+      if (buffered.length > 0) {
+        const end = buffered.end(buffered.length - 1)
+        bufferedAhead = Math.max(0, end - audio.currentTime)
+      }
+      setState((s) => ({ ...s, elapsed: audio.currentTime, bufferedAhead }))
+    }
     audio.addEventListener('play', onPlay)
     audio.addEventListener('pause', onPause)
     audio.addEventListener('timeupdate', onTimeUpdate)
@@ -76,7 +92,13 @@ export function usePlayer(initialVolume?: number) {
     ws.onmessage = (ev) => {
       const msg = JSON.parse(ev.data) as WsMessage
       if (msg.type === 'station') {
-        setState((s) => ({ ...s, stationName: msg.name }))
+        setState((s) => ({
+          ...s,
+          stationName: msg.name,
+          bitrate: msg.bitrate,
+          sampleRate: msg.sample_rate,
+          format: msg.format,
+        }))
       } else if (msg.type === 'now_playing') {
         setState((s) => ({
           ...s,
@@ -118,6 +140,10 @@ export function usePlayer(initialVolume?: number) {
         enrichment: null,
         enriching: false,
         elapsed: 0,
+        bitrate: null,
+        sampleRate: null,
+        format: null,
+        bufferedAhead: 0,
       }))
       audio.src = streamUrl(station)
       audio.load()

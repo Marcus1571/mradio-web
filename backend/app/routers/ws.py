@@ -57,7 +57,13 @@ async def now_playing_ws(websocket: WebSocket, sid: str = Query(...)):
         while True:
             event = await queue.get()
             if event["type"] == "station":
-                await send({"type": "station", "name": event["name"]})
+                await send({
+                    "type": "station",
+                    "name": event["name"],
+                    "bitrate": event.get("bitrate"),
+                    "sample_rate": event.get("sample_rate"),
+                    "format": event.get("format"),
+                })
             elif event["type"] == "title":
                 raw = event["title"]
                 state["raw_title"] = raw

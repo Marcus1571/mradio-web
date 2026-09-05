@@ -75,6 +75,12 @@ export interface EnrichmentItem {
 }
 
 export type WsMessage =
-  | { type: 'station'; name: string }
+  | {
+      type: 'station'
+      name: string
+      bitrate: string | null
+      sample_rate: string | null
+      format: string | null
+    }
   | { type: 'now_playing'; raw_title: string; artist: string; title: string; performer: string }
   | { type: 'enrichment'; raw_title: string; item: EnrichmentItem }

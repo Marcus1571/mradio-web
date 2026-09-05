@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PlayerState } from '../hooks/usePlayer'
 import { useProviders } from '../hooks/useProviders'
-import { formatElapsed } from '../utils/format'
+import { formatCache, formatElapsed, formatKHz, formatKbps } from '../utils/format'
 import {
   ChevronDownIcon,
   ExternalLinkIcon,
@@ -58,11 +58,6 @@ export function NowPlayingPanel({
           {hasStation && <span className="live-dot" aria-hidden="true" />}
           <span className="station-name-strong">{hasStation ? state.stationName : 'Nothing playing'}</span>
         </div>
-        {hasTrack && (
-          <span className="np-meta" style={{ padding: 0, border: 'none', margin: 0 }}>
-            {formatElapsed(state.elapsed)}
-          </span>
-        )}
       </div>
 
       <div className="np-body">
@@ -72,6 +67,15 @@ export function NowPlayingPanel({
 
         {hasTrack && (
           <>
+            <div className="np-metrics">
+              {formatKbps(state.bitrate) && <span className="np-metric">{formatKbps(state.bitrate)}</span>}
+              {formatKHz(state.sampleRate) && <span className="np-metric">{formatKHz(state.sampleRate)}</span>}
+              {state.format && (
+                <span className="np-metric">{state.format.split('/')[1]?.toUpperCase() || state.format}</span>
+              )}
+              <span className="np-metric">{formatCache(state.bufferedAhead)}</span>
+              <span className="np-metric">{formatElapsed(state.elapsed)}</span>
+            </div>
             {state.artist && <p className="np-composer">{state.artist}</p>}
             <h1 className="np-track">{state.title || state.rawTitle}</h1>
             {state.performer && <p className="np-performer">{state.performer}</p>}
@@ -101,7 +105,7 @@ export function NowPlayingPanel({
                       className="wiki-link"
                       href={state.enrichment.wiki}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                     >
                       Read on Wikipedia
                       <ExternalLinkIcon />

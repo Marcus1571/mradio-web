@@ -68,8 +68,16 @@ async def stream(url: str = Query(..., description="the station's real stream UR
     metaint = parse_metaint(upstream.headers)
     content_type = upstream.headers.get("content-type") or "audio/mpeg"
     station_name = (upstream.headers.get("icy-name") or "").strip()
+    icy_br = upstream.headers.get("icy-br")
+    icy_sr = upstream.headers.get("icy-sr")
     if sid and station_name:
-        nowplaying.publish(sid, {"type": "station", "name": station_name})
+        nowplaying.publish(sid, {
+            "type": "station",
+            "name": station_name,
+            "bitrate": icy_br,
+            "sample_rate": icy_sr,
+            "format": content_type,
+        })
 
     async def body():
         try:
