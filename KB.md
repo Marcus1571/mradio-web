@@ -103,6 +103,12 @@ HTTPS** (i.e. through NPM) — not over plain `http://<server-ip>:8000`
 directly, except `http://localhost` in a browser during local dev, which
 gets a same-origin exception.
 
+The app trusts `X-Forwarded-For`/`X-Forwarded-Proto` from its reverse
+proxy (`uvicorn --proxy-headers`) so it sees each listener's real IP
+instead of the proxy's own — this matters for the Analytics page's map
+(§9). NPM sends these headers by default; no extra configuration needed
+on the NPM side.
+
 ## 4. First login
 
 Default bootstrap account: **`admin` / `mradio`** (or whatever you set via
@@ -214,7 +220,7 @@ assumes either way.
 
 Everything persistent lives under the `/data` volume:
 
-- `mradio.db` — SQLite: accounts, sessions.
+- `mradio.db` — SQLite: accounts, sessions, and play history (§9).
 - `settings.json` — the AI provider credentials above.
 - `cache.json` — the shared AI liner-notes cache (author/track → trivia),
   shared across all accounts on purpose.
@@ -235,3 +241,31 @@ docker compose up -d
 
 Rebuilds the image with the latest code and restarts the container. No
 database migration step exists yet — the schema is additive so far.
+Rebuilding also refreshes the geolocation database used by Analytics
+(§9) — there's no separate scheduled update for it, since it's just a
+downloaded data file, not a version pin to review.
+
+## 9. Analytics
+
+Admin-only page (user menu → Analytics) — live sessions, a world map of
+listeners, top stations/genres/listeners, and full play history. Nothing
+to configure; it works automatically once the reverse-proxy header
+trust from §3 is in place.
+
+**The map needs real IPs to show anything.** Every play session records
+the listener's IP and resolves it to an approximate city/country via a
+local GeoLite2-City database (downloaded automatically at image build
+time — no account or API key needed, nothing calls out to a third-party
+geolocation service at runtime). Two cases correctly show no location,
+not an error:
+
+- Connections from your own LAN or over Tailscale — there's no
+  meaningful public location for traffic that never left the local
+  network, same as any self-hosted analytics/monitoring tool.
+- If §3's proxy-header trust isn't set up correctly, every session will
+  look like it's coming from the reverse proxy's own address instead of
+  the real visitor — check `docker logs` for the IP recorded against a
+  known remote session if the map looks empty when it shouldn't be.
+
+Play history and stats have no such limitation — they work regardless of
+where a listener connects from.

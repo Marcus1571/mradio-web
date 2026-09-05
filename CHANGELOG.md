@@ -1,5 +1,55 @@
 # Changelog
 
+## [0.3.0] - 2026-09-05
+
+New admin-only **Analytics** page (user menu → Analytics) — live sessions,
+a world map of listeners, top stations/genres/listeners, and a full play
+history. Loosely inspired by Tracearr, scoped down to this app's actual
+size (a handful of accounts, one SQLite file) rather than adopting its
+full multi-service stack.
+
+- **Live now**: who's listening, to what, and from where, refreshed every
+  5 seconds — served entirely from memory, no database round-trip.
+- **Listener map**: a Leaflet + OpenStreetMap world map, one marker per
+  city, sized by play count. Uses each listener's real IP (captured via
+  the reverse proxy's `X-Forwarded-For` header, now correctly trusted —
+  see below) resolved against a local, self-hosted GeoLite2-City
+  database. Connections from a LAN/Tailscale address correctly show no
+  location, same as any self-hosted geolocation tool — there's no
+  meaningful "location" for traffic that never left the local network.
+- **Stats**: top 5 stations/genres/listeners by play count and total
+  listening time, plus a 7-day/30-day/all-time sessions-per-day trend —
+  all hand-rolled SVG, no charting library added.
+- **History**: every play session ever recorded (station, genre, user,
+  start/end time, approximate location), paginated.
+- New `play_history` SQLite table, one row per stream connection, written
+  by the existing stream proxy's connect/disconnect lifecycle — no new
+  hook points needed, it already had a clean `try/finally` around every
+  connection.
+- **Real bug found and fixed along the way**: the proxy's per-connection
+  cleanup (which now also closes out the history row) could silently get
+  cut short when a client disconnected abruptly, because `await` inside
+  an async generator's `finally` block isn't reliably run to completion
+  once the generator itself is being torn down via cancellation — caught
+  via a live Playwright test that found `ended_at` sometimes left `NULL`.
+  Fixed by shielding the cleanup in its own task
+  (`asyncio.shield(asyncio.create_task(...))`), which also fixes a
+  latent, lower-stakes version of the same issue for the stream's own
+  httpx client cleanup that predates this feature.
+- **Also fixed**: genre was being re-guessed from the station's name on
+  every play (a ~35% misclassification rate against the curated station
+  list — e.g. "WQXR" has no genre keyword in its name, so it was
+  recorded as "other" instead of "classical"), even though the frontend
+  already knows the correct genre for every favorite/curated station.
+  The player now sends the real genre through; the name-based guess is
+  now only a fallback for arbitrary custom stream URLs. The same
+  hardcoded `'other'` gap existed in the page-reload auto-resume path
+  (`config.last_genre` is now persisted and used there too).
+- **Prerequisite infra fix**: `uvicorn` now runs with `--proxy-headers
+  --forwarded-allow-ips=*`, so `request.client.host` reflects the real
+  visitor's IP behind Nginx Proxy Manager instead of NPM's internal
+  Docker IP — required for the map to show anything real at all.
+
 ## [0.2.4] - 2026-09-05
 
 Two more fixes found testing 0.2.3 against the real production NIM key:

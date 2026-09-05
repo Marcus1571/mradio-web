@@ -383,6 +383,93 @@ point is validating real credentials — test it against a real,
 already-configured value too**, which is what surfaced the NIM timeout
 bug in the first place.
 
+## Admin analytics dashboard (added 2026-09-05, 0.3.0)
+
+Loosely inspired by Tracearr (a Plex/Jellyfin/Emby monitoring tool) but
+deliberately scoped down — took the *idea* (live sessions, map, stats,
+history), none of the stack (no TimescaleDB/Redis/Fastify, no React
+Native, no account-sharing detection — that solves a different problem
+this app doesn't have).
+
+**New `play_history` SQLite table** (`db.py`'s `SCHEMA`, same
+`CREATE TABLE IF NOT EXISTS` pattern as everything else, no migration
+framework) — one row per stream connection: user, station, genre,
+start/end time, IP, and resolved city/country/lat/lon. Written by
+`routers/stream.py` at the exact same two points it already logs
+connect/disconnect — no new hook points needed.
+
+**Real bug found via a live Playwright test, not code review**: the
+history-end write (an `await` inside the stream proxy's `body()`
+generator's `finally` block) could silently get cut short on an abrupt
+client disconnect. Root cause: an async generator's `finally` block
+isn't guaranteed to run its `await`s to completion once the generator is
+being closed via cancellation/`GeneratorExit` — a well-documented Python
+asyncio gotcha, confirmed by testing the exact disconnect path
+(clean Stop-button click vs. abrupt browser-context close) 6+ times each
+and finding `ended_at` left `NULL` specifically on abrupt disconnects.
+Fixed by wrapping the whole cleanup sequence (`history.end_session`,
+`nowplaying.session_ended`, the pre-existing `upstream.aclose()`/
+`client.aclose()`) in `asyncio.shield(asyncio.create_task(cleanup()))` —
+the standard fix for exactly this pattern. This also silently fixes a
+lower-stakes version of the same bug that predates this feature (the
+httpx client cleanup could theoretically get cut short the same way).
+
+**Real bug found via manual verification, not assumption**: genre was
+being re-guessed from the station's *name* via the existing
+`stations.genre_of()` heuristic on every single play — checked this
+against the full 94-station curated list and found a **35% mismatch
+rate** (e.g. "WQXR" → guessed "other", real genre "classical", since the
+name has no genre keyword). The frontend already knows every curated/
+favorite station's real genre; it just wasn't sending it. Fixed by
+threading `station.genre` through as a new `?genre=` query param on
+`/api/stream` (backend validates it's a real `stations.GENRES` value,
+falling back to the name heuristic only when absent — the actual
+fallback path for arbitrary custom stream URLs, which have no assigned
+genre otherwise). Also fixed the same hardcoded `'other'` in
+`Dashboard.tsx`'s page-reload auto-resume path — `config.last_genre` is
+now a real persisted field, following the exact same pattern as the
+pre-existing `last_url`/`last_name`.
+
+**Geolocation** (`backend/app/geoip.py`, new): a local GeoLite2-City
+`.mmdb` file (downloaded at Docker build time from a redistribution
+mirror — `github.com/P3TERX/GeoLite.mmdb`, MIT-licensed repackaging of
+MaxMind's CC-BY-SA data, no MaxMind account/API key needed — refreshed
+whenever the image is rebuilt, no separate scheduled workflow for v1).
+Private/loopback/link-local IPs correctly resolve to no location. One
+gap caught independently (not incidental): Python's `ipaddress` module
+does **not** flag Tailscale's CGNAT range (`100.64.0.0/10`, RFC 6598) as
+private — without an explicit check it would silently fall through to a
+real GeoLite2 lookup that happens to return nothing today, but for the
+wrong reason. This app is reached over Tailscale (see
+[[infra_landscape]]), so this is a realistic path, not a hypothetical —
+`geoip.py` explicitly excludes this range now.
+
+**Prerequisite fix, easy to miss**: the app runs behind Nginx Proxy
+Manager, and `uvicorn` was started with no `--proxy-headers` flag — so
+`request.client.host` reflected NPM's internal Docker IP for literally
+every visitor, not their real IP. Without this fix the whole map feature
+would have shipped silently broken (every session showing NPM's own
+address, or nothing, depending on whether that IP happens to be
+private). Fixed by adding `--proxy-headers --forwarded-allow-ips=*` to
+the Dockerfile's `CMD` — safe here since NPM and the app share the same
+Docker host per `KB.md`'s documented deployment, not behind an untrusted
+public load balancer.
+
+Frontend: new `AnalyticsPage.tsx`, following `UsersPage.tsx`'s exact
+conventions (`{ t }` prop, `admin.css` classes, `.pill` reuse). Map via
+`leaflet` + `react-leaflet` (the one deliberate exception to this app's
+zero-UI-dependency posture so far — no reasonable hand-rolled substitute
+for an actual map). Stats charts are hand-rolled inline SVG (bar lists +
+a sparkline polyline) — no charting library, keeping that exception
+narrow and intentional. New `Page` union member `'analytics'`, nav entry
+in `TopBar.tsx`'s admin section next to "AI providers."
+
+Verified live end-to-end via Playwright in both themes and both
+languages (not just build/lint) per the standing lesson from 0.2.2/0.2.3
+— screenshotted the actual rendered map (real pins for New York/
+Amsterdam/Zurich/London from seeded test data), stats bars, sparkline,
+and paginated history table, in dark, light, English, and Spanish.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

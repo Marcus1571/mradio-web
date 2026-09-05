@@ -24,6 +24,9 @@ still work from an HTTPS page.
 - **Multiple accounts**, each with their own favorites and provider
   choice — admin-created, no public sign-up, matching a small
   self-hosted deployment for family/friends rather than a public service.
+- **Admin analytics dashboard** — who's listening right now and from
+  where (a live world map), plus full play history and stats on the most
+  popular stations, genres, and listeners.
 
 ## Stack
 
