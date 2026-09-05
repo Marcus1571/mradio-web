@@ -240,18 +240,27 @@ were reviewed and left alone on purpose, not overlooked.
     section never got the same setup walkthrough NIM's had, despite being
     asked before — added, see same section below.
 
-**Separately noticed while investigating (not a code bug):** the
-Ollama provider is failing on every call in production
-(`POST http://192.168.88.8:11434/api/generate` → 404) — direct testing
-confirms the configured model `gemma3:4b` isn't pulled on that Ollama
-instance at all (`gemma3:4b` was mradio-web's stale default, copied from
-the original terminal app's docs). Models actually available there:
-`gemma4:e4b-it-qat`, `qwen3.5:9b`, `phi4-reasoning:plus`,
-`phi4-mini:latest`, `translategemma:12b`. This silently falls back to
-opencode every time (visible in logs as the `127.0.0.1:4096` opencode
-calls right after each failed Ollama call) — not broken, just wasteful.
-Fix is a one-line change in the AI providers settings page (pick one of
-the models actually pulled), not a code change.
+**Fixed 2026-09-05 (production data, not a code change):** the Ollama
+provider was failing on every call in production
+(`POST http://192.168.88.8:11434/api/generate` → 404) because the
+configured model `gemma3:4b` was never pulled on that Ollama instance
+(stale default, copied from the original terminal app's docs) — silently
+falling back to opencode every time (visible in logs as the
+`127.0.0.1:4096` opencode calls right after each failed Ollama call).
+Caught by the new Test-connection feature (0.2.2+): "Server reachable,
+but model \"gemma3:4b\" is not pulled there." Confirmed available models
+on that instance: `gemma4:e4b-it-qat`, `qwen3.5:9b`, `phi4-reasoning:plus`,
+`phi4-mini:latest`, `translategemma:12b`. Verified `gemma4:e4b-it-qat`
+(closest match to the stale default's size/family) returns clean,
+unwrapped JSON for this app's exact prompt shape, then updated the saved
+`ollama_model` setting to it via `settings.save()` directly (same
+function the admin API itself calls) — not a code default change, since
+`_DEFAULTS["ollama_model"]` in `settings.py` only seeds brand-new
+installs and wouldn't have touched the already-persisted `settings.json`
+on LT. Test-connection now reports Ollama as `True, "Connected."`.
+`_DEFAULTS` itself is left as `gemma3:4b` deliberately — that's still
+correct as a generic fresh-install default; it just needs pulling before
+use, same as any Ollama model does.
 
 ## Language support (added 2026-09-05, 0.2.0 + 0.2.1) — fully done
 
