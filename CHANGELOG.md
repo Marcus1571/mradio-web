@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.1.2] - 2026-09-05
 
 Four small UI/UX bugs found reviewing the live 0.1.1 deployment against the
 original design mockup:
