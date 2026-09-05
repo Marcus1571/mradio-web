@@ -77,6 +77,10 @@ export function AISettingsPage() {
 
           <div className="settings-group">
             <h2>OpenAI-compatible (NIM, etc.)</h2>
+            <p className="admin-note">
+              New to NIM? See "Getting an API key" under NVIDIA NIM in the project's KB.md for how to get a
+              free API key.
+            </p>
             <div className="settings-row">
               <label htmlFor="api_base">API base URL</label>
               <input id="api_base" value={settings.api_base} onChange={(e) => field('api_base', e.target.value)} />

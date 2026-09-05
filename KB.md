@@ -148,14 +148,32 @@ auto-merges or pushes a new image anywhere by itself.
 
 ### NVIDIA NIM (OpenAI-compatible)
 
-- **API base URL**: your NIM endpoint — typically
-  `https://integrate.api.nvidia.com/v1`, but check the exact value on your
-  build.nvidia.com API settings page rather than trusting that blindly.
-- **Model**: the NIM model id you want (e.g. one of the Llama/Mixtral
-  models NVIDIA hosts).
-- **API key**: paste the key from `build.nvidia.com/settings/api-keys`
-  (starts with `nvapi-`, same as mradio's own key format). Stored server
-  side; the settings page only ever shows it redacted after saving.
+**Getting an API key:**
+
+1. Create an account at [build.nvidia.com](https://build.nvidia.com) (email
+   + password).
+2. Add and verify a phone number — required before NVIDIA will issue API
+   keys.
+3. Go to
+   [build.nvidia.com/settings/api-keys](https://build.nvidia.com/settings/api-keys),
+   click **Generate Key**, and copy the `nvapi-...` value.
+4. Paste it into mradio-web's **AI providers** page (user menu → AI
+   providers, admin only) in the API key field, then **Save**.
+
+**Fields:**
+
+- **API base URL**: defaults to `https://integrate.api.nvidia.com/v1` on a
+  fresh install — NVIDIA's hosted NIM endpoint. Double-check the exact
+  value on your build.nvidia.com API settings page if it's ever changed on
+  their end, rather than trusting this blindly.
+- **Model**: defaults to `minimaxai/minimax-m3` on a fresh install — the
+  only free NIM model that reliably returns clean, strict JSON matching
+  this app's liner-notes schema (same reasoning as the original mradio
+  terminal app). The NIM catalogue changes often; other free models may
+  appear or disappear, or you can point this at any other model you have
+  access to.
+- **API key**: paste the key from step 3 above. Stored server side; the
+  settings page only ever shows it redacted after saving.
 
 ### Ollama
 
