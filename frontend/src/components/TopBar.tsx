@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
+import { LANGUAGES } from '../i18n'
+import type { Language, TFunction } from '../i18n'
 import { ChevronDownIcon, MoonIcon, SunIcon } from './Icons'
 
 export type Page = 'dashboard' | 'users' | 'ai-settings' | 'change-password'
@@ -9,15 +11,23 @@ export function TopBar({
   onToggleTheme,
   page,
   onNavigate,
+  language,
+  onChangeLanguage,
+  t,
 }: {
   theme: 'dark' | 'light'
   onToggleTheme: () => void
   page: Page
   onNavigate: (page: Page) => void
+  language: Language
+  onChangeLanguage: (l: Language) => void
+  t: TFunction
 }) {
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
+  const [langOpen, setLangOpen] = useState(false)
+  const langRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!menuOpen) return
@@ -28,7 +38,17 @@ export function TopBar({
     return () => document.removeEventListener('mousedown', onClick)
   }, [menuOpen])
 
+  useEffect(() => {
+    if (!langOpen) return
+    function onClick(e: MouseEvent) {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [langOpen])
+
   const initials = (user?.username ?? '?').slice(0, 2).toUpperCase()
+  const currentLanguage = LANGUAGES.find((l) => l.code === language) ?? LANGUAGES[0]
 
   return (
     <div className="topbar">
@@ -37,18 +57,41 @@ export function TopBar({
         <span className="brand-sub">dial&nbsp;room</span>
       </button>
       <div className="topbar-right">
+        <div className="dropdown-picker" ref={langRef}>
+          <button className="dropdown-chip" type="button" onClick={() => setLangOpen((v) => !v)}>
+            {currentLanguage.flag} {currentLanguage.label}
+            <ChevronDownIcon />
+          </button>
+          {langOpen && (
+            <div className="dropdown-menu">
+              {LANGUAGES.map((l) => (
+                <button
+                  key={l.code}
+                  className={`dropdown-option ${l.code === language ? 'active' : ''}`}
+                  type="button"
+                  onClick={() => {
+                    onChangeLanguage(l.code)
+                    setLangOpen(false)
+                  }}
+                >
+                  <span>{l.flag} {l.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <span className="app-version">v{__APP_VERSION__}</span>
         {page !== 'dashboard' && (
           <button className="text-btn" type="button" onClick={() => onNavigate('dashboard')}>
-            Back to player
+            {t('topbar.backToPlayer')}
           </button>
         )}
         <button
           className="icon-btn"
           type="button"
           onClick={onToggleTheme}
-          aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-          title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          aria-label={theme === 'dark' ? t('topbar.switchToLight') : t('topbar.switchToDark')}
+          title={theme === 'dark' ? t('topbar.switchToLight') : t('topbar.switchToDark')}
         >
           {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
         </button>
@@ -63,20 +106,20 @@ export function TopBar({
               {user?.is_admin && (
                 <>
                   <button type="button" onClick={() => { onNavigate('users'); setMenuOpen(false) }}>
-                    Users
+                    {t('topbar.users')}
                   </button>
                   <button type="button" onClick={() => { onNavigate('ai-settings'); setMenuOpen(false) }}>
-                    AI providers
+                    {t('topbar.aiProviders')}
                   </button>
                   <hr />
                 </>
               )}
               <button type="button" onClick={() => { onNavigate('change-password'); setMenuOpen(false) }}>
-                Change password
+                {t('topbar.changePassword')}
               </button>
               <hr />
               <button className="danger" type="button" onClick={() => void logout()}>
-                Sign out
+                {t('topbar.signOut')}
               </button>
             </div>
           )}

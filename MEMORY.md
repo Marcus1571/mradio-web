@@ -246,6 +246,37 @@ calls right after each failed Ollama call) — not broken, just wasteful.
 Fix is a one-line change in the AI providers settings page (pick one of
 the models actually pulled), not a code change.
 
+## Language support (added 2026-09-05, 0.2.0)
+
+UI language (English/Spanish, top-bar dropdown) is done —
+`frontend/src/i18n/` (hand-rolled `en.ts`/`es.ts`/`index.ts`, no library,
+`Dict` type widening so Spanish only has to match English's key shape,
+not its exact text). `Dashboard.tsx` owns `language` state exactly like
+`theme`, passes a bound `t()` down as a prop to every consumer — no
+React Context, matching this codebase's existing "no abstraction until
+needed" style. Persists via `PATCH /api/config`'s new `language` field.
+
+**Deliberate scope cut**: `LoginScreen.tsx` and the *forced* first-login
+`ChangePasswordScreen` (rendered pre-auth in `App.tsx`, as siblings of
+`Dashboard` — not children) stay English-only. There is no account
+identity yet at that point to look up a saved preference for, and
+(explicit decision, not an oversight) no `localStorage` fallback either
+— keeping it simple. `ChangePasswordScreen` reached *voluntarily* from
+the Dashboard's user menu is a normal translated page; only the pre-auth
+render path is the exception.
+
+**Not yet done**: AI liner notes are still English-only regardless of
+the UI language — the enrichment prompt (`enricher.py`'s
+`_PROMPT_TEMPLATE`) has no language instruction yet, and the cache key
+(`cache.py`, currently `provider::raw_title`) has no language dimension,
+so a language-aware cache is a prerequisite (two users on different
+languages listening to the same track would otherwise collide on one
+cached blurb). This is the next piece of work — same session's plan
+already designed it (mirror `theme`'s pattern for `Enricher.language`,
+not `provider`'s activate-endpoint pattern; reuse the existing
+`reenrich` WS message to re-ask the current track's liner notes
+immediately on language switch, don't wait for the next track).
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

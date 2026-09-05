@@ -3,9 +3,10 @@ import type { FormEvent } from 'react'
 import { ApiError, api } from '../api/client'
 import type { User } from '../api/types'
 import { useAuth } from '../hooks/useAuth'
+import type { TFunction } from '../i18n'
 import '../styles/admin.css'
 
-export function UsersPage() {
+export function UsersPage({ t }: { t: TFunction }) {
   const { user: me } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -36,7 +37,7 @@ export function UsersPage() {
       setIsAdmin(false)
       await refresh()
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not create user.')
+      setError(err instanceof ApiError ? err.message : t('users.errorFallback'))
     } finally {
       setBusy(false)
     }
@@ -53,18 +54,18 @@ export function UsersPage() {
   }
 
   async function resetPassword(u: User) {
-    const next = window.prompt(`New temporary password for ${u.username} (min 8 characters):`)
+    const next = window.prompt(t('users.resetPasswordPrompt', { username: u.username }))
     if (!next) return
     if (next.length < 8) {
-      window.alert('Password must be at least 8 characters.')
+      window.alert(t('users.resetPasswordTooShort'))
       return
     }
     await api.patch(`/api/users/${u.id}`, { password: next })
-    window.alert(`Password reset. They'll be asked to set their own on next sign-in.`)
+    window.alert(t('users.resetPasswordDone'))
   }
 
   async function deleteUser(u: User) {
-    if (!window.confirm(`Delete ${u.username}? This cannot be undone.`)) return
+    if (!window.confirm(t('users.deleteConfirm', { username: u.username }))) return
     await api.del(`/api/users/${u.id}`)
     await refresh()
   }
@@ -72,8 +73,8 @@ export function UsersPage() {
   return (
     <div className="admin-page">
       <div className="admin-header">
-        <h1>Users</h1>
-        <p>Accounts are created here — there's no public sign-up.</p>
+        <h1>{t('users.title')}</h1>
+        <p>{t('users.subtitle')}</p>
       </div>
 
       <div className="admin-panel">
@@ -81,9 +82,9 @@ export function UsersPage() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Username</th>
-                <th>Status</th>
-                <th>Created</th>
+                <th>{t('users.colUsername')}</th>
+                <th>{t('users.colStatus')}</th>
+                <th>{t('users.colCreated')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -92,21 +93,21 @@ export function UsersPage() {
                 <tr key={u.id}>
                   <td>{u.username}</td>
                   <td>
-                    {u.is_admin && <span className="pill admin">admin</span>}{' '}
-                    {u.disabled && <span className="pill disabled">disabled</span>}
-                    {u.must_change_password && <span className="pill">password pending</span>}
+                    {u.is_admin && <span className="pill admin">{t('users.pillAdmin')}</span>}{' '}
+                    {u.disabled && <span className="pill disabled">{t('users.pillDisabled')}</span>}
+                    {u.must_change_password && <span className="pill">{t('users.pillPasswordPending')}</span>}
                   </td>
                   <td>{new Date(u.created_at).toLocaleDateString()}</td>
                   <td>
                     <div className="row-actions">
                       <button type="button" onClick={() => void toggleAdmin(u)} disabled={u.id === me?.id}>
-                        {u.is_admin ? 'Remove admin' : 'Make admin'}
+                        {u.is_admin ? t('users.removeAdmin') : t('users.makeAdmin')}
                       </button>
                       <button type="button" onClick={() => void toggleDisabled(u)} disabled={u.id === me?.id}>
-                        {u.disabled ? 'Enable' : 'Disable'}
+                        {u.disabled ? t('users.enable') : t('users.disable')}
                       </button>
                       <button type="button" onClick={() => void resetPassword(u)}>
-                        Reset password
+                        {t('users.resetPassword')}
                       </button>
                       <button
                         className="danger"
@@ -114,7 +115,7 @@ export function UsersPage() {
                         onClick={() => void deleteUser(u)}
                         disabled={u.id === me?.id}
                       >
-                        Delete
+                        {t('users.delete')}
                       </button>
                     </div>
                   </td>
@@ -126,11 +127,11 @@ export function UsersPage() {
 
         <form className="admin-form" onSubmit={onCreate}>
           <label className="field">
-            <span>Username</span>
+            <span>{t('users.fieldUsername')}</span>
             <input value={username} onChange={(e) => setUsername(e.target.value)} required />
           </label>
           <label className="field">
-            <span>Temporary password</span>
+            <span>{t('users.fieldTempPassword')}</span>
             <input
               type="text"
               value={password}
@@ -141,15 +142,15 @@ export function UsersPage() {
           </label>
           <label className="checkbox">
             <input type="checkbox" checked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)} />
-            Admin
+            {t('users.fieldAdmin')}
           </label>
           <button className="admin-submit" type="submit" disabled={busy}>
-            {busy ? 'Adding…' : 'Add user'}
+            {busy ? t('users.adding') : t('users.addUser')}
           </button>
         </form>
         {error && <p className="admin-note" style={{ padding: '0 1rem 1rem', color: 'var(--danger)' }}>{error}</p>}
         <p className="admin-note" style={{ padding: '0 1rem 1rem' }}>
-          New accounts must change this password on first sign-in.
+          {t('users.footerNote')}
         </p>
       </div>
     </div>

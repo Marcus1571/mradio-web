@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Station } from '../api/types'
+import type { TFunction } from '../i18n'
 import type { PlayerState } from '../hooks/usePlayer'
 import { useProviders } from '../hooks/useProviders'
 import { formatCache, formatElapsed, formatKHz, formatKbps } from '../utils/format'
@@ -28,6 +29,7 @@ export function NowPlayingPanel({
   setVolume,
   toggleMute,
   reenrich,
+  t,
 }: {
   state: PlayerState
   play: (station: Station) => void
@@ -36,6 +38,7 @@ export function NowPlayingPanel({
   setVolume: (v: number) => void
   toggleMute: () => void
   reenrich: () => void
+  t: TFunction
 }) {
   const { providers, active, activate } = useProviders()
   const [providerOpen, setProviderOpen] = useState(false)
@@ -55,22 +58,22 @@ export function NowPlayingPanel({
   const hasTrack = state.rawTitle !== ''
 
   return (
-    <section className="panel now-playing" aria-label="Now playing">
+    <section className="panel now-playing" aria-label={t('nowPlaying.ariaLabel')}>
       <div className="panel-head">
         <div className="station-strip">
           {hasStation && <span className="live-dot" aria-hidden="true" />}
-          <span className="station-name-strong">{hasStation ? state.stationName : 'Nothing playing'}</span>
+          <span className="station-name-strong">{hasStation ? state.stationName : t('nowPlaying.nothingPlaying')}</span>
         </div>
       </div>
 
       <div className="np-body">
-        {!hasStation && <p className="np-empty">Pick a station from favorites or genres to start listening.</p>}
+        {!hasStation && <p className="np-empty">{t('nowPlaying.pickStation')}</p>}
 
         {hasStation && state.status === 'stopped' && (
-          <p className="np-empty">Stopped — press play to reconnect.</p>
+          <p className="np-empty">{t('nowPlaying.stopped')}</p>
         )}
 
-        {hasStation && state.status === 'playing' && !hasTrack && <p className="np-empty">Connecting…</p>}
+        {hasStation && state.status === 'playing' && !hasTrack && <p className="np-empty">{t('nowPlaying.connecting')}</p>}
 
         {hasTrack && state.status === 'playing' && (
           <>
@@ -89,13 +92,13 @@ export function NowPlayingPanel({
 
             <div className="trivia-label">
               <SparkleIcon />
-              Liner notes
+              {t('nowPlaying.linerNotes')}
             </div>
 
-            {state.enriching && !state.enrichment && <p className="trivia-placeholder">Asking the AI provider…</p>}
+            {state.enriching && !state.enrichment && <p className="trivia-placeholder">{t('nowPlaying.askingProvider')}</p>}
 
             {!state.enriching && !state.enrichment && (
-              <p className="trivia-placeholder">No liner notes for this track.</p>
+              <p className="trivia-placeholder">{t('nowPlaying.noLinerNotes')}</p>
             )}
 
             {state.enrichment && (
@@ -104,7 +107,7 @@ export function NowPlayingPanel({
                 <div className="trivia-actions">
                   {state.enrichment.trivia.length > 280 && (
                     <button className="text-btn" type="button" onClick={() => setTriviaExpanded((v) => !v)}>
-                      {triviaExpanded ? 'Show less' : 'Show more'}
+                      {triviaExpanded ? t('nowPlaying.showLess') : t('nowPlaying.showMore')}
                     </button>
                   )}
                   {state.enrichment.wiki && (
@@ -114,13 +117,13 @@ export function NowPlayingPanel({
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Read on Wikipedia
+                      {t('nowPlaying.readOnWikipedia')}
                       <ExternalLinkIcon />
                     </a>
                   )}
                   <button className="text-btn" type="button" onClick={reenrich} disabled={state.enriching}>
                     <RefreshIcon />
-                    Re-ask AI
+                    {t('nowPlaying.reAskAi')}
                   </button>
                 </div>
               </>
@@ -135,7 +138,7 @@ export function NowPlayingPanel({
           type="button"
           onClick={state.status === 'playing' ? stop : () => state.station && play(state.station)}
           disabled={!hasStation}
-          aria-label={state.status === 'playing' ? 'Stop' : 'Play'}
+          aria-label={state.status === 'playing' ? t('nowPlaying.stop') : t('nowPlaying.play')}
         >
           {state.status === 'playing' ? <StopIcon /> : <PlayIcon />}
         </button>
@@ -145,8 +148,8 @@ export function NowPlayingPanel({
           type="button"
           onClick={reconnect}
           disabled={!hasStation}
-          aria-label="Reconnect"
-          title="Reconnect"
+          aria-label={t('nowPlaying.reconnect')}
+          title={t('nowPlaying.reconnect')}
         >
           <RefreshIcon />
         </button>
@@ -156,7 +159,7 @@ export function NowPlayingPanel({
             className={`mute-btn ${state.muted ? 'active' : ''}`}
             type="button"
             onClick={toggleMute}
-            aria-label={state.muted ? 'Unmute' : 'Mute'}
+            aria-label={state.muted ? t('nowPlaying.unmute') : t('nowPlaying.mute')}
           >
             {state.muted ? <MuteIcon /> : <VolumeIcon />}
           </button>
@@ -167,22 +170,22 @@ export function NowPlayingPanel({
             max={100}
             value={state.volume}
             onChange={(e) => setVolume(Number(e.target.value))}
-            aria-label="Volume"
+            aria-label={t('nowPlaying.volume')}
           />
           <span className="vol-pct">{state.volume}%</span>
         </div>
 
-        <div className="provider-picker" ref={providerRef}>
-          <button className="provider-chip" type="button" onClick={() => setProviderOpen((v) => !v)}>
-            AI provider · <b>{_PROVIDER_LABEL[active] || 'none'}</b>
+        <div className="provider-picker dropdown-picker" ref={providerRef}>
+          <button className="dropdown-chip" type="button" onClick={() => setProviderOpen((v) => !v)}>
+            {t('nowPlaying.aiProvider')} · <b>{_PROVIDER_LABEL[active] || t('nowPlaying.none')}</b>
             <ChevronDownIcon />
           </button>
           {providerOpen && (
-            <div className="provider-dropdown">
+            <div className="dropdown-menu dropdown-menu--up">
               {providers.map((p) => (
                 <button
                   key={p.name}
-                  className={`provider-option ${p.name === active ? 'active' : ''}`}
+                  className={`dropdown-option ${p.name === active ? 'active' : ''}`}
                   type="button"
                   disabled={!p.enabled}
                   onClick={() => {
@@ -191,7 +194,7 @@ export function NowPlayingPanel({
                   }}
                 >
                   <span>{_PROVIDER_LABEL[p.name]}</span>
-                  {!p.enabled && <span>not configured</span>}
+                  {!p.enabled && <span>{t('nowPlaying.notConfigured')}</span>}
                 </button>
               ))}
             </div>

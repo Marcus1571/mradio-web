@@ -3,14 +3,17 @@ import type { FormEvent, MouseEvent } from 'react'
 import { useFavorites } from '../hooks/useFavorites'
 import { useGenres } from '../hooks/useGenres'
 import type { Station } from '../api/types'
+import type { TFunction } from '../i18n'
 import { MoveIcon, StarIcon, TrashIcon } from './Icons'
 
 export function StationBrowserPanel({
   currentUrl,
   onPlay,
+  t,
 }: {
   currentUrl: string | null
   onPlay: (station: Station) => void
+  t: TFunction
 }) {
   const [tab, setTab] = useState<'favorites' | 'genres'>('favorites')
   const { favorites, add, remove, move } = useFavorites()
@@ -47,7 +50,7 @@ export function StationBrowserPanel({
 
   async function onDelete(e: MouseEvent, url: string) {
     e.stopPropagation()
-    if (!window.confirm('Remove this favorite?')) return
+    if (!window.confirm(t('stationBrowser.removeFavoriteConfirm'))) return
     await remove(url)
     setMarked(null)
   }
@@ -56,20 +59,20 @@ export function StationBrowserPanel({
     e.preventDefault()
     const url = addUrl.trim()
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      flash('Must be a valid http(s) stream URL.', true)
+      flash(t('stationBrowser.invalidUrl'), true)
       return
     }
     setAddBusy(true)
     try {
       const host = new URL(url).host
       const added = await add(url, host)
-      flash(added ? 'Added to favorites.' : 'Already a favorite, or no free slots.', !added)
+      flash(added ? t('stationBrowser.addedToFavorites') : t('stationBrowser.alreadyFavoriteOrFull'), !added)
       if (added) {
         onPlay({ name: host, url, genre: 'other' })
         setAddUrl('')
       }
     } catch {
-      flash('Could not add that URL.', true)
+      flash(t('stationBrowser.couldNotAddUrl'), true)
     } finally {
       setAddBusy(false)
     }
@@ -78,26 +81,29 @@ export function StationBrowserPanel({
   async function onStar(station: Station) {
     const already = favorites.some((f) => f?.url === station.url)
     if (already) {
-      flash('Already a favorite.')
+      flash(t('stationBrowser.alreadyFavorite'))
       return
     }
     const added = await add(station.url, station.name)
-    flash(added ? `Added ${station.name} to favorites.` : 'No free slots — remove one first.', !added)
+    flash(
+      added ? t('stationBrowser.addedNamedToFavorites', { name: station.name }) : t('stationBrowser.noFreeSlots'),
+      !added,
+    )
   }
 
   return (
-    <aside className="panel" aria-label="Station browser">
+    <aside className="panel" aria-label={t('stationBrowser.title')}>
       <div className="panel-head">
         <div className="panel-title">
-          Your stations
-          <small>12 favorite slots</small>
+          {t('stationBrowser.title')}
+          <small>{t('stationBrowser.favoriteSlots')}</small>
         </div>
         <div className="browser-tabs">
           <button className={`tab ${tab === 'favorites' ? 'active' : ''}`} type="button" onClick={() => setTab('favorites')}>
-            Favorites
+            {t('stationBrowser.favorites')}
           </button>
           <button className={`tab ${tab === 'genres' ? 'active' : ''}`} type="button" onClick={() => setTab('genres')}>
-            Genres
+            {t('stationBrowser.genres')}
           </button>
         </div>
       </div>
@@ -113,7 +119,7 @@ export function StationBrowserPanel({
                 setMarked(null)
               }}
             >
-              {editing ? 'Done editing' : 'Edit favorites'}
+              {editing ? t('stationBrowser.doneEditing') : t('stationBrowser.editFavorites')}
             </button>
           </div>
 
@@ -124,7 +130,8 @@ export function StationBrowserPanel({
               if (fav === null) {
                 return (
                   <button key={i} className="fav-slot empty" type="button" onClick={() => onSlotClick(i, null)}>
-                    {i === 9 ? '0' : i + 1} — empty{editing && marked !== null ? ' · move here' : ''}
+                    {i === 9 ? '0' : i + 1} {t('stationBrowser.slotEmpty')}
+                    {editing && marked !== null ? t('stationBrowser.slotMoveHere') : ''}
                   </button>
                 )
               }
@@ -153,21 +160,19 @@ export function StationBrowserPanel({
 
           {editing && (
             <p className="edit-hint">
-              {marked === null
-                ? 'Tap a station to pick it up, then tap a slot to move it there.'
-                : 'Tap a slot to drop it there — tap the same slot again to cancel.'}
+              {marked === null ? t('stationBrowser.editHintPick') : t('stationBrowser.editHintDrop')}
             </p>
           )}
 
           <form className="add-stream-row" onSubmit={onAddStream}>
             <input
               type="url"
-              placeholder="Add a stream URL…"
+              placeholder={t('stationBrowser.addStreamPlaceholder')}
               value={addUrl}
               onChange={(e) => setAddUrl(e.target.value)}
             />
             <button type="submit" disabled={addBusy || !addUrl.trim()}>
-              {addBusy ? 'Adding…' : 'Add'}
+              {addBusy ? t('stationBrowser.adding') : t('stationBrowser.add')}
             </button>
           </form>
         </>
@@ -217,7 +222,10 @@ export function StationBrowserPanel({
             })}
           </div>
           <div className="panel-foot">
-            {genres.find((g) => g.genre === active)?.label} · {stations.length} stations · favorites shown first
+            {t('stationBrowser.footer', {
+              label: genres.find((g) => g.genre === active)?.label ?? '',
+              count: stations.length,
+            })}
           </div>
         </>
       )}

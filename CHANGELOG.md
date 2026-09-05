@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.2.0] - 2026-09-05
+
+Added a language switcher — English and Spanish, with a flag + language
+name dropdown in the top bar (left of the version number). Switching
+applies instantly across the whole UI, including admin pages (Users, AI
+providers) and dynamic dialogs (delete/reset-password confirmations),
+and persists per account.
+
+- New `frontend/src/i18n/` module: hand-rolled dictionary + `t()` lookup,
+  no library — English is the canonical key shape, Spanish is typed
+  against it so a missing translation key is a build-time TypeScript
+  error, not a silent runtime gap.
+- ~130 hardcoded strings extracted across every page/component.
+- The login screen and the forced first-time password-change screen stay
+  English-only — they render before any account is authenticated, so
+  there's no saved preference to read yet.
+- Backend: `PATCH /api/config` now accepts and persists a `language`
+  field, same pattern as the existing `theme` preference.
+- AI-generated liner notes are not yet translated — that's a separate,
+  upcoming change to the enrichment prompt/cache; today, switching
+  language only affects UI text.
+
 ## [0.1.10] - 2026-09-05
 
 Trimmed the top bar's padding and the dashboard's outer padding/gap so

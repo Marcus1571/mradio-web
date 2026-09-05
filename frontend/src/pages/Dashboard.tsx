@@ -7,6 +7,8 @@ import { TopBar } from '../components/TopBar'
 import type { Page } from '../components/TopBar'
 import { useInitialConfig } from '../hooks/useConfig'
 import { usePlayer } from '../hooks/usePlayer'
+import { useTranslation } from '../i18n'
+import type { Language } from '../i18n'
 import { ChangePasswordScreen } from './ChangePasswordScreen'
 import { AISettingsPage } from './AISettingsPage'
 import { UsersPage } from './UsersPage'
@@ -16,14 +18,18 @@ export function Dashboard() {
   const config = useInitialConfig()
   const player = usePlayer(config?.volume)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [language, setLanguageState] = useState<Language>('en')
   const [page, setPage] = useState<Page>('dashboard')
   const resumedRef = useRef(false)
+  const t = useTranslation(language)
 
   useEffect(() => {
     if (!config) return
-    const t = config.theme === 'light' ? 'light' : 'dark'
-    setTheme(t)
-    document.documentElement.setAttribute('data-theme', t)
+    const nextTheme = config.theme === 'light' ? 'light' : 'dark'
+    setTheme(nextTheme)
+    document.documentElement.setAttribute('data-theme', nextTheme)
+    const nextLanguage: Language = config.language === 'es' ? 'es' : 'en'
+    setLanguageState(nextLanguage)
     if (config.mute) player.toggleMute()
     if (!resumedRef.current && config.last_url) {
       resumedRef.current = true
@@ -39,13 +45,26 @@ export function Dashboard() {
     void api.patch('/api/config', { theme: next })
   }
 
+  function setLanguage(next: Language) {
+    setLanguageState(next)
+    void api.patch('/api/config', { language: next })
+  }
+
   function onPlay(station: Station) {
     player.play(station)
   }
 
   return (
     <div>
-      <TopBar theme={theme} onToggleTheme={toggleTheme} page={page} onNavigate={setPage} />
+      <TopBar
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        page={page}
+        onNavigate={setPage}
+        language={language}
+        onChangeLanguage={setLanguage}
+        t={t}
+      />
       {page === 'dashboard' && (
         <div className="dashboard">
           <NowPlayingPanel
@@ -56,13 +75,14 @@ export function Dashboard() {
             setVolume={player.setVolume}
             toggleMute={player.toggleMute}
             reenrich={player.reenrich}
+            t={t}
           />
-          <StationBrowserPanel currentUrl={player.state.station?.url ?? null} onPlay={onPlay} />
+          <StationBrowserPanel currentUrl={player.state.station?.url ?? null} onPlay={onPlay} t={t} />
         </div>
       )}
-      {page === 'change-password' && <ChangePasswordScreen onDone={() => setPage('dashboard')} />}
-      {page === 'users' && <UsersPage />}
-      {page === 'ai-settings' && <AISettingsPage />}
+      {page === 'change-password' && <ChangePasswordScreen onDone={() => setPage('dashboard')} t={t} />}
+      {page === 'users' && <UsersPage t={t} />}
+      {page === 'ai-settings' && <AISettingsPage t={t} />}
     </div>
   )
 }

@@ -41,6 +41,7 @@ export interface Config {
   last_url?: string
   last_name?: string
   provider?: string
+  language?: 'en' | 'es'
 }
 
 export interface ProviderInfo {
