@@ -232,6 +232,13 @@ were reviewed and left alone on purpose, not overlooked.
     panel (metrics row, performer line, trivia actions, transport bar)
     and changed liner notes to default expanded instead of clamped —
     purely cosmetic, no behavior change.
+12. Fixed 2026-09-05 (0.2.2): three bugs from a review pass — (a) the
+    theme toggle icon showed the destination theme instead of the current
+    one, inverted back; (b) the AI providers page had no way to verify a
+    saved credential actually works short of waiting for a real track to
+    fail — see "AI provider connection test" below; (c) KB.md's Ollama
+    section never got the same setup walkthrough NIM's had, despite being
+    asked before — added, see same section below.
 
 **Separately noticed while investigating (not a code bug):** the
 Ollama provider is failing on every call in production
@@ -290,6 +297,41 @@ credential this session didn't have — every other link in the chain
 (prompt construction, cache isolation, config persistence, live
 Enricher sync, WS re-ask trigger) was confirmed working via direct
 tests and a live Playwright run against the real backend.
+
+## AI provider connection test (added 2026-09-05, 0.2.2)
+
+`POST /api/settings/ai/test?provider=<ollama|openai|opencode>` — new
+endpoint in `routers/settings.py`, takes an `AISettingsUpdate`-shaped body
+(reused as-is, no new request model), merges it on top of the
+currently-saved settings server-side, and dispatches to
+`providers.run_provider_test()`. This solves the redacted-API-key problem
+cleanly: the frontend only sends `api_key` when the admin actually
+retyped it this session (`apiKeyInput` non-empty), otherwise the merge
+falls back to the real saved key that only the backend ever holds.
+
+Three provider-specific test functions in `providers.py`
+(`_test_ollama`/`_test_openai`/`_test_opencode`), all with a fixed 5s
+timeout independent of the configured production timeouts (a test should
+fail fast, not hang for the real 75s/30s/180s enrichment budget):
+- Ollama: `GET /api/tags`, then checks the configured model is actually
+  in the returned list — a reachable server with the wrong model pulled
+  is reported as a failure, not a pass, since that's what actually
+  matters for enrichment to work.
+- OpenAI-compatible (NIM): a real chat-completion call with
+  `max_tokens=1`, exercising the exact code path `llm_openai` uses,
+  rather than a `/models` endpoint some OpenAI-compatible proxies don't
+  implement.
+- opencode: reuses the app's one shared `enricher._opencode`
+  `OpencodeSession` instance (imported lazily inside the function to
+  avoid a circular import — `enricher.py` already imports `providers` at
+  module level) rather than spawning a second subprocess.
+
+Frontend: one Test button + result pill per provider group in
+`AISettingsPage.tsx`, reusing the existing `.pill`/`.pill.admin`
+(success)/`.pill.disabled` (failure) classes already in `admin.css` —
+deliberately not a new color/badge system. Testing is independent of
+Save: it never persists anything, and uses whatever's currently typed in
+the form.
 
 ## Known unknowns
 

@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.2.2] - 2026-09-05
+
+Three small fixes from a review pass:
+
+- Fixed the dark/light theme toggle icon showing the *destination* theme
+  instead of the current one — it now reflects what the app currently
+  looks like, not what clicking it would change to.
+- Added a **Test** button to each AI provider group on the AI providers
+  page (Ollama, OpenAI-compatible/NIM, opencode). Clicking it makes a
+  real, lightweight, read-only call against that provider with whatever's
+  currently in the form — never against the saved value alone, and never
+  persists anything — and shows a pass/fail pill with the actual reason
+  on failure (unreachable server, missing model, bad key, etc.). New
+  backend endpoint: `POST /api/settings/ai/test?provider=<name>`.
+- KB.md's Ollama section was missing the install/setup walkthrough NIM's
+  already had — added a matching "Setting up Ollama" section (install,
+  pull a model, confirm reachability), and the AI providers page now
+  links to it the same way it already links to NIM's setup section.
+
 ## [0.2.1] - 2026-09-05
 
 AI liner notes now follow the UI language (0.2.0 only switched the UI
