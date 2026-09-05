@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.3.6] - 2026-09-06
+
+Fixed the saved volume being ignored on page reload — it always reset
+to the 70% default instead of restoring the level you'd actually set,
+even though the correct value was already saved server-side.
+
+Root cause: `usePlayer(config?.volume)` only uses that argument to seed
+React's `useState` on the very first render — but the saved config
+loads asynchronously (a separate `GET /api/config` after mount), so by
+the time it arrived, the 70% default had already been locked in and
+nothing re-applied the real value afterward. Theme, mute, and language
+were already being explicitly re-applied once config loaded; volume was
+the one field that wasn't. Fixed with a new `applySavedVolume()`,
+called alongside the existing theme/mute/language sync.
+
+Verified against a real production build (not just the dev server,
+which uses React StrictMode's double-effect-invocation in a way that
+briefly looked like it also broke mute-persistence — confirmed that was
+a dev-only artifact, not a real bug, by testing `vite preview` directly).
+
 ## [0.3.5] - 2026-09-06
 
 Added Portuguese as a fourth UI/AI language, alongside English,

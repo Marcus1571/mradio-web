@@ -631,6 +631,51 @@ closing "→ Open the Knowledge Base ←" link. See
 feature that gets its own KB.md section should also get a matching
 README link, going forward.
 
+## Saved volume ignored on reload (fixed 2026-09-06, 0.3.6)
+
+Reported directly by the user: volume always reset to 70% on page
+reload, even though the actual set level (e.g. 27%) was genuinely
+persisted server-side — confirmed via a direct `GET /api/config` check
+before reproducing anything in the UI.
+
+Root cause, found by reading `Dashboard.tsx`/`usePlayer.ts` together,
+not guessed: `Dashboard.tsx` calls `usePlayer(config?.volume)`, and
+`usePlayer`'s `useState({...INITIAL_STATE, volume: initialVolume ?? 70})`
+only ever reads that constructor argument on the component's *first*
+render. `useInitialConfig()` fetches `/api/config` inside a `useEffect`
+(async, after mount) — so on that critical first render, `config` is
+still `null`, `config?.volume` is `undefined`, and `70` gets locked in
+permanently. When the real config later arrives, nothing re-applies
+it — `theme`/`language`/`mute`/`last_url` are all explicitly re-synced
+once config loads (in `Dashboard.tsx`'s `useEffect(() => {...}, [config])`),
+volume was the one field that wasn't.
+
+Fixed with a new `usePlayer.ts` function, `applySavedVolume(volume)` —
+deliberately separate from the existing user-facing `setVolume()`
+(which always re-PATCHes `{volume, mute: false}`, and would have
+wrongly cleared a saved mute if reused here for the initial sync).
+`applySavedVolume` only sets `audio.volume`/`state.volume`, no network
+call, no mute side effect. Called from the same config-loaded effect
+in `Dashboard.tsx` right alongside the existing theme/mute/language
+syncs.
+
+**Investigation footnote, not a real bug**: while verifying this fix
+live, a mute-persistence test against the Vite *dev server*
+(`npm run dev`) briefly appeared to also break — mute would show as set
+right after clicking, then silently clear itself on reload. Traced to
+React 19's `StrictMode` (enabled in `main.tsx`) intentionally
+double-invoking effects with no cleanup function in development —
+`Dashboard.tsx`'s config-loaded effect calls `player.toggleMute()`
+directly (a non-idempotent toggle) with no cleanup, so StrictMode's dev
+double-invoke cancels it right back out. Confirmed via a real
+production build (`npm run build && npm run preview`, which doesn't
+double-invoke) that mute persistence is fine in what actually ships —
+this was purely a dev-server-only artifact of how the verification was
+done, not a shipped bug. Worth noting as a latent code-quality
+observation (an effect calling a non-idempotent toggle function is
+fragile against StrictMode/concurrent-rendering assumptions) but not
+worth "fixing" on its own since production behavior is already correct.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
