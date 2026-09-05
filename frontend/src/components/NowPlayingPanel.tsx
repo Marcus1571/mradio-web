@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Station } from '../api/types'
+import { api } from '../api/client'
+import type { Station, TriviaHistoryEntry } from '../api/types'
 import type { TFunction } from '../i18n'
-import type { PlayerState, TriviaHistoryEntry } from '../hooks/usePlayer'
+import type { PlayerState } from '../hooks/usePlayer'
 import { useProviders } from '../hooks/useProviders'
 import { formatCache, formatElapsed, formatKHz, formatKbps } from '../utils/format'
 import {
@@ -21,13 +22,21 @@ const _PROVIDER_LABEL: Record<string, string> = {
   openai: 'NIM',
 }
 
-function TriviaHistoryStrip({ history, t }: { history: TriviaHistoryEntry[]; t: TFunction }) {
-  const [expanded, setExpanded] = useState<string | null>(null)
+function TriviaHistoryStrip({ version, t }: { version: number; t: TFunction }) {
+  const [history, setHistory] = useState<TriviaHistoryEntry[]>([])
+  const [expanded, setExpanded] = useState<number | null>(null)
   const [showFullExpanded, setShowFullExpanded] = useState(false)
+
+  useEffect(() => {
+    api.get<TriviaHistoryEntry[]>('/api/enrich/trivia-history').then(setHistory)
+    // version bumps whenever a fresh enrichment lands (see usePlayer.ts) —
+    // this is a persisted-per-user list now (trivia_history.py), not
+    // client state, so a refetch is how a new entry shows up.
+  }, [version])
 
   if (history.length === 0) return null
 
-  const active = history.find((h) => h.rawTitle === expanded) ?? null
+  const active = history.find((h) => h.id === expanded) ?? null
 
   return (
     <div className="trivia-history">
@@ -38,32 +47,32 @@ function TriviaHistoryStrip({ history, t }: { history: TriviaHistoryEntry[]; t: 
       <div className="trivia-history-strip">
         {history.map((h) => (
           <button
-            key={h.rawTitle}
+            key={h.id}
             type="button"
-            className={`trivia-history-chip ${h.rawTitle === expanded ? 'active' : ''}`}
+            className={`trivia-history-chip ${h.id === expanded ? 'active' : ''}`}
             onClick={() => {
-              setExpanded((cur) => (cur === h.rawTitle ? null : h.rawTitle))
+              setExpanded((cur) => (cur === h.id ? null : h.id))
               setShowFullExpanded(false)
             }}
           >
-            <span className="trivia-history-chip-title">{h.title || h.rawTitle}</span>
-            <span className="trivia-history-chip-station">{h.stationName}</span>
+            <span className="trivia-history-chip-title">{h.title || h.raw_title}</span>
+            <span className="trivia-history-chip-station">{h.station_name}</span>
           </button>
         ))}
       </div>
       {active && (
         <div className="trivia-history-expanded">
           {active.artist && <p className="np-composer">{active.artist}</p>}
-          <p className="np-track-small">{active.title || active.rawTitle}</p>
-          <p className={`trivia ${showFullExpanded ? '' : 'clamped'}`}>{active.item.trivia}</p>
+          <p className="np-track-small">{active.title || active.raw_title}</p>
+          <p className={`trivia ${showFullExpanded ? '' : 'clamped'}`}>{active.trivia}</p>
           <div className="trivia-actions">
-            {active.item.trivia.length > 280 && (
+            {active.trivia.length > 280 && (
               <button className="text-btn" type="button" onClick={() => setShowFullExpanded((v) => !v)}>
                 {showFullExpanded ? t('nowPlaying.showLess') : t('nowPlaying.showMore')}
               </button>
             )}
-            {active.item.wiki && (
-              <a className="wiki-link" href={active.item.wiki} target="_blank" rel="noopener noreferrer">
+            {active.wiki && (
+              <a className="wiki-link" href={active.wiki} target="_blank" rel="noopener noreferrer">
                 {t('nowPlaying.readOnWikipedia')}
                 <ExternalLinkIcon />
               </a>
@@ -256,7 +265,7 @@ export function NowPlayingPanel({
         </div>
       </div>
 
-      <TriviaHistoryStrip history={state.triviaHistory} t={t} />
+      <TriviaHistoryStrip version={state.triviaHistoryVersion} t={t} />
     </section>
   )
 }

@@ -4,18 +4,6 @@ import type { EnrichmentItem, Station, WsMessage } from '../api/types'
 
 export type PlaybackStatus = 'stopped' | 'playing'
 
-export interface TriviaHistoryEntry {
-  rawTitle: string
-  stationName: string
-  artist: string
-  title: string
-  performer: string
-  item: EnrichmentItem
-  at: number
-}
-
-const MAX_TRIVIA_HISTORY = 10
-
 export interface PlayerState {
   station: Station | null
   stationName: string
@@ -34,7 +22,12 @@ export interface PlayerState {
   sampleRate: string | null
   format: string | null
   bufferedAhead: number
-  triviaHistory: TriviaHistoryEntry[]
+  // Bumped every time a fresh (non-fail) enrichment arrives — the
+  // now-playing panel's trivia-history strip is fetched from the server
+  // (persisted per user, not client state, see trivia_history.py) and
+  // uses this as a dependency to know when to refetch, since the actual
+  // history list itself doesn't live here anymore.
+  triviaHistoryVersion: number
 }
 
 const INITIAL_STATE: PlayerState = {
@@ -55,7 +48,7 @@ const INITIAL_STATE: PlayerState = {
   sampleRate: null,
   format: null,
   bufferedAhead: 0,
-  triviaHistory: [],
+  triviaHistoryVersion: 0,
 }
 
 /** Wires an <audio> element, the /api/stream proxy, and the /api/ws
@@ -171,21 +164,12 @@ export function usePlayer(initialVolume?: number) {
           setState((s) => {
             if (s.rawTitle !== msg.raw_title) return s
             if (msg.item.fail) return { ...s, enrichment: null, enriching: false }
-            const entry: TriviaHistoryEntry = {
-              rawTitle: msg.raw_title,
-              stationName: s.stationName,
-              artist: s.artist,
-              title: s.title,
-              performer: s.performer,
-              item: msg.item,
-              at: Date.now(),
+            return {
+              ...s,
+              enrichment: msg.item,
+              enriching: false,
+              triviaHistoryVersion: s.triviaHistoryVersion + 1,
             }
-            // A re-ask (existing "Re-ask AI" button) re-arrives as another
-            // 'enrichment' message for the same rawTitle — update that
-            // entry in place instead of appending a duplicate chip.
-            const withoutExisting = s.triviaHistory.filter((h) => h.rawTitle !== msg.raw_title)
-            const triviaHistory = [entry, ...withoutExisting].slice(0, MAX_TRIVIA_HISTORY)
-            return { ...s, enrichment: msg.item, enriching: false, triviaHistory }
           })
         }
       }

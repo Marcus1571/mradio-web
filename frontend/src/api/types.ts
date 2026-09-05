@@ -136,6 +136,19 @@ export interface AnalyticsStats {
   by_day: DayCount[]
 }
 
+export interface TriviaHistoryEntry {
+  id: number
+  raw_title: string
+  station_name: string
+  artist: string
+  title: string
+  performer: string
+  work: string
+  trivia: string
+  wiki: string
+  created_at: string
+}
+
 export type WsMessage =
   | {
       type: 'station'

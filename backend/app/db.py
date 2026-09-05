@@ -45,6 +45,20 @@ CREATE TABLE IF NOT EXISTS play_history (
 );
 CREATE INDEX IF NOT EXISTS idx_play_history_started ON play_history(started_at);
 CREATE INDEX IF NOT EXISTS idx_play_history_user ON play_history(user_id);
+CREATE TABLE IF NOT EXISTS trivia_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    raw_title TEXT NOT NULL,
+    station_name TEXT NOT NULL,
+    artist TEXT NOT NULL,
+    title TEXT NOT NULL,
+    performer TEXT NOT NULL,
+    work TEXT NOT NULL,
+    trivia TEXT NOT NULL,
+    wiki TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_trivia_history_user ON trivia_history(user_id, id);
 """
 
 _db: aiosqlite.Connection | None = None

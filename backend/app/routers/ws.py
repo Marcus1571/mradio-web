@@ -21,6 +21,7 @@ from fastapi import APIRouter, Query, WebSocket
 from starlette.websockets import WebSocketDisconnect
 
 from .. import nowplaying
+from .. import trivia_history
 from ..auth import SESSION_COOKIE_NAME, resolve_session
 from ..enrichers import get_enricher
 from ..textutil import split_title
@@ -45,7 +46,7 @@ async def now_playing_ws(websocket: WebSocket, sid: str = Query(...)):
     enricher = await get_enricher(user["id"])
     queue = nowplaying.subscribe(sid)
     logger.info("connected sid=%s user_id=%s", sid, user["id"])
-    state = {"raw_title": ""}
+    state = {"raw_title": "", "station_name": "", "artist": "", "title": "", "performer": ""}
 
     async def send(payload: dict) -> None:
         try:
@@ -53,10 +54,18 @@ async def now_playing_ws(websocket: WebSocket, sid: str = Query(...)):
         except Exception:
             pass
 
+    async def record_trivia(raw_title: str, item: dict) -> None:
+        if item.get("fail") or not item.get("trivia"):
+            return
+        await trivia_history.record(
+            user["id"], raw_title, state["station_name"], state["artist"],
+            state["title"], state["performer"], item)
+
     async def push_enrichment(raw_title: str, item: dict) -> None:
         if raw_title != state["raw_title"]:
             return  # stale — the user has since moved to a different track
         await send({"type": "enrichment", "raw_title": raw_title, "item": item})
+        await record_trivia(raw_title, item)
 
     enricher.on_result = push_enrichment
 
@@ -64,6 +73,7 @@ async def now_playing_ws(websocket: WebSocket, sid: str = Query(...)):
         while True:
             event = await queue.get()
             if event["type"] == "station":
+                state["station_name"] = event["name"]
                 await send({
                     "type": "station",
                     "name": event["name"],
@@ -75,11 +85,13 @@ async def now_playing_ws(websocket: WebSocket, sid: str = Query(...)):
                 raw = event["title"]
                 state["raw_title"] = raw
                 artist, title, performer = split_title(raw)
+                state["artist"], state["title"], state["performer"] = artist, title, performer
                 await send({"type": "now_playing", "raw_title": raw,
                            "artist": artist, "title": title, "performer": performer})
                 cached = await enricher.blurb(raw)
                 if cached:
                     await send({"type": "enrichment", "raw_title": raw, "item": cached})
+                    await record_trivia(raw, cached)
                 else:
                     await enricher.submit(raw, artist, title, performer)
 

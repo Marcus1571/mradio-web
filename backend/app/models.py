@@ -109,3 +109,16 @@ class AnalyticsStats(BaseModel):
     top_genres: list[GenreCount]
     top_users: list[UserCount]
     by_day: list[DayCount]
+
+
+class TriviaHistoryEntry(BaseModel):
+    id: int
+    raw_title: str
+    station_name: str
+    artist: str
+    title: str
+    performer: str
+    work: str
+    trivia: str
+    wiki: str
+    created_at: str
