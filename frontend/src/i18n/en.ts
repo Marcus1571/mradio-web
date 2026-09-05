@@ -12,7 +12,7 @@ const en = {
     backToPlayer: 'Back to player',
     users: 'Users',
     aiProviders: 'AI providers',
-    analytics: 'Analytics',
+    dashboard: 'Dashboard',
     changePassword: 'Change password',
     signOut: 'Sign out',
     switchToLight: 'Switch to light theme',

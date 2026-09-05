@@ -14,7 +14,7 @@ const it: Dict = {
     backToPlayer: 'Torna al lettore',
     users: 'Utenti',
     aiProviders: 'Provider IA',
-    analytics: 'Analitica',
+    dashboard: 'Pannello',
     changePassword: 'Cambia password',
     signOut: 'Esci',
     switchToLight: 'Passa al tema chiaro',

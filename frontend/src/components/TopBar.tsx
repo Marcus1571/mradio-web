@@ -95,6 +95,11 @@ export function TopBar({
         >
           {theme === 'dark' ? <MoonIcon /> : <SunIcon />}
         </button>
+        {user?.is_admin && (
+          <button className="dropdown-chip" type="button" onClick={() => onNavigate('analytics')}>
+            {t('topbar.dashboard')}
+          </button>
+        )}
         <div className="user-menu" ref={menuRef}>
           <button className="user-chip" type="button" onClick={() => setMenuOpen((v) => !v)}>
             <span className="avatar">{initials}</span>
@@ -110,9 +115,6 @@ export function TopBar({
                   </button>
                   <button type="button" onClick={() => { onNavigate('ai-settings'); setMenuOpen(false) }}>
                     {t('topbar.aiProviders')}
-                  </button>
-                  <button type="button" onClick={() => { onNavigate('analytics'); setMenuOpen(false) }}>
-                    {t('topbar.analytics')}
                   </button>
                   <hr />
                 </>
