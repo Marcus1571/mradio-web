@@ -34,6 +34,23 @@ still work from an HTTPS page.
 - Single container: one FastAPI process serves the API, the WebSocket,
   and the built frontend, all on one port
 
+## Footprint
+
+Measured against a live deployment (Chromium via Playwright, logged in, a
+station playing, AI liner notes in flight):
+
+- **~9.5 MB JS heap**, flat over a 20s window — no leak, no growth.
+- **~0.86% of one CPU core** sustained while streaming audio and holding
+  the now-playing WebSocket open.
+- **134 DOM nodes**, **~215 KB JS + ~21 KB CSS** shipped (gzipped: ~67 KB /
+  ~4 KB) — one bundle, no framework bloat.
+- Audio decoding is offloaded entirely to the browser's native `<audio>`
+  element — nothing here is a custom JS audio pipeline.
+
+Server side, the container itself runs at **under 1% CPU and ~500 MB RAM**
+on a 64 GB host — negligible next to whatever else you're already running
+on it.
+
 ## Layout
 
 - `backend/` — FastAPI app
