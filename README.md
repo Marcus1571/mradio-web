@@ -1,5 +1,7 @@
 # mradio-web
 
+**README · [KB (Knowledge Base)](KB.md) · [Changelog](CHANGELOG.md)**
+
 A self-hosted, multi-user internet radio player for the browser — pick a
 station, see what's playing, and get AI-generated liner notes about the
 artist and track while it plays.
@@ -9,6 +11,10 @@ as a standalone web app, not a wrapper around it: playback happens in the
 browser's own `<audio>` element (there's no server-side speaker to play
 into), and the backend proxies each station's stream so HTTP-only stations
 still work from an HTTPS page.
+
+**Every setup detail — building, deploying, the reverse-proxy config,
+managing accounts, configuring AI providers — lives in [`KB.md`](KB.md).**
+This page is just the overview.
 
 ## What it does
 
@@ -20,13 +26,20 @@ still work from an HTTPS page.
 - **AI liner notes** — a short, factual write-up about the piece and its
   composer/artist, generated on the fly and cached (shared across
   everyone, so the same track is never re-queried twice) via opencode,
-  Ollama, or any OpenAI-compatible endpoint (e.g. NVIDIA NIM).
+  Ollama, or any OpenAI-compatible endpoint (e.g. NVIDIA NIM). See
+  [KB §6 — Configuring AI providers](KB.md#6-configuring-ai-providers).
+  A "recently played" trivia history keeps the last 10 blurbs per
+  account, re-readable while something else plays.
+- **English, Spanish, Italian, and Portuguese** UI and AI liner notes —
+  switch instantly from the top bar.
 - **Multiple accounts**, each with their own favorites and provider
   choice — admin-created, no public sign-up, matching a small
   self-hosted deployment for family/friends rather than a public service.
+  See [KB §5 — Managing accounts](KB.md#5-managing-accounts).
 - **Admin analytics dashboard** — who's listening right now and from
   where (a live world map), plus full play history and stats on the most
-  popular stations, genres, and listeners.
+  popular stations, genres, and listeners. See
+  [KB §9 — Analytics](KB.md#9-analytics).
 
 ## Stack
 
@@ -62,7 +75,19 @@ on it.
 
 ## Getting started
 
-See [`KB.md`](KB.md) for the full deployment reference: building and
-running with Docker Compose, the reverse-proxy setup (websockets +
-streaming need two non-default settings), first login, managing
-accounts, and configuring each AI provider.
+See [`KB.md`](KB.md) for the full deployment reference:
+
+- [KB §1 — Prerequisites](KB.md#1-prerequisites)
+- [KB §2 — Build and run](KB.md#2-build-and-run) (Docker Compose)
+- [KB §3 — Reverse proxy](KB.md#3-reverse-proxy-nginx-proxy-manager) —
+  websockets + streaming need two non-default settings
+- [KB §4 — First login](KB.md#4-first-login)
+- [KB §5 — Managing accounts](KB.md#5-managing-accounts)
+- [KB §6 — Configuring AI providers](KB.md#6-configuring-ai-providers)
+- [KB §7 — Data and backups](KB.md#7-data-and-backups)
+- [KB §8 — Updating](KB.md#8-updating)
+- [KB §9 — Analytics](KB.md#9-analytics)
+
+---
+
+**→ [Open the Knowledge Base](KB.md) ←**
