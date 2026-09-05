@@ -216,3 +216,68 @@ class OpencodeSession:
             except ProcessLookupError:
                 pass
         self._proc = None
+
+
+_TEST_TIMEOUT = 5.0
+
+
+async def _test_ollama(settings: dict) -> tuple[bool, str]:
+    url = settings.get("ollama_url")
+    if not url:
+        return False, "No server URL configured."
+    model = settings.get("ollama_model") or "gemma3:4b"
+    try:
+        async with httpx.AsyncClient(timeout=_TEST_TIMEOUT) as client:
+            r = await client.get(api_endpoint(url, "api/tags"))
+            r.raise_for_status()
+            data = r.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        return False, f"Could not reach {url}: {exc}"
+    names = {m.get("name") for m in data.get("models", [])}
+    if model not in names and not any(n.startswith(model + ":") for n in names if n):
+        return False, f'Server reachable, but model "{model}" is not pulled there.'
+    return True, "Connected."
+
+
+async def _test_openai(settings: dict) -> tuple[bool, str]:
+    if not settings.get("api_key"):
+        return False, "No API key configured."
+    base = api_endpoint(settings.get("api_base") or "https://api.openai.com/v1",
+                        "chat/completions")
+    payload = {
+        "model": settings.get("api_model") or "gpt-4o-mini",
+        "messages": [{"role": "user", "content": "ping"}],
+        "max_tokens": 1,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=_TEST_TIMEOUT) as client:
+            r = await client.post(base, json=payload, headers={
+                "Authorization": "Bearer " + settings["api_key"]})
+            r.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        return False, f"Server responded with an error ({exc.response.status_code})."
+    except httpx.HTTPError as exc:
+        return False, f"Could not reach {base}: {exc}"
+    return True, "Connected."
+
+
+async def _test_opencode(settings: dict) -> tuple[bool, str]:
+    from . import enricher  # local import: avoids a circular import at module load
+
+    port = oc_port(settings)
+    if not port:
+        return False, "opencode is not enabled."
+    reply = await enricher._opencode.ask(settings, "Reply with the single word: pong")
+    if not reply:
+        return False, "opencode did not respond."
+    return True, "Connected."
+
+
+async def run_provider_test(provider: str, settings: dict) -> tuple[bool, str]:
+    if provider == "ollama":
+        return await _test_ollama(settings)
+    if provider == "openai":
+        return await _test_openai(settings)
+    if provider == "opencode":
+        return await _test_opencode(settings)
+    return False, "Unknown provider."

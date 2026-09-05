@@ -63,6 +63,7 @@ const es: Dict = {
       'Credenciales compartidas para opencode, Ollama y cualquier endpoint compatible con OpenAI (p. ej. NVIDIA NIM). ' +
       'Cada persona elige cuál usar desde el reproductor — nadie necesita su propia clave.',
     ollamaGroup: 'Ollama',
+    ollamaNote: '¿Nuevo en Ollama? Consulta "Setting up Ollama" en la sección Ollama del KB.md del proyecto para instalarlo y descargar un modelo.',
     serverUrl: 'URL del servidor',
     model: 'Modelo',
     openaiGroup: 'Compatible con OpenAI (NIM, etc.)',
@@ -73,6 +74,11 @@ const es: Dict = {
     opencodeGroup: 'opencode',
     opencodeEnable: 'Habilitar (puerto, o "1" para el predeterminado)',
     errorFallback: 'No se pudo guardar la configuración.',
+    test: 'Probar',
+    testing: 'Probando…',
+    testSuccess: 'Funciona',
+    testFailure: 'Error',
+    testError: 'No se pudo contactar con el servidor para ejecutar la prueba.',
   },
   stationBrowser: {
     title: 'Tus emisoras',

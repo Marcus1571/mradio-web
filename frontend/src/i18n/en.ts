@@ -61,6 +61,7 @@ const en = {
       'Shared credentials for opencode, Ollama, and any OpenAI-compatible endpoint (e.g. NVIDIA NIM). Each ' +
       'person picks which of these they use from the player — nobody needs their own key.',
     ollamaGroup: 'Ollama',
+    ollamaNote: 'New to Ollama? See "Setting up Ollama" under Ollama in the project\'s KB.md for how to install it and pull a model.',
     serverUrl: 'Server URL',
     model: 'Model',
     openaiGroup: 'OpenAI-compatible (NIM, etc.)',
@@ -71,6 +72,11 @@ const en = {
     opencodeGroup: 'opencode',
     opencodeEnable: 'Enable (port, or "1" for default)',
     errorFallback: 'Could not save settings.',
+    test: 'Test',
+    testing: 'Testing…',
+    testSuccess: 'Working',
+    testFailure: 'Failed',
+    testError: 'Could not reach the server to run the test.',
   },
   stationBrowser: {
     title: 'Your stations',

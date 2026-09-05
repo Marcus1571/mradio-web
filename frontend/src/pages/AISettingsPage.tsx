@@ -1,9 +1,28 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError, api } from '../api/client'
-import type { AISettings } from '../api/types'
+import type { AISettings, AITestResult } from '../api/types'
 import type { TFunction } from '../i18n'
 import '../styles/admin.css'
+
+type Provider = 'ollama' | 'openai' | 'opencode'
+
+type TestState = { status: 'idle' | 'testing' | 'success' | 'failure'; message?: string }
+
+const IDLE: TestState = { status: 'idle' }
+
+function TestBadge({ state, t }: { state: TestState; t: TFunction }) {
+  if (state.status === 'idle') return null
+  const pillClass =
+    state.status === 'success' ? 'pill admin' : state.status === 'failure' ? 'pill disabled' : 'pill'
+  const label =
+    state.status === 'testing'
+      ? t('aiSettings.testing')
+      : state.status === 'success'
+        ? t('aiSettings.testSuccess')
+        : state.message || t('aiSettings.testFailure')
+  return <span className={pillClass}>{label}</span>
+}
 
 export function AISettingsPage({ t }: { t: TFunction }) {
   const [settings, setSettings] = useState<AISettings | null>(null)
@@ -11,6 +30,9 @@ export function AISettingsPage({ t }: { t: TFunction }) {
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  const [ollamaTest, setOllamaTest] = useState<TestState>(IDLE)
+  const [openaiTest, setOpenaiTest] = useState<TestState>(IDLE)
+  const [opencodeTest, setOpencodeTest] = useState<TestState>(IDLE)
 
   useEffect(() => {
     api.get<AISettings>('/api/settings/ai').then(setSettings)
@@ -41,6 +63,20 @@ export function AISettingsPage({ t }: { t: TFunction }) {
     }
   }
 
+  async function testProvider(
+    provider: Provider,
+    overrides: Partial<AISettings>,
+    setState: (s: TestState) => void,
+  ) {
+    setState({ status: 'testing' })
+    try {
+      const res = await api.post<AITestResult>(`/api/settings/ai/test?provider=${provider}`, overrides)
+      setState({ status: res.ok ? 'success' : 'failure', message: res.message })
+    } catch {
+      setState({ status: 'failure', message: t('aiSettings.testError') })
+    }
+  }
+
   if (!settings) return null
 
   return (
@@ -54,6 +90,7 @@ export function AISettingsPage({ t }: { t: TFunction }) {
         <div className="settings-form">
           <div className="settings-group">
             <h2>{t('aiSettings.ollamaGroup')}</h2>
+            <p className="admin-note">{t('aiSettings.ollamaNote')}</p>
             <div className="settings-row">
               <label htmlFor="ollama_url">{t('aiSettings.serverUrl')}</label>
               <input
@@ -70,6 +107,27 @@ export function AISettingsPage({ t }: { t: TFunction }) {
                 value={settings.ollama_model}
                 onChange={(e) => field('ollama_model', e.target.value)}
               />
+            </div>
+            <div className="row-actions">
+              <button
+                type="button"
+                disabled={ollamaTest.status === 'testing'}
+                onClick={() =>
+                  void testProvider(
+                    'ollama',
+                    {
+                      ollama_url: settings.ollama_url,
+                      ollama_model: settings.ollama_model,
+                      ollama_timeout: settings.ollama_timeout,
+                      ollama_gpu: settings.ollama_gpu,
+                    },
+                    setOllamaTest,
+                  )
+                }
+              >
+                {ollamaTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
+              </button>
+              <TestBadge state={ollamaTest} t={t} />
             </div>
           </div>
 
@@ -94,6 +152,27 @@ export function AISettingsPage({ t }: { t: TFunction }) {
                 onChange={(e) => setApiKeyInput(e.target.value)}
               />
             </div>
+            <div className="row-actions">
+              <button
+                type="button"
+                disabled={openaiTest.status === 'testing'}
+                onClick={() =>
+                  void testProvider(
+                    'openai',
+                    {
+                      api_base: settings.api_base,
+                      api_model: settings.api_model,
+                      api_timeout: settings.api_timeout,
+                      ...(apiKeyInput ? { api_key: apiKeyInput } : {}),
+                    },
+                    setOpenaiTest,
+                  )
+                }
+              >
+                {openaiTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
+              </button>
+              <TestBadge state={openaiTest} t={t} />
+            </div>
           </div>
 
           <div className="settings-group">
@@ -101,6 +180,22 @@ export function AISettingsPage({ t }: { t: TFunction }) {
             <div className="settings-row">
               <label htmlFor="opencode">{t('aiSettings.opencodeEnable')}</label>
               <input id="opencode" value={settings.opencode} onChange={(e) => field('opencode', e.target.value)} />
+            </div>
+            <div className="row-actions">
+              <button
+                type="button"
+                disabled={opencodeTest.status === 'testing'}
+                onClick={() =>
+                  void testProvider(
+                    'opencode',
+                    { opencode: settings.opencode, opencode_timeout: settings.opencode_timeout },
+                    setOpencodeTest,
+                  )
+                }
+              >
+                {opencodeTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
+              </button>
+              <TestBadge state={opencodeTest} t={t} />
             </div>
           </div>
 

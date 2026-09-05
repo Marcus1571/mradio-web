@@ -67,6 +67,11 @@ export interface AISettings {
   opencode_timeout: number
 }
 
+export interface AITestResult {
+  ok: boolean
+  message: string
+}
+
 export interface EnrichmentItem {
   work: string
   trivia: string

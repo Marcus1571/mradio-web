@@ -49,3 +49,8 @@ class AISettingsUpdate(BaseModel):
 
 class ProviderSwitchRequest(BaseModel):
     name: str
+
+
+class AITestResult(BaseModel):
+    ok: bool
+    message: str
