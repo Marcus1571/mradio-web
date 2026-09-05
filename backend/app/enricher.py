@@ -52,8 +52,22 @@ _PROMPT_TEMPLATE = (
     'headings, no labels). Aim for 750-850 characters with a hard '
     'maximum of 850 — if your draft runs long, tighten it. Always end '
     'on a complete, natural final sentence; never trail off mid-thought.\n'
+    "{language_instruction}"
     "Output the JSON object and nothing else."
 )
+
+# English is the model's natural default, so it costs nothing to leave
+# implicit. Only "trivia" changes language — "work"/"wiki" must stay as
+# specified above regardless (wiki.resolve() looks up the ENGLISH
+# Wikipedia specifically, see _worker() below).
+_LANGUAGE_INSTRUCTIONS = {
+    "en": "",
+    "es": (
+        '- Write the "trivia" field in Spanish (Español). Keep "work" and '
+        '"wiki" exactly as specified above regardless of language — '
+        '"wiki" MUST remain the English Wikipedia article title.\n'
+    ),
+}
 
 _FAIL_ITEM = {"work": "", "trivia": "", "wiki": "", "movement": 0, "fail": True}
 
@@ -70,6 +84,7 @@ class Enricher:
         self.started: dict[str, float] = {}
         self.epoch = 0
         self.provider = ""
+        self.language = "en"
         self._task: asyncio.Task | None = None
         self.on_result: Callable[[str, dict], Awaitable[None] | None] | None = None
 
@@ -77,6 +92,8 @@ class Enricher:
         cfg = await load_cfg(self.user_id)
         p = cfg.get("provider", "")
         self.provider = p if p in PROVIDERS else ""
+        lang = cfg.get("language", "en")
+        self.language = lang if lang in _LANGUAGE_INSTRUCTIONS else "en"
         self._task = asyncio.create_task(self._worker())
 
     async def shutdown(self) -> None:
@@ -102,7 +119,7 @@ class Enricher:
     async def blurb(self, raw_title: str) -> dict | None:
         if not self.provider or not raw_title:
             return None
-        item = await cache_store.get_cached(self.provider, raw_title)
+        item = await cache_store.get_cached(self.provider, self.language, raw_title)
         return item if item and not item.get("fail") else None
 
     def pending(self, raw_title: str) -> bool:
@@ -117,7 +134,7 @@ class Enricher:
             return
         self.last_key = raw_title
         if self.provider:
-            cached = await cache_store.get_cached(self.provider, raw_title)
+            cached = await cache_store.get_cached(self.provider, self.language, raw_title)
             if cached and not cached.get("fail"):
                 return
         self.started[raw_title] = time.time()
@@ -154,7 +171,7 @@ class Enricher:
         if epoch != self.epoch:
             return  # stale reply discarded (provider/selection changed since submit)
         if not item.get("fail") and self.provider:
-            await cache_store.store(self.provider, raw_title, item)
+            await cache_store.store(self.provider, self.language, raw_title, item)
         if self.on_result:
             result = self.on_result(raw_title, item)
             if result is not None:
@@ -167,7 +184,12 @@ class Enricher:
             f"Performer (if present): {performer or 'none'}"
         )
         prompt = apply_provider_rules(
-            _PROMPT_TEMPLATE.format(question=question), self.provider)
+            _PROMPT_TEMPLATE.format(
+                question=question,
+                language_instruction=_LANGUAGE_INSTRUCTIONS.get(self.language, ""),
+            ),
+            self.provider,
+        )
         raw = await self._llm(settings, prompt)
         if raw is None:
             return None

@@ -45,9 +45,15 @@ export function Dashboard() {
     void api.patch('/api/config', { theme: next })
   }
 
-  function setLanguage(next: Language) {
+  async function setLanguage(next: Language) {
     setLanguageState(next)
-    void api.patch('/api/config', { language: next })
+    // Awaited (unlike theme's fire-and-forget PATCH): the backend Enricher
+    // only picks up the new language once this lands, and re-asking the
+    // current track's liner notes right after depends on that having
+    // already happened — otherwise the re-ask could race ahead of it and
+    // still come back in the old language.
+    await api.patch('/api/config', { language: next })
+    player.reenrich()
   }
 
   function onPlay(station: Station) {

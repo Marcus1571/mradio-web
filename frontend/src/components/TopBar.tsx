@@ -70,7 +70,7 @@ export function TopBar({
                   className={`dropdown-option ${l.code === language ? 'active' : ''}`}
                   type="button"
                   onClick={() => {
-                    onChangeLanguage(l.code)
+                    void onChangeLanguage(l.code)
                     setLangOpen(false)
                   }}
                 >

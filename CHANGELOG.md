@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.2.1] - 2026-09-05
+
+AI liner notes now follow the UI language (0.2.0 only switched the UI
+text, not the AI output). Switching to Spanish re-asks the currently
+playing track's liner notes immediately — no need to wait for the next
+track.
+
+- `enricher.py`: the prompt now carries a language instruction (Spanish
+  only — English stays fully implicit, zero cost for the common case).
+  The Wikipedia link lookup is explicitly protected: `"wiki"` always
+  stays the English article title regardless of trivia language, since
+  it's a lookup key into English Wikipedia.
+- The shared trivia cache now includes language in its key
+  (`provider::language::raw_title`), so two accounts listening to the
+  same track in different languages don't collide on one cached blurb.
+- `PATCH /api/config`'s `language` field now also pushes a live update
+  into that user's running Enricher, so a language switch takes effect
+  on the very next AI request — no restart needed.
+- Verified via a full local test: the WebSocket's existing `reenrich`
+  message fires automatically on language switch, the config file
+  persists `language` correctly, and cache entries for the same track in
+  different languages are confirmed independent.
+
 ## [0.2.0] - 2026-09-05
 
 Added a language switcher — English and Spanish, with a flag + language

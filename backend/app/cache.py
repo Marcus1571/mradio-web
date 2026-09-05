@@ -2,7 +2,8 @@
 
 Shared across all users rather than per-user, on purpose — the same
 "Sting - Every Breath You Take" result benefits everyone, not just
-whoever triggered it first. Entries are keyed by (provider, raw_title):
+whoever triggered it first. Entries are keyed by (provider, language,
+raw_title):
 
 - raw_title MUST be the unparsed ICY title string (e.g. "Wolfgang Amadeus
   Mozart - Symphony No. 1 in C major"), never just the parsed-out track
@@ -12,7 +13,13 @@ whoever triggered it first. Entries are keyed by (provider, raw_title):
 - provider: the active AI provider is a per-user choice, so keying it in
   means two users on different providers never overwrite each other's
   cached result for the same track, and each provider's answer is cached
-  independently."""
+  independently.
+- language: added so two users listening to the same track in different
+  UI languages don't collide on one cached (English- or Spanish-language)
+  blurb — each language gets its own cache entry. Older 2-part keys from
+  before this field existed are simply never looked up again by the new
+  3-part _key() and age out naturally via the MAX_ENTRIES eviction below;
+  no migration needed."""
 
 import asyncio
 from pathlib import Path
@@ -28,8 +35,8 @@ MAX_ENTRIES = 800
 _lock = asyncio.Lock()
 
 
-def _key(provider: str, raw_title: str) -> str:
-    return f"{provider}::{raw_title}"
+def _key(provider: str, language: str, raw_title: str) -> str:
+    return f"{provider}::{language}::{raw_title}"
 
 
 def _load_sync() -> dict:
@@ -44,17 +51,17 @@ def _save_sync(cache: dict) -> bool:
     return atomic_write_json(CACHE_FILE, cache)
 
 
-async def get_cached(provider: str, raw_title: str) -> dict | None:
+async def get_cached(provider: str, language: str, raw_title: str) -> dict | None:
     cache = await asyncio.to_thread(_load_sync)
-    return cache.get(_key(provider, raw_title))
+    return cache.get(_key(provider, language, raw_title))
 
 
-async def store(provider: str, raw_title: str, item: dict) -> None:
+async def store(provider: str, language: str, raw_title: str, item: dict) -> None:
     """Read-modify-write under a lock so concurrent requests (from
     different users) can't clobber each other's writes."""
     async with _lock:
         cache = await asyncio.to_thread(_load_sync)
-        cache[_key(provider, raw_title)] = item
+        cache[_key(provider, language, raw_title)] = item
         if len(cache) > MAX_ENTRIES:
             cache.pop(next(iter(cache)))
         await asyncio.to_thread(_save_sync, cache)

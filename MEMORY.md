@@ -246,15 +246,15 @@ calls right after each failed Ollama call) — not broken, just wasteful.
 Fix is a one-line change in the AI providers settings page (pick one of
 the models actually pulled), not a code change.
 
-## Language support (added 2026-09-05, 0.2.0)
+## Language support (added 2026-09-05, 0.2.0 + 0.2.1) — fully done
 
-UI language (English/Spanish, top-bar dropdown) is done —
+UI language (English/Spanish, top-bar dropdown, 0.2.0) —
 `frontend/src/i18n/` (hand-rolled `en.ts`/`es.ts`/`index.ts`, no library,
 `Dict` type widening so Spanish only has to match English's key shape,
 not its exact text). `Dashboard.tsx` owns `language` state exactly like
 `theme`, passes a bound `t()` down as a prop to every consumer — no
 React Context, matching this codebase's existing "no abstraction until
-needed" style. Persists via `PATCH /api/config`'s new `language` field.
+needed" style. Persists via `PATCH /api/config`'s `language` field.
 
 **Deliberate scope cut**: `LoginScreen.tsx` and the *forced* first-login
 `ChangePasswordScreen` (rendered pre-auth in `App.tsx`, as siblings of
@@ -265,17 +265,31 @@ identity yet at that point to look up a saved preference for, and
 the Dashboard's user menu is a normal translated page; only the pre-auth
 render path is the exception.
 
-**Not yet done**: AI liner notes are still English-only regardless of
-the UI language — the enrichment prompt (`enricher.py`'s
-`_PROMPT_TEMPLATE`) has no language instruction yet, and the cache key
-(`cache.py`, currently `provider::raw_title`) has no language dimension,
-so a language-aware cache is a prerequisite (two users on different
-languages listening to the same track would otherwise collide on one
-cached blurb). This is the next piece of work — same session's plan
-already designed it (mirror `theme`'s pattern for `Enricher.language`,
-not `provider`'s activate-endpoint pattern; reuse the existing
-`reenrich` WS message to re-ask the current track's liner notes
-immediately on language switch, don't wait for the next track).
+AI liner notes follow the UI language too (0.2.1) — `Enricher.language`
+mirrors `self.provider`'s pattern (set once in `start()` from
+`load_cfg()`, pushed live by `PATCH /api/config` into the running
+instance, not re-read from disk per-call). `_PROMPT_TEMPLATE` gained a
+`{language_instruction}` slot (English stays fully implicit — zero
+prompt-text cost — Spanish adds one line asking for the trivia field in
+Spanish while explicitly protecting `"wiki"`, which must stay the
+English Wikipedia article title for `wiki.resolve()`'s lookup).
+`cache.py`'s key gained a language dimension
+(`provider::language::raw_title`) so two accounts in different
+languages don't collide on one cached blurb for the same track — old
+2-part keys just age out via the existing eviction cap, no migration.
+Switching language auto-triggers the existing `reenrich` WS message
+(same one the manual "Re-ask AI" button already used) so the
+currently-playing track's notes update immediately, not on the next
+track — `Dashboard.tsx`'s `setLanguage` awaits the config PATCH before
+calling `reenrich()` to avoid a race where the re-ask could beat the
+language update to the Enricher.
+
+Verified locally end-to-end except the actual LLM output quality/
+language-following behavior itself, which needs a real provider
+credential this session didn't have — every other link in the chain
+(prompt construction, cache isolation, config persistence, live
+Enricher sync, WS re-ask trigger) was confirmed working via direct
+tests and a live Playwright run against the real backend.
 
 ## Known unknowns
 
