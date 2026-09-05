@@ -1,8 +1,19 @@
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+
+# Uvicorn configures its own `uvicorn`/`uvicorn.access`/`uvicorn.error`
+# loggers but leaves the root logger at the Python default (WARNING, no
+# handler) — so app-level `logging.getLogger("mradio.*")` calls are
+# silently dropped unless we configure this ourselves. `docker logs`
+# already captures stderr, so a plain stream handler is all that's needed.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(name)s %(levelname)s %(message)s",
+)
 
 from .db import close_db, init_db
 from .enrichers import shutdown_all as shutdown_enrichers

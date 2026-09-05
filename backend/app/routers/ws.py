@@ -15,6 +15,7 @@ blurbs immediately, which covers the actual multi-listener use case
 this app is for (different accounts, not one account in two tabs)."""
 
 import asyncio
+import logging
 
 from fastapi import APIRouter, Query, WebSocket
 from starlette.websockets import WebSocketDisconnect
@@ -24,6 +25,8 @@ from ..auth import SESSION_COOKIE_NAME, resolve_session
 from ..enrichers import get_enricher
 from ..textutil import split_title
 
+logger = logging.getLogger("mradio.ws")
+
 router = APIRouter(tags=["ws"])
 
 
@@ -32,12 +35,14 @@ async def now_playing_ws(websocket: WebSocket, sid: str = Query(...)):
     token = websocket.cookies.get(SESSION_COOKIE_NAME)
     user = await resolve_session(token) if token else None
     if user is None or user["disabled"] or user["must_change_password"]:
+        logger.info("rejected sid=%s — no valid session", sid)
         await websocket.close(code=4401)
         return
 
     await websocket.accept()
     enricher = await get_enricher(user["id"])
     queue = nowplaying.subscribe(sid)
+    logger.info("connected sid=%s user_id=%s", sid, user["id"])
     state = {"raw_title": ""}
 
     async def send(payload: dict) -> None:
@@ -102,5 +107,6 @@ async def now_playing_ws(websocket: WebSocket, sid: str = Query(...)):
             except (asyncio.CancelledError, WebSocketDisconnect, Exception):
                 pass
         nowplaying.unsubscribe(sid, queue)
+        logger.info("disconnected sid=%s", sid)
         if enricher.on_result is push_enrichment:
             enricher.on_result = None

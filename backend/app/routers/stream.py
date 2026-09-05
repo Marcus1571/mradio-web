@@ -6,6 +6,7 @@ parsed off the same bytes as they pass through (see icy.py)."""
 
 import asyncio
 import ipaddress
+import logging
 import socket
 from urllib.parse import urlparse
 
@@ -16,6 +17,8 @@ from fastapi.responses import StreamingResponse
 from .. import nowplaying
 from ..deps import get_active_user
 from ..icy import IcyDemuxer, parse_metaint
+
+logger = logging.getLogger("mradio.stream")
 
 router = APIRouter(prefix="/api", tags=["stream"])
 
@@ -70,6 +73,10 @@ async def stream(url: str = Query(..., description="the station's real stream UR
     station_name = (upstream.headers.get("icy-name") or "").strip()
     icy_br = upstream.headers.get("icy-br")
     icy_sr = upstream.headers.get("icy-sr")
+    logger.info(
+        "connected sid=%s station=%r bitrate=%s sample_rate=%s format=%s metaint=%s",
+        sid, station_name, icy_br, icy_sr, content_type, metaint,
+    )
     if sid and station_name:
         nowplaying.publish(sid, {
             "type": "station",
@@ -86,6 +93,7 @@ async def stream(url: str = Query(..., description="the station's real stream UR
                 async for chunk in upstream.aiter_bytes():
                     audio, title = demux.feed(chunk)
                     if title and sid:
+                        logger.info("title sid=%s title=%r", sid, title)
                         nowplaying.publish(sid, {"type": "title", "title": title})
                     if audio:
                         yield audio
@@ -93,6 +101,7 @@ async def stream(url: str = Query(..., description="the station's real stream UR
                 async for chunk in upstream.aiter_bytes():
                     yield chunk
         finally:
+            logger.info("disconnected sid=%s station=%r", sid, station_name)
             await upstream.aclose()
             await client.aclose()
 

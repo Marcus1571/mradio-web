@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.3] - 2026-09-05
+
+Fixed a real playback bug found right after deploying 0.1.2: stations could
+get stuck showing "Connecting…" forever, even though audio played fine —
+only clicking Reconnect fixed it.
+
+- Root cause: the audio stream connection and the now-playing WebSocket are
+  two independent requests with no ordering guarantee. If the stream's
+  `station`/`title` events arrived before the WebSocket had finished
+  connecting, they were silently dropped — pre-existing since the
+  WebSocket was first built, but far more likely to show up over a real
+  network (reverse proxy) than on localhost, which is why it went
+  unnoticed until now.
+- Fix: the backend now remembers the latest `station`/`title` event per
+  player session and replays it immediately when the WebSocket connects,
+  instead of dropping events sent to nobody.
+- Added structured logging (`mradio.stream`, `mradio.nowplaying`,
+  `mradio.ws` loggers) for connect/disconnect/publish/subscribe events, so
+  this kind of issue is visible in `docker logs` instead of requiring code
+  archaeology to diagnose.
+
 ## [0.1.2] - 2026-09-05
 
 Four small UI/UX bugs found reviewing the live 0.1.1 deployment against the

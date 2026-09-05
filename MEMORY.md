@@ -163,14 +163,23 @@ were reviewed and left alone on purpose, not overlooked.
    (NIM/Ollama), if desired — not yet done.
 5. No committed test suite yet (see "Gaps" above) — still true, still not
    urgent at this scale.
-6. Fixed 2026-09-05: Wikipedia link `rel` attribute, NIM provider defaults
-   not prefilled (now default to NVIDIA's hosted endpoint +
+6. Fixed 2026-09-05 (0.1.2): Wikipedia link `rel` attribute, NIM provider
+   defaults not prefilled (now default to NVIDIA's hosted endpoint +
    `minimaxai/minimax-m3`, matching mradio's own reasoning for that model
    choice), genre-tag/station-name spacing in the favorites grid, and a
    missing stream-metadata row (bitrate/sample-rate/format/cache/elapsed)
-   in the now-playing panel. **Not yet redeployed to LT** — the running
-   container there is still on the pre-fix build; redeploy via `git pull
-   && docker compose build && docker compose up -d` to pick these up.
+   in the now-playing panel. Redeployed to LT same day.
+7. Fixed 2026-09-05 (0.1.3), found immediately after deploying 0.1.2:
+   stations could get stuck on "Connecting…" forever (audio played fine,
+   only the metadata UI hung) — a pre-existing race between the audio
+   stream connection and the now-playing WebSocket, where the first
+   `station`/`title` event could be published before the WebSocket had
+   subscribed and get silently dropped. `nowplaying.py` now caches and
+   replays the latest `station`/`title` event per session on subscribe.
+   Also added structured logging (`mradio.stream`/`mradio.nowplaying`/
+   `mradio.ws` loggers, visible via `docker logs`) — there was previously
+   zero application-level logging, only uvicorn's access log, which made
+   this bug much harder to diagnose than it should have been.
 
 ## Known unknowns
 
