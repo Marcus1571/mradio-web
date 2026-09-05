@@ -84,3 +84,4 @@ export type WsMessage =
     }
   | { type: 'now_playing'; raw_title: string; artist: string; title: string; performer: string }
   | { type: 'enrichment'; raw_title: string; item: EnrichmentItem }
+  | { type: 'ping' }

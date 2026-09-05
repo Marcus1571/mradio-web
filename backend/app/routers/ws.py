@@ -29,6 +29,8 @@ logger = logging.getLogger("mradio.ws")
 
 router = APIRouter(tags=["ws"])
 
+_PING_INTERVAL_S = 30  # comfortably under NPM/nginx's typical 60s idle timeout
+
 
 @router.websocket("/api/ws")
 async def now_playing_ws(websocket: WebSocket, sid: str = Query(...)):
@@ -89,11 +91,25 @@ async def now_playing_ws(websocket: WebSocket, sid: str = Query(...)):
                 artist, title, performer = split_title(raw)
                 await enricher.invalidate(raw, artist, title, performer)
 
+    async def pump_ping() -> None:
+        """Keeps the socket looking active to any reverse proxy sitting in
+        front of it — without this, a quiet stretch between track changes
+        can exceed a proxy's idle-read timeout and get silently killed
+        (observed via mradio.ws disconnected log lines with no error).
+        Uses the same fire-and-forget `send()` as everything else, so a
+        failed send here never raises into the `asyncio.wait` below —
+        only a real client disconnect (pump_client) or an unhandled
+        pump_nowplaying error ends it, same as before this was added."""
+        while True:
+            await asyncio.sleep(_PING_INTERVAL_S)
+            await send({"type": "ping"})
+
     pump_task = asyncio.create_task(pump_nowplaying())
     client_task = asyncio.create_task(pump_client())
+    ping_task = asyncio.create_task(pump_ping())
     try:
         done, _pending = await asyncio.wait(
-            [pump_task, client_task], return_when=asyncio.FIRST_COMPLETED)
+            [pump_task, client_task, ping_task], return_when=asyncio.FIRST_COMPLETED)
         for t in done:
             exc = t.exception()
             if exc and not isinstance(exc, WebSocketDisconnect):
@@ -101,7 +117,8 @@ async def now_playing_ws(websocket: WebSocket, sid: str = Query(...)):
     finally:
         pump_task.cancel()
         client_task.cancel()
-        for t in (pump_task, client_task):
+        ping_task.cancel()
+        for t in (pump_task, client_task, ping_task):
             try:
                 await t
             except (asyncio.CancelledError, WebSocketDisconnect, Exception):

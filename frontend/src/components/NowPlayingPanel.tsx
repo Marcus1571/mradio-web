@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { Station } from '../api/types'
 import type { PlayerState } from '../hooks/usePlayer'
 import { useProviders } from '../hooks/useProviders'
 import { formatCache, formatElapsed, formatKHz, formatKbps } from '../utils/format'
@@ -6,10 +7,10 @@ import {
   ChevronDownIcon,
   ExternalLinkIcon,
   MuteIcon,
-  PauseIcon,
   PlayIcon,
   RefreshIcon,
   SparkleIcon,
+  StopIcon,
   VolumeIcon,
 } from './Icons'
 
@@ -21,14 +22,16 @@ const _PROVIDER_LABEL: Record<string, string> = {
 
 export function NowPlayingPanel({
   state,
-  togglePause,
+  play,
+  stop,
   reconnect,
   setVolume,
   toggleMute,
   reenrich,
 }: {
   state: PlayerState
-  togglePause: () => void
+  play: (station: Station) => void
+  stop: () => void
   reconnect: () => void
   setVolume: (v: number) => void
   toggleMute: () => void
@@ -63,9 +66,13 @@ export function NowPlayingPanel({
       <div className="np-body">
         {!hasStation && <p className="np-empty">Pick a station from favorites or genres to start listening.</p>}
 
-        {hasStation && !hasTrack && <p className="np-empty">Connecting…</p>}
+        {hasStation && state.status === 'stopped' && (
+          <p className="np-empty">Stopped — press play to reconnect.</p>
+        )}
 
-        {hasTrack && (
+        {hasStation && state.status === 'playing' && !hasTrack && <p className="np-empty">Connecting…</p>}
+
+        {hasTrack && state.status === 'playing' && (
           <>
             <div className="np-metrics">
               {formatKbps(state.bitrate) && <span className="np-metric">{formatKbps(state.bitrate)}</span>}
@@ -126,11 +133,11 @@ export function NowPlayingPanel({
         <button
           className="transport-btn"
           type="button"
-          onClick={togglePause}
+          onClick={state.status === 'playing' ? stop : () => state.station && play(state.station)}
           disabled={!hasStation}
-          aria-label={state.playing ? 'Pause' : 'Play'}
+          aria-label={state.status === 'playing' ? 'Stop' : 'Play'}
         >
-          {state.playing ? <PauseIcon /> : <PlayIcon />}
+          {state.status === 'playing' ? <StopIcon /> : <PlayIcon />}
         </button>
 
         <button

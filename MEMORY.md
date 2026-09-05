@@ -190,6 +190,28 @@ were reviewed and left alone on purpose, not overlooked.
    `EnrichmentItem.wiki: string` type expects — the link rendered but
    `href` resolved to `"[object Object]"`. Both fixed; the frontend
    itself needed no change since its type/JSX were already correct.
+9. Fixed 2026-09-05 (0.1.5): now-playing WebSocket died silently and
+   never recovered (audio fine, metadata stuck until manual reconnect/
+   reload) — near-certainly Nginx Proxy Manager's idle timeout, since
+   neither side sent any keepalive traffic. `ws.py` now has a third
+   `pump_ping()` task sending `{"type":"ping"}` every 30s (verified live:
+   pings arrive at exactly 30s/60s over a real WebSocket connection);
+   `usePlayer.ts`'s WS effect was rewritten into a self-contained
+   reconnect loop with exponential backoff, gated by a `wantsConnectionRef`
+   so a deliberate Stop doesn't get silently fought by its own keepalive
+   logic. Same session also replaced Pause with a real Stop:
+   `togglePause()` only ever called native `audio.pause()`, which doesn't
+   touch `audio.src` — the backend kept proxying the live station forever
+   while "paused," and resuming played back stale buffered audio rather
+   than reconnecting to what's actually airing. `PlayerState.playing:
+   boolean` became `status: 'stopped' | 'playing'`; `stop()` clears
+   `audio.src` and reloads (the same abort mechanism `reconnect()`
+   already used), which the backend correctly detects as a disconnect
+   and cleans up via `stream.py`'s existing `finally` block — verified
+   live via `docker logs` showing `mradio.stream INFO disconnected`
+   firing exactly when Stop was clicked. No pause-with-a-timeout
+   compromise was built — decided with the user that a live stream only
+   has Play and Stop, nothing in between ("live is live").
 
 ## Known unknowns
 

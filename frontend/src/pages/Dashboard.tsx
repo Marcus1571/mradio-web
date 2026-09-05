@@ -50,7 +50,8 @@ export function Dashboard() {
         <div className="dashboard">
           <NowPlayingPanel
             state={player.state}
-            togglePause={player.togglePause}
+            play={player.play}
+            stop={player.stop}
             reconnect={player.reconnect}
             setVolume={player.setVolume}
             toggleMute={player.toggleMute}

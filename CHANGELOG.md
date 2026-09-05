@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.5] - 2026-09-05
+
+Fixed the now-playing WebSocket dying silently and never recovering
+(audio kept playing, but metadata/liner notes would just stop updating
+until a manual reconnect or page reload) — and reworked pause into a
+real Stop, since a live broadcast has no meaningful "paused" state.
+
+- The socket now sends a `{"type":"ping"}` keepalive every 30 seconds,
+  so reverse-proxy idle timeouts (the likely cause, confirmed via
+  `mradio.ws INFO disconnected` gaps in production logs with no error)
+  stop killing it silently.
+- If it does still drop for any reason, the frontend now reconnects
+  itself automatically with exponential backoff, instead of requiring a
+  manual reconnect or page reload.
+- Replaced the Pause button with a real Stop: pressing it now actually
+  releases the connection to the station (same mechanism the existing
+  Reconnect button already used to abort and re-request), instead of
+  just muting playback while the backend kept fetching from the live
+  station in the background with nobody listening. Resuming always
+  reconnects to what's airing now, never stale buffered audio.
+
 ## [0.1.4] - 2026-09-05
 
 Fixed the "Read on Wikipedia" link not showing up for non-classical

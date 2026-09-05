@@ -81,7 +81,14 @@ In NPM, add a proxy host:
 - **Forward Port**: `8000` (or whatever host port you mapped it to).
 - **Websockets Support**: **on**. The now-playing/AI-liner-notes channel
   (`/api/ws`) is a real WebSocket; without this toggle NPM won't upgrade the
-  connection and now-playing updates silently never arrive.
+  connection and now-playing updates silently never arrive. The app sends
+  a lightweight `{"type":"ping"}` keepalive over this socket every 30
+  seconds, so most reverse proxies' idle-connection timeouts (e.g.
+  nginx's default `proxy_read_timeout 60s`) never trigger — you shouldn't
+  need to touch that setting for this. If you still see the socket dying
+  periodically (visible as `mradio.ws INFO disconnected` in `docker
+  logs`) behind an unusual proxy setup, raising `proxy_read_timeout`
+  there in the Advanced tab is the fallback.
 - **SSL**: a valid cert for that domain, force SSL on.
 - **Advanced tab**, add:
   ```
