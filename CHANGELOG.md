@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.3] - 2026-09-05
+
+Fixed the Test buttons shipped in 0.2.2 rendering as unstyled, button-less
+text with no visible pass/fail indicator — they were reusing `.row-actions`
+(the Users table's plain-text action-link style), which is wrong for a
+primary action in a settings form. Added a dedicated `.test-btn`/
+`.test-actions` style (bordered button, same visual language as the rest
+of the settings form) and verified live in a browser: Ollama and NIM
+correctly report "No server URL configured." / "No API key configured."
+when empty, and a real, working opencode install reports "Working" with
+a green pill.
+
 ## [0.2.2] - 2026-09-05
 
 Three small fixes from a review pass:

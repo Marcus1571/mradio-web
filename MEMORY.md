@@ -333,6 +333,22 @@ deliberately not a new color/badge system. Testing is independent of
 Save: it never persists anything, and uses whatever's currently typed in
 the form.
 
+**Fixed in 0.2.3**: the Test *buttons themselves* shipped in 0.2.2 with
+no visible button styling — they'd reused `.row-actions button`, which is
+deliberately plain-text-styled for the Users table's inline action links
+("Make admin", "Disable", etc.), wrong for a primary action in a settings
+form. This shipped without ever clicking Test in a real browser first —
+the pill/JSON logic was verified, the actual rendered look wasn't. Added
+`.test-btn`/`.test-actions` (bordered button matching the settings form's
+visual language) and verified live end-to-end this time: ran the backend
++ Vite dev server locally, logged in via Playwright, clicked all three
+Test buttons, and confirmed both the failure pill (red, "No server URL
+configured." / "No API key configured.") and a genuine success pill
+(green "Working", via this dev machine's real Homebrew-installed
+opencode binary) render correctly. **Lesson: for any UI change, actually
+look at the rendered page before calling it done — a green build/lint is
+necessary but not sufficient.**
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
