@@ -7,11 +7,12 @@ accounts, and configuring AI providers.
 ## 1. Prerequisites
 
 - Docker + the Docker Compose plugin on the host (`docker compose version`).
-  On Unraid/LT this is whatever ships with a recent Unraid + the Docker
-  service enabled — no Community Apps template needed, this is a manual
-  `docker compose` deployment like your other non-CA containers.
-- A place for persistent data. Following your existing appdata convention:
-  `/mnt/cache/appdata/mradio-web/data`.
+  On Unraid this is whatever ships with a recent Unraid release + the
+  Docker service enabled — no Community Apps template needed, this is a
+  manual `docker compose` deployment, same as any container you'd run
+  outside the CA app store.
+- A place for persistent data on the host, e.g. `/mnt/cache/appdata/mradio-web/data`
+  on Unraid, or any other path on a plain Linux host.
 
 ## 2. Build and run
 
@@ -42,13 +43,15 @@ build takes a few minutes; nothing is pulled from a registry, everything is
 built from this repo.
 
 The container listens on port 8000 (`ports: - "8000:8000"` in the compose
-file — change the host side if 8000 is already taken on LT). On the actual
-LT deployment, host port 8000 was already taken by StirlingPDF, so a local
-`docker-compose.override.yml` (not committed — host-specific, lives only
-on LT) remaps it to 8123 and points the volume at
-`/mnt/cache/appdata/mradio-web/data`. Note: Compose merges `ports:` lists
-by appending, not replacing, so overriding the port requires the
-`!override` YAML merge tag (Compose 2.24+), e.g.:
+file — change the host side if 8000 is already taken by something else on
+your server). On a host that's already running other containers (common
+on something like Unraid, which tends to accumulate a lot of them), check
+for a conflict first (e.g. `docker ps` and look for a mapping already
+using 8000) rather than assuming it's free.
+
+If it's taken, keep the base `docker-compose.yml` unchanged and add a
+`docker-compose.override.yml` next to it (untracked — host-specific,
+don't commit it) remapping the host port and volume path, e.g.:
 
 ```yaml
 services:
@@ -59,8 +62,10 @@ services:
       - /mnt/cache/appdata/mradio-web/data:/data
 ```
 
-Without `!override`, Compose ends up trying to bind both 8000 and 8123,
-and the container fails to start because 8000 is already in use.
+The `!override` YAML merge tag (Compose 2.24+) matters here: Compose
+merges `ports:` lists by *appending*, not replacing, so without it,
+Compose ends up trying to bind both the original and the new port, and
+the container fails to start if the original one is already taken.
 
 ## 3. Reverse proxy (Nginx Proxy Manager)
 
@@ -70,14 +75,14 @@ just another route on the same FastAPI process, not a separate service.
 
 In NPM, add a proxy host:
 
-- **Domain**: whatever subdomain you want, e.g. `radio.legba.myddns.rocks`
-  (matching your existing `*.legba.myddns.rocks` / `*.legba.top` pattern).
-- **Forward Hostname/IP**: LT's LAN IP (e.g. `192.168.88.8`).
+- **Domain**: whatever subdomain you want to use for this app, e.g.
+  `radio.example.com`.
+- **Forward Hostname/IP**: the server's LAN IP (e.g. `192.168.1.10`).
 - **Forward Port**: `8000` (or whatever host port you mapped it to).
 - **Websockets Support**: **on**. The now-playing/AI-liner-notes channel
   (`/api/ws`) is a real WebSocket; without this toggle NPM won't upgrade the
   connection and now-playing updates silently never arrive.
-- **SSL**: your existing wildcard cert, force SSL on.
+- **SSL**: a valid cert for that domain, force SSL on.
 - **Advanced tab**, add:
   ```
   proxy_buffering off;
@@ -87,9 +92,9 @@ In NPM, add a proxy host:
   either stutters or never starts.
 
 Sessions are cookie-based with `Secure` set, so the app **only works over
-HTTPS** (i.e. through NPM) — not over plain `http://LT-IP:8000` directly,
-except `http://localhost` in a browser during local dev, which gets a
-same-origin exception.
+HTTPS** (i.e. through NPM) — not over plain `http://<server-ip>:8000`
+directly, except `http://localhost` in a browser during local dev, which
+gets a same-origin exception.
 
 ## 4. First login
 
@@ -138,8 +143,8 @@ Its own version is pinned in the `Dockerfile` (`ARG OPENCODE_VERSION`) so
 builds stay reproducible. A scheduled GitHub Action
 (`.github/workflows/bump-opencode.yml`) checks weekly for a newer
 `opencode-ai` release and opens a PR bumping the pin — review and merge it,
-then `docker compose build` on LT to pick it up. It never auto-merges or
-pushes a new image anywhere by itself.
+then `docker compose build` on the server to pick it up. It never
+auto-merges or pushes a new image anywhere by itself.
 
 ### NVIDIA NIM (OpenAI-compatible)
 
@@ -154,13 +159,16 @@ pushes a new image anywhere by itself.
 
 ### Ollama
 
-- **Server URL**: `http://192.168.88.8:11434` for your LT setup.
+- **Server URL**: e.g. `http://192.168.1.10:11434` for an Ollama instance
+  running on your LAN, or `http://localhost:11434` if it's on the same
+  host.
 - **Model**: whatever you've pulled on that Ollama instance (mradio
   defaulted to `gemma3:4b` — keep that or change it).
 
-Whether this points at your existing Hermes-Agent Ollama/NIM stack or runs
-independently is entirely up to what you type in these two provider
-sections — nothing in the code assumes either way.
+Whether this points at an existing Ollama/NIM setup you already run for
+other things, or a dedicated instance just for this app, is entirely up
+to what you type in these two provider sections — nothing in the code
+assumes either way.
 
 ## 7. Data and backups
 
@@ -173,8 +181,9 @@ Everything persistent lives under the `/data` volume:
 - `users/<id>/stations.json`, `config.json` — each account's favorites and
   personal settings (theme, volume, active provider).
 
-Back up the whole `/data` directory (or just the appdata folder on LT, same
-as your other containers) — it's the entire state of the app.
+Back up the whole `/data` directory (or the equivalent appdata folder on
+your platform, same as any other container) — it's the entire state of
+the app.
 
 ## 8. Updating
 
