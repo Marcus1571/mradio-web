@@ -20,7 +20,11 @@ async def list_providers(user: dict = Depends(get_active_user)):
     settings = settings_store.load()
     enricher = await get_enricher(user["id"])
     return {
-        "active": enricher.provider,
+        # The user's own pick (enricher.provider) can be empty/disabled
+        # while enrichment still succeeds via the fallback chain — show
+        # the provider actually doing the work, not just the raw
+        # preference, so "Asking <name>..." names something real.
+        "active": await enricher.active_provider(),
         "providers": [
             {"name": name, "enabled": providers.provider_enabled(name, settings)}
             for name in providers.PROVIDERS

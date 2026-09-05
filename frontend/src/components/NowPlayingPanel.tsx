@@ -158,7 +158,13 @@ export function NowPlayingPanel({
               {t('nowPlaying.linerNotes')}
             </div>
 
-            {state.enriching && !state.enrichment && <p className="trivia-placeholder">{t('nowPlaying.askingProvider')}</p>}
+            {state.enriching && !state.enrichment && (
+              <p className="trivia-placeholder">
+                {active
+                  ? t('nowPlaying.askingNamedProvider', { provider: _PROVIDER_LABEL[active] || active })
+                  : t('nowPlaying.askingProvider')}
+              </p>
+            )}
 
             {!state.enriching && !state.enrichment && (
               <p className="trivia-placeholder">{t('nowPlaying.noLinerNotes')}</p>

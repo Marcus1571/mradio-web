@@ -115,6 +115,7 @@ const en = {
     connecting: 'Connecting…',
     linerNotes: 'Liner notes',
     askingProvider: 'Asking the AI provider…',
+    askingNamedProvider: 'Asking {provider}…',
     noLinerNotes: 'No liner notes for this track.',
     showMore: 'Show more',
     showLess: 'Show less',

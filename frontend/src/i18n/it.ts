@@ -117,6 +117,7 @@ const it: Dict = {
     connecting: 'Connessione…',
     linerNotes: 'Note di copertina',
     askingProvider: 'Interrogando il provider IA…',
+    askingNamedProvider: 'Interrogando {provider}…',
     noLinerNotes: 'Nessuna nota per questo brano.',
     showMore: 'Mostra di più',
     showLess: 'Mostra di meno',

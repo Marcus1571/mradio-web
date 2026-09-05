@@ -117,6 +117,7 @@ const es: Dict = {
     connecting: 'Conectando…',
     linerNotes: 'Notas del disco',
     askingProvider: 'Preguntando al proveedor de IA…',
+    askingNamedProvider: 'Preguntando a {provider}…',
     noLinerNotes: 'No hay notas para esta pista.',
     showMore: 'Mostrar más',
     showLess: 'Mostrar menos',
