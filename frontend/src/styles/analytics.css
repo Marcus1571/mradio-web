@@ -1,0 +1,123 @@
+.analytics-section-title {
+  font-size: var(--text-md);
+  font-weight: 500;
+  padding: var(--space-md) var(--space-md) var(--space-sm);
+}
+
+.analytics-empty {
+  padding: 0 var(--space-md) var(--space-md);
+}
+
+.live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--live);
+}
+
+.analytics-map-wrap {
+  padding: 0 var(--space-md) var(--space-md);
+}
+
+.analytics-map {
+  height: 320px;
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+}
+
+.analytics-stats-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: var(--space-md);
+}
+
+.since-picker {
+  display: flex;
+  gap: var(--space-3xs);
+}
+
+.since-btn {
+  font-size: var(--text-xs);
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3xs) var(--space-xs);
+}
+
+.since-btn.active {
+  border-color: var(--accent-line);
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+.analytics-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+  padding: 0 var(--space-md) var(--space-md);
+}
+
+.analytics-stats-grid h3 {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--ink-2);
+  margin-bottom: var(--space-2xs);
+}
+
+@media (max-width: 700px) {
+  .analytics-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-xs);
+}
+
+.bar-label {
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-track {
+  height: 8px;
+  background: var(--paper-3);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.bar-value {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.sparkline {
+  width: 100%;
+  height: 60px;
+}
+
+.history-pagination {
+  padding: var(--space-sm) var(--space-md);
+}

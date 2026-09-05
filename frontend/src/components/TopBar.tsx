@@ -4,7 +4,7 @@ import { LANGUAGES } from '../i18n'
 import type { Language, TFunction } from '../i18n'
 import { ChevronDownIcon, MoonIcon, SunIcon } from './Icons'
 
-export type Page = 'dashboard' | 'users' | 'ai-settings' | 'change-password'
+export type Page = 'dashboard' | 'users' | 'ai-settings' | 'analytics' | 'change-password'
 
 export function TopBar({
   theme,
@@ -110,6 +110,9 @@ export function TopBar({
                   </button>
                   <button type="button" onClick={() => { onNavigate('ai-settings'); setMenuOpen(false) }}>
                     {t('topbar.aiProviders')}
+                  </button>
+                  <button type="button" onClick={() => { onNavigate('analytics'); setMenuOpen(false) }}>
+                    {t('topbar.analytics')}
                   </button>
                   <hr />
                 </>
