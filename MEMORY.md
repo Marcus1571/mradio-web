@@ -477,52 +477,92 @@ languages (not just build/lint) per the standing lesson from 0.2.2/0.2.3
 Amsterdam/Zurich/London from seeded test data), stats bars, sparkline,
 and paginated history table, in dark, light, English, and Spanish.
 
-## Trivia history (added 2026-09-05, 0.3.2)
+## Trivia history (added 2026-09-05, 0.3.2; made per-user + persisted 2026-09-06, 0.3.3)
 
-"Recently played" — the last 10 AI trivia blurbs from the current
-session, re-readable while a different track plays. Session-only,
-in-memory, personal per listener (all confirmed with the user up
-front) — no backend changes at all.
+"Recently played" — the last 10 AI trivia blurbs (author, title,
+station, trivia, wiki link), re-readable while a different track plays.
+**0.3.2 shipped this as session-only/in-memory; 0.3.3 replaced that
+with per-user persistence** after the user asked for it explicitly
+("per user not per session... together with the trivia/info, the
+author and title must be kept too" — the author/title part was already
+true in 0.3.2's shape, carried forward unchanged).
 
-Lives entirely in `usePlayer.ts`'s `PlayerState.triviaHistory`
-(`TriviaHistoryEntry[]`, capped at `MAX_TRIVIA_HISTORY = 10`), appended
-in the existing `'enrichment'` WS-message handler — the one place
-`stationName`/`artist`/`title`/`performer` and the fresh
-`EnrichmentItem` are all simultaneously in scope. Deduped on
-`rawTitle`: a re-ask via the existing `reenrich()`/"Re-ask AI" button
-re-arrives as another `'enrichment'` message for the same `rawTitle`
-and updates that entry in place (moves to front) rather than adding a
-duplicate chip — verified with a small standalone script simulating 12
-distinct arrivals (caps at 10, drops oldest) plus a re-ask of an
-already-present entry (no duplicate, moves to front). `play()`
-deliberately does NOT clear `triviaHistory` on a station switch — it's
-scoped to the whole session, not the current station.
+Current (0.3.3) architecture: new `trivia_history` SQLite table
+(`db.py`, same `CREATE TABLE IF NOT EXISTS` pattern as `play_history`) —
+one row per `(user_id, raw_title)`, `backend/app/trivia_history.py`
+mirrors `history.py`'s plain-async-functions-over-`db.tx()` style.
+`record()` deletes any existing row for that `(user_id, raw_title)`
+first (so a re-ask moves the entry to newest instead of duplicating —
+same dedupe behavior 0.3.2 had in a JS array, now enforced in SQL),
+inserts, then trims to the 10 most recent per user. Wired into
+`routers/ws.py`'s `push_enrichment()` — the single choke point every
+successful enrichment already passes through — and the cached-hit
+branch in `pump_nowplaying()` (a track whose trivia is already cached
+still needs to land in *this user's* persisted history even though no
+fresh LLM call happened). `state` in that same handler gained
+`station_name`/`artist`/`title`/`performer` tracking (previously only
+`raw_title`) to have everything `record()` needs.
 
-UI: `NowPlayingPanel.tsx` gained a `TriviaHistoryStrip` local
-subcomponent (same "small subcomponent beside its one caller" style as
-`AISettingsPage.tsx`'s `TestBadge`) — a horizontal scrollable filmstrip
-of compact chips below the `.transport` bar, renders nothing at all
-when history is empty. Clicking a chip expands it inline directly
-underneath, reusing the *exact* same `.trivia`/`.trivia-actions`/
-wiki-link classes and clamp-at-280-chars "show more" behavior as the
-live current-track trivia block — a re-read blurb looks and behaves
-identically to the original, not a simplified copy. Only one chip
-expands at a time (local `expanded: string | null` state).
+New `GET /api/enrich/trivia-history` (behind `get_active_user`, not
+admin-only — personal data). Frontend: `usePlayer.ts` dropped the
+in-memory array entirely, replaced with a `triviaHistoryVersion`
+counter bumped on every fresh (non-fail) `'enrichment'` message;
+`NowPlayingPanel.tsx`'s `TriviaHistoryStrip` fetches the endpoint in a
+`useEffect` keyed on that version instead of receiving history as a
+prop. All the 0.3.2 UI (filmstrip chips, expand-in-place reusing
+`.trivia`/`.trivia-actions`/wiki-link, clamp-at-280 "show more",
+one-expanded-at-a-time) is unchanged — only the data source moved from
+client state to a server fetch. Verified live: played a track to a
+real trivia result, reloaded the page, logged back in — the chip was
+still there, proving persistence (this is the concrete thing 0.3.2
+could never do).
 
-Verified live end-to-end via Playwright with a REAL opencode-generated
-trivia blurb (not a mock) — confirmed a chip renders correctly on
-first arrival, expand/collapse toggles the right CSS classes (and the
-underlying DOM state, not just visually — checked `getAttribute('class')`
-before/after each click to rule out the lingering highlight after
-collapse being a real bug rather than the browser's own default button
-focus-ring outline, which is what it actually was), and both dark and
-light themes render the filmstrip/expanded card correctly. Building up
-a full 10-entry history live wasn't practical in one sitting (real
-radio stations change tracks every few minutes, and this app's AI
-enrichment already takes 10-90s per track even on a fast local
-opencode — both pre-existing, unrelated to this feature), so the
-cap/dedupe logic itself was additionally verified via a standalone
-Node script rather than waiting on real playback for an hour.
+**Two real AI bugs found and fixed in the same 0.3.3 round** (from
+production logs + a direct user report: "sometimes AI won't give
+anything and re-requesting fails, and if I change AI provider yields
+nothing — I need to reload the page"):
+
+1. `providers.py`'s `_offline_until` is a single **global, cross-user,
+   cross-provider** cooldown (120s) — `enricher.py`'s `_worker()` sets
+   it via `mark_offline()` on ANY failed attempt and checks it via
+   `is_offline()` before even trying again, so one failure from one
+   user on one provider silently no-ops every enrichment attempt from
+   *everyone*, on *every* provider, for two minutes — including a
+   deliberate "Re-ask AI" click. That's "re-requesting fails." Fixed:
+   `Enricher.invalidate()` (what both "Re-ask AI" and a provider switch
+   call) now calls `providers.clear_offline()` first — a human
+   explicitly asking again is exactly the case the cooldown shouldn't
+   block; it exists to stop *automatic* background retries from
+   hammering a genuinely down provider, not to veto a deliberate one.
+2. `routers/enrich.py`'s `activate_provider()` (`POST
+   /api/enrich/providers/activate`, what the provider dropdown calls)
+   updated `enricher.provider` but never re-asked about the
+   currently-playing track — the panel kept showing the previous
+   (often failed/empty) result until a separate manual re-ask, which
+   itself could still be blocked by bug #1. That's "change AI provider
+   yields nothing." Fixed: it now calls `enricher.invalidate(...)`
+   immediately after a successful switch, using new `Enricher.last_key`/
+   `last_artist`/`last_title`/`last_performer` fields (set in `submit()`
+   alongside the existing `last_key`) so the router doesn't need
+   `routers/ws.py` to thread that state through separately.
+   `is_offline()` global cooldown itself was deliberately left as a
+   single flag (not made per-provider) — that's a bigger, riskier
+   change to the fallback-chain logic for a problem the two fixes above
+   already solve for the reported symptom; noted as a known remaining
+   limitation, not silently dropped.
+
+**Root cause of "reload fixes it"**: purely coincidental — by the time
+a frustrated user gives up and reloads, the 120s cooldown has usually
+already expired on its own. Reloading itself does nothing special.
+
+Verified live end-to-end via Playwright: forced a real failure (pointed
+`ollama_url` at an unreachable port, confirmed "No liner notes" via a
+real `llm_ollama()` connection-refused path — not simulated), then
+switched to opencode via the dropdown with zero manual re-ask, and
+confirmed a fresh, successful enrichment landed ~30s later — the exact
+reported bug sequence, now fixed, confirmed via `docker logs`-style
+request tracing (`POST .../activate` immediately followed by a real
+opencode health-check + session-create, not silence).
 
 **Confirmed, not assumed**: the shared AI trivia cache (`cache.py`,
 `provider::language::raw_title` key, added in 0.2.1) already handles
@@ -543,6 +583,16 @@ built.
   in the original project plan — it's now purely a value in the AI
   Providers admin page, not a code decision, so it never needed resolving
   in the build itself.
+- `providers.py`'s offline cooldown (`_offline_until`) is still a single
+  global flag, not per-provider, even after 0.3.3's fixes (see "Trivia
+  history" section above) — a genuinely-down provider still blocks
+  *automatic* retries for every other provider/user for up to 120s. The
+  two 0.3.3 fixes cover every *deliberate* user-initiated retry path
+  (manual re-ask, provider switch), which is what the actual reported
+  bug needed; making the cooldown per-provider is a real but
+  lower-priority follow-up, deliberately deferred as riskier (touches
+  the fallback-chain ordering in `active_provider()`/`_llm()` too) for a
+  problem already solved for the reported symptom.
 
 ## Where things live
 

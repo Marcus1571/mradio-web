@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.3.3] - 2026-09-06
+
+Made trivia history per-user and persisted (was session-only, in-memory,
+since 0.3.2), and fixed two real AI enrichment bugs found from production
+logs and a user report ("sometimes AI won't give anything and
+re-requesting fails, and if I change AI provider yields nothing — I need
+to reload the page").
+
+- **Trivia history now survives logout/reload.** New `trivia_history`
+  SQLite table, one row per track per user (author, title, station,
+  trivia, wiki link — same fields as before, now persisted instead of
+  living in browser memory). The "Recently played" filmstrip fetches
+  from `GET /api/enrich/trivia-history` instead of a local array;
+  re-asking AI for a track still updates that entry in place rather
+  than duplicating it, now enforced in SQL.
+- **Real bug fixed**: a single AI failure — from *any* user, on *any*
+  provider — set a global 2-minute cooldown that silently blocked every
+  retry attempt for *everyone*, including a deliberate "Re-ask AI"
+  click. That's what "re-requesting fails" was. Fixed: a manual re-ask
+  now clears the cooldown first, since a human explicitly asking again
+  is exactly the case it shouldn't block.
+- **Real bug fixed**: switching AI providers updated which provider was
+  active but never actually re-asked it about the currently-playing
+  track — the panel just kept showing the previous (often failed/empty)
+  result until a separate manual re-ask, which itself could still be
+  blocked by the bug above. That's "change AI provider yields nothing."
+  Fixed: switching providers now immediately triggers a fresh
+  enrichment attempt for the current track.
+- Verified live end-to-end: forced a real Ollama connection failure,
+  confirmed the panel showed no liner notes, then confirmed switching
+  to opencode alone (no manual re-ask) produced a fresh, successful
+  enrichment ~30s later — the exact reported failure sequence, now
+  fixed.
+
 ## [0.3.2] - 2026-09-05
 
 Added a "Recently played" trivia history to the now-playing panel — the
