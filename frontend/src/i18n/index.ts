@@ -8,9 +8,10 @@ import it from './it'
 import nl from './nl'
 import pt from './pt'
 import ru from './ru'
+import sv from './sv'
 import type { Dict } from './en'
 
-export type Language = 'en' | 'es' | 'it' | 'pt' | 'fr' | 'ru' | 'de' | 'el' | 'nl' | 'da'
+export type Language = 'en' | 'es' | 'it' | 'pt' | 'fr' | 'ru' | 'de' | 'el' | 'nl' | 'da' | 'sv'
 
 export const LANGUAGES: { code: Language; flag: string; label: string }[] = [
   { code: 'en', flag: '🇺🇸', label: 'English' },
@@ -23,9 +24,10 @@ export const LANGUAGES: { code: Language; flag: string; label: string }[] = [
   { code: 'el', flag: '🇬🇷', label: 'Ελληνικά' },
   { code: 'nl', flag: '🇳🇱', label: 'Nederlands' },
   { code: 'da', flag: '🇩🇰', label: 'Dansk' },
+  { code: 'sv', flag: '🇸🇪', label: 'Svenska' },
 ]
 
-const DICTS: Record<Language, Dict> = { en, es, it, pt, fr, ru, de, el, nl, da }
+const DICTS: Record<Language, Dict> = { en, es, it, pt, fr, ru, de, el, nl, da, sv }
 
 function getPath(dict: Dict, path: string): string {
   return path
