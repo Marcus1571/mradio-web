@@ -262,18 +262,19 @@ on LT. Test-connection now reports Ollama as `True, "Connected."`.
 correct as a generic fresh-install default; it just needs pulling before
 use, same as any Ollama model does.
 
-## Language support (added 2026-09-05, 0.2.0 + 0.2.1 + 0.3.1; Portuguese + pattern cleanup 2026-09-06, 0.3.5; French 2026-09-06, 0.3.10; Russian 2026-09-06, 0.5.8; German 2026-09-06, 0.5.9; Greek 2026-09-06, 0.5.10; Dutch 2026-09-06, 0.5.11) — fully done
+## Language support (added 2026-09-05, 0.2.0 + 0.2.1 + 0.3.1; Portuguese + pattern cleanup 2026-09-06, 0.3.5; French 2026-09-06, 0.3.10; Russian 2026-09-06, 0.5.8; German 2026-09-06, 0.5.9; Greek 2026-09-06, 0.5.10; Dutch 2026-09-06, 0.5.11; Danish 2026-09-06, 0.5.12) — fully done
 
 UI language (English/Spanish/Italian/Portuguese/French/Russian/German/
-Greek/Dutch, top-bar dropdown, 0.2.0 + Italian in 0.3.1 + Portuguese
-in 0.3.5 + French in 0.3.10 + Russian in 0.5.8 + German in 0.5.9 +
-Greek in 0.5.10 + Dutch in 0.5.11) — `frontend/src/i18n/` (hand-rolled
-`en.ts`/`es.ts`/`it.ts`/`pt.ts`/`fr.ts`/`ru.ts`/`de.ts`/`el.ts`/
-`nl.ts`/`index.ts`, no library, `Dict` type widening so non-English
-files only have to match English's key shape, not its exact text).
-Adding a language is now a proven 6-spot pattern (confirmed for
-Italian in 0.3.1, Portuguese in 0.3.5, French in 0.3.10, Russian in
-0.5.8, German in 0.5.9, Greek in 0.5.10, Dutch in 0.5.11 — see
+Greek/Dutch/Danish, top-bar dropdown, 0.2.0 + Italian in 0.3.1 +
+Portuguese in 0.3.5 + French in 0.3.10 + Russian in 0.5.8 + German in
+0.5.9 + Greek in 0.5.10 + Dutch in 0.5.11 + Danish in 0.5.12) —
+`frontend/src/i18n/` (hand-rolled `en.ts`/`es.ts`/`it.ts`/`pt.ts`/
+`fr.ts`/`ru.ts`/`de.ts`/`el.ts`/`nl.ts`/`da.ts`/`index.ts`, no library,
+`Dict` type widening so non-English files only have to match English's
+key shape, not its exact text). Adding a language is now a proven
+6-spot pattern (confirmed for Italian in 0.3.1, Portuguese in 0.3.5,
+French in 0.3.10, Russian in 0.5.8, German in 0.5.9, Greek in 0.5.10,
+Dutch in 0.5.11, Danish in 0.5.12 — see
 [[feedback_i18n_and_readme_kb_links]] for the durable checklist): new
 `<lang>.ts` file, add its code to `Language` + `LANGUAGES` in
 `index.ts`, add the code to `Config.language`'s union in
@@ -290,8 +291,10 @@ truncation or wrapping issues found on the Settings hub cards or
 elsewhere. Greek used the ISO code `el` (not `gr`, a common but
 incorrect guess) since that's the actual ISO 639-1 code — verified the
 same way, including uppercase accented table headers ("ΌΝΟΜΑ ΧΡΉΣΤΗ")
-rendering correctly. Dutch (`nl`) needed nothing special either —
-ninth language added, this pattern is now well-proven across Latin,
+rendering correctly. Dutch (`nl`) needed nothing special either.
+Danish used the ISO code `da` (not `dk`, a common but incorrect guess —
+`dk` is the *country* code, `da` is the *language* code) — tenth
+language added, this pattern is now well-proven across Latin,
 Cyrillic, and Greek scripts alike.
 `Dashboard.tsx`'s config-load fallback chain (previously an `===`
 chain naming each language code, needing an edit per new language) was
@@ -314,14 +317,15 @@ render path is the exception.
 
 AI liner notes follow the UI language too (0.2.1, Italian added 0.3.1,
 Portuguese added 0.3.5, French added 0.3.10, Russian added 0.5.8,
-German added 0.5.9, Greek added 0.5.10, Dutch added 0.5.11) —
-`Enricher.language` mirrors `self.provider`'s pattern (set once in
-`start()` from `load_cfg()`, pushed live by `PATCH /api/config` into
-the running instance, not re-read from disk per-call).
-`_PROMPT_TEMPLATE` gained a `{language_instruction}` slot (English
-stays fully implicit — zero prompt-text cost — Spanish/Italian/
-Portuguese/French/Russian/German/Greek/Dutch each add one line asking
-for the trivia field in that language while explicitly protecting
+German added 0.5.9, Greek added 0.5.10, Dutch added 0.5.11, Danish
+added 0.5.12) — `Enricher.language` mirrors `self.provider`'s pattern
+(set once in `start()` from `load_cfg()`, pushed live by
+`PATCH /api/config` into the running instance, not re-read from disk
+per-call). `_PROMPT_TEMPLATE` gained a `{language_instruction}` slot
+(English stays fully implicit — zero prompt-text cost — Spanish/
+Italian/Portuguese/French/Russian/German/Greek/Dutch/Danish each add
+one line asking for the trivia field in that language while explicitly
+protecting
 `"wiki"`, which must stay the English Wikipedia article title for
 `wiki.resolve()`'s lookup).
 `cache.py`'s key gained a language dimension

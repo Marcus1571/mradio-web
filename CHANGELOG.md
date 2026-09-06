@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.12] - 2026-09-06
+
+Added Danish as a tenth UI/AI-liner-notes language, alongside English,
+Spanish, Italian, Portuguese, French, Russian, German, Greek, and
+Dutch — switch instantly from the top bar, same as the others.
+
 ## [0.5.11] - 2026-09-06
 
 Added Dutch as a ninth UI/AI-liner-notes language, alongside English,
