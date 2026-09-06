@@ -2,23 +2,37 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError, api } from '../api/client'
 import type { User } from '../api/types'
+import { Modal } from '../components/Modal'
 import { useAuth } from '../hooks/useAuth'
 import type { TFunction } from '../i18n'
 import { displayName } from '../utils/format'
 import '../styles/admin.css'
 
+type CreateForm = {
+  username: string
+  password: string
+  fullName: string
+  email: string
+  isAdmin: boolean
+}
+
+const EMPTY_CREATE_FORM: CreateForm = { username: '', password: '', fullName: '', email: '', isAdmin: false }
+
 export function UsersPage({ onBack, t }: { onBack?: () => void; t: TFunction }) {
   const { user: me } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
 
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [busy, setBusy] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createForm, setCreateForm] = useState<CreateForm>(EMPTY_CREATE_FORM)
+  const [createBusy, setCreateBusy] = useState(false)
+  const [createError, setCreateError] = useState('')
+
+  const [editTarget, setEditTarget] = useState<User | null>(null)
+  const [editFullName, setEditFullName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [editBusy, setEditBusy] = useState(false)
+  const [editError, setEditError] = useState('')
 
   async function refresh() {
     const res = await api.get<User[]>('/api/users')
@@ -29,28 +43,30 @@ export function UsersPage({ onBack, t }: { onBack?: () => void; t: TFunction }) 
     refresh().finally(() => setLoading(false))
   }, [])
 
+  function openCreate() {
+    setCreateForm(EMPTY_CREATE_FORM)
+    setCreateError('')
+    setCreateOpen(true)
+  }
+
   async function onCreate(e: FormEvent) {
     e.preventDefault()
-    setError('')
-    setBusy(true)
+    setCreateError('')
+    setCreateBusy(true)
     try {
       await api.post('/api/users', {
-        username,
-        password,
-        is_admin: isAdmin,
-        full_name: fullName || undefined,
-        email: email || undefined,
+        username: createForm.username,
+        password: createForm.password,
+        is_admin: createForm.isAdmin,
+        full_name: createForm.fullName || undefined,
+        email: createForm.email || undefined,
       })
-      setUsername('')
-      setPassword('')
-      setFullName('')
-      setEmail('')
-      setIsAdmin(false)
+      setCreateOpen(false)
       await refresh()
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : t('users.errorFallback'))
+      setCreateError(err instanceof ApiError ? err.message : t('users.errorFallback'))
     } finally {
-      setBusy(false)
+      setCreateBusy(false)
     }
   }
 
@@ -81,18 +97,27 @@ export function UsersPage({ onBack, t }: { onBack?: () => void; t: TFunction }) 
     await refresh()
   }
 
-  async function editProfile(u: User) {
-    const nextFullName = window.prompt(
-      t('users.editFullNamePrompt', { username: u.username }), u.full_name ?? ''
-    )
-    if (nextFullName === null) return
-    const nextEmail = window.prompt(
-      t('users.editEmailPrompt', { username: u.username }), u.email ?? ''
-    )
-    if (nextEmail === null) return
-    await api.patch(`/api/users/${u.id}`, { full_name: nextFullName, email: nextEmail })
-    await refresh()
-    window.alert(t('users.editProfileDone'))
+  function openEdit(u: User) {
+    setEditTarget(u)
+    setEditFullName(u.full_name ?? '')
+    setEditEmail(u.email ?? '')
+    setEditError('')
+  }
+
+  async function onEditSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (!editTarget) return
+    setEditError('')
+    setEditBusy(true)
+    try {
+      await api.patch(`/api/users/${editTarget.id}`, { full_name: editFullName, email: editEmail })
+      setEditTarget(null)
+      await refresh()
+    } catch (err) {
+      setEditError(err instanceof ApiError ? err.message : t('users.errorFallback'))
+    } finally {
+      setEditBusy(false)
+    }
   }
 
   return (
@@ -139,7 +164,7 @@ export function UsersPage({ onBack, t }: { onBack?: () => void; t: TFunction }) 
                       <button type="button" onClick={() => void toggleDisabled(u)} disabled={u.id === me?.id}>
                         {u.disabled ? t('users.enable') : t('users.disable')}
                       </button>
-                      <button type="button" onClick={() => void editProfile(u)}>
+                      <button type="button" onClick={() => openEdit(u)}>
                         {t('users.editProfile')}
                       </button>
                       <button type="button" onClick={() => void resetPassword(u)}>
@@ -161,42 +186,93 @@ export function UsersPage({ onBack, t }: { onBack?: () => void; t: TFunction }) 
           </table>
         )}
 
-        <form className="admin-form" onSubmit={onCreate}>
+        <div style={{ padding: 'var(--space-md)' }}>
+          <button className="admin-submit" type="button" onClick={openCreate}>
+            {t('users.addUser')}
+          </button>
+        </div>
+        <p className="admin-note" style={{ padding: '0 1rem 1rem' }}>
+          {t('users.footerNote')}
+        </p>
+      </div>
+
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title={t('users.addUser')}>
+        <form onSubmit={onCreate}>
           <label className="field">
             <span>{t('users.fieldUsername')}</span>
-            <input value={username} onChange={(e) => setUsername(e.target.value)} required />
+            <input
+              value={createForm.username}
+              onChange={(e) => setCreateForm((f) => ({ ...f, username: e.target.value }))}
+              autoFocus
+              required
+            />
           </label>
           <label className="field">
             <span>{t('users.fieldFullName')}</span>
-            <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+            <input
+              value={createForm.fullName}
+              onChange={(e) => setCreateForm((f) => ({ ...f, fullName: e.target.value }))}
+            />
           </label>
           <label className="field">
             <span>{t('users.fieldEmail')}</span>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input
+              type="email"
+              value={createForm.email}
+              onChange={(e) => setCreateForm((f) => ({ ...f, email: e.target.value }))}
+            />
           </label>
           <label className="field">
             <span>{t('users.fieldTempPassword')}</span>
             <input
               type="text"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={createForm.password}
+              onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))}
               minLength={8}
               required
             />
           </label>
           <label className="checkbox">
-            <input type="checkbox" checked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={createForm.isAdmin}
+              onChange={(e) => setCreateForm((f) => ({ ...f, isAdmin: e.target.checked }))}
+            />
             {t('users.fieldAdmin')}
           </label>
-          <button className="admin-submit" type="submit" disabled={busy}>
-            {busy ? t('users.adding') : t('users.addUser')}
-          </button>
+          {createError && <p className="admin-note" style={{ color: 'var(--danger)' }}>{createError}</p>}
+          <div className="modal-actions">
+            <button className="modal-cancel" type="button" onClick={() => setCreateOpen(false)}>
+              {t('common.cancel')}
+            </button>
+            <button className="admin-submit" type="submit" disabled={createBusy}>
+              {createBusy ? t('users.adding') : t('users.addUser')}
+            </button>
+          </div>
         </form>
-        {error && <p className="admin-note" style={{ padding: '0 1rem 1rem', color: 'var(--danger)' }}>{error}</p>}
-        <p className="admin-note" style={{ padding: '0 1rem 1rem' }}>
-          {t('users.footerNote')}
-        </p>
-      </div>
+      </Modal>
+
+      <Modal open={editTarget !== null} onClose={() => setEditTarget(null)} title={t('users.editProfile')}>
+        <form onSubmit={onEditSubmit}>
+          <label className="field">
+            <span>{t('users.fieldFullName')}</span>
+            <input value={editFullName} onChange={(e) => setEditFullName(e.target.value)} autoFocus />
+          </label>
+          <label className="field">
+            <span>{t('users.fieldEmail')}</span>
+            <input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+          </label>
+          {editError && <p className="admin-note" style={{ color: 'var(--danger)' }}>{editError}</p>}
+          <div className="modal-actions">
+            <button className="modal-cancel" type="button" onClick={() => setEditTarget(null)}>
+              {t('common.cancel')}
+            </button>
+            <button className="admin-submit" type="submit" disabled={editBusy}>
+              {editBusy ? t('common.saving') : t('common.save')}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   )
 }

@@ -1,0 +1,89 @@
+.modal {
+  background: var(--paper-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 0;
+  width: min(420px, calc(100vw - var(--space-lg) * 2));
+  box-shadow: 0 20px 48px oklch(0% 0 0 / 0.2);
+}
+
+.modal::backdrop {
+  background: oklch(0% 0 0 / 0.4);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--line);
+}
+
+.modal-header h2 {
+  font-size: var(--text-md);
+  font-weight: 500;
+}
+
+.modal-close {
+  font-size: var(--text-lg);
+  line-height: 1;
+  color: var(--ink-3);
+  padding: var(--space-3xs);
+}
+
+.modal-close:hover {
+  color: var(--ink);
+}
+
+.modal-body {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.modal-body .field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+}
+
+.modal-body .field span {
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+.modal-body .field input {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2xs) var(--space-xs);
+  font-size: var(--text-sm);
+  width: 100%;
+  color: var(--ink);
+}
+
+.modal-body .checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-size: var(--text-sm);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-2xs);
+}
+
+.modal-cancel {
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  padding: var(--space-2xs) var(--space-sm);
+}
+
+.modal-cancel:hover {
+  color: var(--ink);
+}
