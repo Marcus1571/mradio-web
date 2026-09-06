@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.7] - 2026-09-06
+
+Fixed the Analytics "Live now" table's status-dot column claiming a
+large, fixed share of the table's width (a min-width rule meant for the
+Users table's name column was leaking into every `.admin-table`,
+including this one, where the first column is just a small dot) —
+squeezing User/Station/Genre/Location/Elapsed into cramped, wrapping
+columns. The dot column now sizes to its content; the other columns
+get their space back.
+
 ## [0.5.6] - 2026-09-06
 
 Replaced the "Add user" and "Edit profile" browser-native prompt

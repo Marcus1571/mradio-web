@@ -1111,6 +1111,28 @@ round-trip correctly through the existing API endpoints unchanged
 (no backend changes needed for this — pure frontend UI swap), and the
 modal renders correctly in both dark and light themes.
 
+## Analytics live table's status-dot column crowding the rest (fixed 2026-09-06, 0.5.7)
+
+Direct fallout from the earlier "long display name" table fix (0.4.2's
+`.admin-table td:first-child { min-width: 12rem }`, added for the
+Users table's name column) — every table sharing the generic
+`.admin-table` class inherited that rule, including the Analytics
+"Live now" table, whose *first* column is just a small pulsing status
+dot with no text at all. That dot column was being forced to 12rem
+wide, visibly starving User/Station/Genre/Location/Elapsed of space
+and causing them to wrap awkwardly — exactly the kind of layout bug a
+generic class-based rule can introduce in a table it wasn't written
+for. Fixed by scoping the min-width rule to a new `.admin-table-users`
+class applied only to `UsersPage.tsx`'s table, and giving the
+Analytics dot column its own `.admin-table-status-col` (`width: 1%` —
+the standard CSS trick for "shrink this table cell to its content's
+intrinsic width" in table layout) applied to both the dot `<th>` and
+`<td>`. **Lesson, same shape as the placeholder-text miss earlier this
+session**: a fix scoped to a shared class can silently regress an
+unrelated user of that class — worth checking every place a modified
+shared class is actually used, not just the one page the fix was
+written for.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
