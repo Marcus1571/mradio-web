@@ -310,6 +310,31 @@
   z-index: 1;
 }
 
+/* Many station logos are only available flattened onto a white
+   rectangle (France Musique's is a lossy WebP, which can't carry
+   transparency at all), which reads as a bright box against the
+   panel's warm paper. `multiply` makes white pixels take the
+   background's colour, so the box disappears while the artwork itself
+   is unchanged — and logos that *are* transparent, or that are dark
+   on light, are unaffected.
+
+   Light mode only: against a dark panel, multiply crushes a light
+   logo to near-black and makes it unreadable. Confirmed both
+   behaviours by rendering real logos in both themes. Follows the same
+   light/dark selector pattern as index.css, so the manual theme
+   toggle is honoured as well as the OS preference. */
+:root[data-theme="light"] .station-logo {
+  mix-blend-mode: multiply;
+  filter: brightness(1.06);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .station-logo {
+    mix-blend-mode: multiply;
+    filter: brightness(1.06);
+  }
+}
+
 .np-body {
   padding: var(--space-sm) var(--space-md);
   min-height: 220px;
