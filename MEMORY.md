@@ -1076,6 +1076,41 @@ strings across the whole frontend before editing, specifically to avoid
 another repeat of the previous entry's lesson (partial fixes that miss
 some of the actual occurrences).
 
+## "Add user" / "Edit profile" moved off window.prompt (added 2026-09-06, 0.5.6)
+
+User asked for a "proper page" instead of the ephemeral `window.prompt`
+popups for these two actions. Chose an in-page modal over a full
+separate page (explicit choice, not a default) — this app has no
+routing library and no modal precedent yet, but a modal is the lighter
+addition for a handful of fields versus a full navigate-away page, and
+keeps the Users table visible underneath.
+
+New `frontend/src/components/Modal.tsx` — thin wrapper around the
+native `<dialog>` element (`showModal()`/`close()` driven by an `open`
+prop), not a hand-rolled overlay: gets ESC-to-close, backdrop, and
+focus trapping for free from the browser, matching this codebase's
+"reuse the platform, minimal abstraction" style rather than pulling in
+a modal library. New `frontend/src/styles/modal.css` styled with the
+same design tokens (`--paper-2`, `--radius-lg`, etc.) already used
+everywhere else — no new visual language introduced.
+
+`UsersPage.tsx`'s inline create-user form (which was already a real
+form, just awkwardly living at the bottom of the table) and the
+`editProfile()` `window.prompt` chain were both replaced with the same
+`Modal` component, each with its own open/busy/error state. Reused
+existing `common.cancel`/`common.save` i18n keys rather than adding new
+ones. `resetPassword()`/`deleteUser()` deliberately *not* touched —
+user only asked about "Add user"/"Edit profile" specifically, and a
+single confirm/prompt for a one-field action is a much smaller UX
+complaint than a two-prompt chain for a two-field edit; left as a
+possible future ask rather than assumed in scope.
+
+Verified live: modal opens/closes correctly (including ESC and
+backdrop-click, both confirmed via Playwright), create and edit both
+round-trip correctly through the existing API endpoints unchanged
+(no backend changes needed for this — pure frontend UI swap), and the
+modal renders correctly in both dark and light themes.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

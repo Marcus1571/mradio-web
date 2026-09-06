@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.6] - 2026-09-06
+
+Replaced the "Add user" and "Edit profile" browser-native prompt
+popups on the Users page with a proper in-page modal form. Same fields
+as before (username/full name/email/temp password for Add user; full
+name/email for Edit profile), now a real dialog with visible field
+labels, a backdrop, Cancel/Save buttons, and Escape/backdrop-click to
+close, instead of sequential `window.prompt()` dialogs.
+
 ## [0.5.5] - 2026-09-06
 
 Fixed the PWA install prompt still offering the old app name after the
