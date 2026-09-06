@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.8] - 2026-09-06
+
+Added Russian as a sixth UI/AI-liner-notes language, alongside English,
+Spanish, Italian, Portuguese, and French — switch instantly from the
+top bar, same as the others.
+
 ## [0.5.7] - 2026-09-06
 
 Fixed the Analytics "Live now" table's status-dot column claiming a

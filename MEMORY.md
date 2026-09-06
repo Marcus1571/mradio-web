@@ -262,21 +262,25 @@ on LT. Test-connection now reports Ollama as `True, "Connected."`.
 correct as a generic fresh-install default; it just needs pulling before
 use, same as any Ollama model does.
 
-## Language support (added 2026-09-05, 0.2.0 + 0.2.1 + 0.3.1; Portuguese + pattern cleanup 2026-09-06, 0.3.5; French 2026-09-06, 0.3.10) — fully done
+## Language support (added 2026-09-05, 0.2.0 + 0.2.1 + 0.3.1; Portuguese + pattern cleanup 2026-09-06, 0.3.5; French 2026-09-06, 0.3.10; Russian 2026-09-06, 0.5.8) — fully done
 
-UI language (English/Spanish/Italian/Portuguese/French, top-bar
-dropdown, 0.2.0 + Italian in 0.3.1 + Portuguese in 0.3.5 + French in
-0.3.10) — `frontend/src/i18n/` (hand-rolled `en.ts`/`es.ts`/`it.ts`/
-`pt.ts`/`fr.ts`/`index.ts`, no library, `Dict` type widening so
-non-English files only have to match English's key shape, not its
-exact text). Adding a language is now a proven 6-spot pattern
-(confirmed for Italian in 0.3.1, Portuguese in 0.3.5, French in
-0.3.10 — see [[feedback_i18n_and_readme_kb_links]] for the durable
-checklist): new `<lang>.ts` file, add its code to `Language` +
-`LANGUAGES` in `index.ts`, add the code to `Config.language`'s union in
+UI language (English/Spanish/Italian/Portuguese/French/Russian,
+top-bar dropdown, 0.2.0 + Italian in 0.3.1 + Portuguese in 0.3.5 +
+French in 0.3.10 + Russian in 0.5.8) — `frontend/src/i18n/`
+(hand-rolled `en.ts`/`es.ts`/`it.ts`/`pt.ts`/`fr.ts`/`ru.ts`/`index.ts`,
+no library, `Dict` type widening so non-English files only have to
+match English's key shape, not its exact text). Adding a language is
+now a proven 6-spot pattern (confirmed for Italian in 0.3.1, Portuguese
+in 0.3.5, French in 0.3.10, Russian in 0.5.8 — see
+[[feedback_i18n_and_readme_kb_links]] for the durable checklist): new
+`<lang>.ts` file, add its code to `Language` + `LANGUAGES` in
+`index.ts`, add the code to `Config.language`'s union in
 `api/types.ts`, and the backend's two spots (`routers/config.py`'s
 `_VALID_LANGUAGES`, `enricher.py`'s `_LANGUAGE_INSTRUCTIONS`), plus the
-README's language-list bullet.
+README's language-list bullet. Russian's Cyrillic text needed no
+special handling anywhere in the stack (same as CJK/emoji before it) —
+confirmed via a live Playwright pass across the player, Analytics, and
+Settings/Users pages with no layout breakage or truncation.
 `Dashboard.tsx`'s config-load fallback chain (previously an `===`
 chain naming each language code, needing an edit per new language) was
 **simplified in 0.3.5** to validate against `LANGUAGES` generically
@@ -297,15 +301,16 @@ the Dashboard's user menu is a normal translated page; only the pre-auth
 render path is the exception.
 
 AI liner notes follow the UI language too (0.2.1, Italian added 0.3.1,
-Portuguese added 0.3.5, French added 0.3.10) — `Enricher.language`
-mirrors `self.provider`'s pattern (set once in `start()` from
-`load_cfg()`, pushed live by `PATCH /api/config` into the running
-instance, not re-read from disk per-call). `_PROMPT_TEMPLATE` gained a
-`{language_instruction}` slot (English stays fully implicit — zero
-prompt-text cost — Spanish/Italian/Portuguese/French each add one line
-asking for the trivia field in that language while explicitly
-protecting `"wiki"`, which must stay the English Wikipedia article
-title for `wiki.resolve()`'s lookup).
+Portuguese added 0.3.5, French added 0.3.10, Russian added 0.5.8) —
+`Enricher.language` mirrors `self.provider`'s pattern (set once in
+`start()` from `load_cfg()`, pushed live by `PATCH /api/config` into
+the running instance, not re-read from disk per-call).
+`_PROMPT_TEMPLATE` gained a `{language_instruction}` slot (English
+stays fully implicit — zero prompt-text cost — Spanish/Italian/
+Portuguese/French/Russian each add one line asking for the trivia
+field in that language while explicitly protecting `"wiki"`, which
+must stay the English Wikipedia article title for `wiki.resolve()`'s
+lookup).
 `cache.py`'s key gained a language dimension
 (`provider::language::raw_title`) so two accounts in different
 languages don't collide on one cached blurb for the same track — old
