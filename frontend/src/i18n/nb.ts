@@ -185,6 +185,8 @@ const nb: Dict = {
     mapTitle: 'Lytterkart',
     mapPins: 'Nåler',
     mapHeatmap: 'Varmekart',
+    mapScopeLive: 'Kun live',
+    mapScopeHistory: 'Live + nylig historikk',
     statsTitle: 'Statistikk',
     since7d: 'Siste 7 dager',
     since30d: 'Siste 30 dager',

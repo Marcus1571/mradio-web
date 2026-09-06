@@ -185,6 +185,8 @@ const it: Dict = {
     mapTitle: 'Mappa degli ascoltatori',
     mapPins: 'Indicatori',
     mapHeatmap: 'Mappa di calore',
+    mapScopeLive: 'Solo in diretta',
+    mapScopeHistory: 'In diretta + cronologia recente',
     statsTitle: 'Statistiche',
     since7d: 'Ultimi 7 giorni',
     since30d: 'Ultimi 30 giorni',

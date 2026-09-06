@@ -185,6 +185,8 @@ const ja: Dict = {
     mapTitle: 'リスナーマップ',
     mapPins: 'ピン',
     mapHeatmap: 'ヒートマップ',
+    mapScopeLive: 'ライブのみ',
+    mapScopeHistory: 'ライブ + 最近の履歴',
     statsTitle: '統計',
     since7d: '過去7日間',
     since30d: '過去30日間',

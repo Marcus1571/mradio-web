@@ -183,6 +183,8 @@ const en = {
     mapTitle: 'Listener map',
     mapPins: 'Pins',
     mapHeatmap: 'Heatmap',
+    mapScopeLive: 'Live only',
+    mapScopeHistory: 'Live + recent history',
     statsTitle: 'Stats',
     since7d: 'Last 7 days',
     since30d: 'Last 30 days',

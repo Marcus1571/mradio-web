@@ -185,6 +185,8 @@ const sv: Dict = {
     mapTitle: 'Lyssnarkarta',
     mapPins: 'Nålar',
     mapHeatmap: 'Värmekarta',
+    mapScopeLive: 'Endast live',
+    mapScopeHistory: 'Live + senaste historik',
     statsTitle: 'Statistik',
     since7d: 'Senaste 7 dagarna',
     since30d: 'Senaste 30 dagarna',

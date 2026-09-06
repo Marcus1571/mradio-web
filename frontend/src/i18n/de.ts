@@ -185,6 +185,8 @@ const de: Dict = {
     mapTitle: 'Hörerkarte',
     mapPins: 'Markierungen',
     mapHeatmap: 'Heatmap',
+    mapScopeLive: 'Nur live',
+    mapScopeHistory: 'Live + letzter Verlauf',
     statsTitle: 'Statistiken',
     since7d: 'Letzte 7 Tage',
     since30d: 'Letzte 30 Tage',

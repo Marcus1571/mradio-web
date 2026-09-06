@@ -185,6 +185,8 @@ const ru: Dict = {
     mapTitle: 'Карта слушателей',
     mapPins: 'Метки',
     mapHeatmap: 'Тепловая карта',
+    mapScopeLive: 'Только сейчас',
+    mapScopeHistory: 'Сейчас + недавняя история',
     statsTitle: 'Статистика',
     since7d: 'Последние 7 дней',
     since30d: 'Последние 30 дней',

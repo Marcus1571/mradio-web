@@ -185,6 +185,8 @@ const el: Dict = {
     mapTitle: 'Χάρτης ακροατών',
     mapPins: 'Καρφίτσες',
     mapHeatmap: 'Χάρτης θερμότητας',
+    mapScopeLive: 'Μόνο ζωντανά',
+    mapScopeHistory: 'Ζωντανά + πρόσφατο ιστορικό',
     statsTitle: 'Στατιστικά',
     since7d: 'Τελευταίες 7 ημέρες',
     since30d: 'Τελευταίες 30 ημέρες',

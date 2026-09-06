@@ -127,6 +127,7 @@ function buildPins(sessions: LiveSession[], history: HistoryEntry[]): Pin[] {
 }
 
 type MapMode = 'pins' | 'heatmap'
+type MapScope = 'live' | 'live+history'
 
 const LIVE_DOT_ICON = L.divIcon({
   className: 'map-live-dot-icon',
@@ -159,18 +160,22 @@ function HeatLayer({ pins }: { pins: Pin[] }) {
 
 function AnalyticsMap({
   sessions,
-  history,
+  mapHistory,
   mode,
   onModeChange,
+  scope,
+  onScopeChange,
   t,
 }: {
   sessions: LiveSession[]
-  history: HistoryEntry[]
+  mapHistory: HistoryEntry[]
   mode: MapMode
   onModeChange: (m: MapMode) => void
+  scope: MapScope
+  onScopeChange: (s: MapScope) => void
   t: TFunction
 }) {
-  const pins = buildPins(sessions, history)
+  const pins = buildPins(sessions, scope === 'live+history' ? mapHistory : [])
   return (
     <div className="analytics-map-wrap">
       <div className="map-mode-picker">
@@ -182,6 +187,17 @@ function AnalyticsMap({
             onClick={() => onModeChange(m)}
           >
             {t(m === 'pins' ? 'analytics.mapPins' : 'analytics.mapHeatmap')}
+          </button>
+        ))}
+        <span className="map-picker-sep" aria-hidden="true" />
+        {(['live', 'live+history'] as MapScope[]).map((s) => (
+          <button
+            key={s}
+            type="button"
+            className={`since-btn ${scope === s ? 'active' : ''}`}
+            onClick={() => onScopeChange(s)}
+          >
+            {t(s === 'live' ? 'analytics.mapScopeLive' : 'analytics.mapScopeHistory')}
           </button>
         ))}
       </div>
@@ -207,10 +223,12 @@ function AnalyticsMap({
 export function AnalyticsPage({ t }: { t: TFunction }) {
   const [live, setLive] = useState<LiveSession[]>([])
   const [history, setHistory] = useState<HistoryEntry[]>([])
+  const [mapHistory, setMapHistory] = useState<HistoryEntry[]>([])
   const [stats, setStats] = useState<AnalyticsStats | null>(null)
   const [since, setSince] = useState<Since>('30d')
   const [historyOffset, setHistoryOffset] = useState(0)
   const [mapMode, setMapMode] = useState<MapMode>('pins')
+  const [mapScope, setMapScope] = useState<MapScope>('live')
 
   useEffect(() => {
     let cancelled = false
@@ -236,6 +254,14 @@ export function AnalyticsPage({ t }: { t: TFunction }) {
       .then(setHistory)
   }, [historyOffset])
 
+  // Independent of the history table's own pagination above — the map's
+  // "live + recent history" scope always means the same fixed recent
+  // window, not whatever page the admin happens to have the table on.
+  useEffect(() => {
+    if (mapScope !== 'live+history') return
+    api.get<HistoryEntry[]>('/api/analytics/history?limit=25&offset=0').then(setMapHistory)
+  }, [mapScope])
+
   return (
     <div className="admin-page">
       <div className="admin-header">
@@ -250,7 +276,15 @@ export function AnalyticsPage({ t }: { t: TFunction }) {
 
       <div className="admin-panel">
         <h2 className="analytics-section-title">{t('analytics.mapTitle')}</h2>
-        <AnalyticsMap sessions={live} history={history} mode={mapMode} onModeChange={setMapMode} t={t} />
+        <AnalyticsMap
+          sessions={live}
+          mapHistory={mapHistory}
+          mode={mapMode}
+          onModeChange={setMapMode}
+          scope={mapScope}
+          onScopeChange={setMapScope}
+          t={t}
+        />
       </div>
 
       <div className="admin-panel">
