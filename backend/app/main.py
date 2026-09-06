@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.types import Scope
 
 # Uvicorn configures its own `uvicorn`/`uvicorn.access`/`uvicorn.error`
 # loggers but leaves the root logger at the Python default (WARNING, no
@@ -55,6 +56,23 @@ app.include_router(config_router.router)
 app.include_router(ws_router.router)
 app.include_router(analytics_router.router)
 
+class _CacheAwareStaticFiles(StaticFiles):
+    """Vite hashes every filename under /assets/* (a new build always gets
+    a new name), so those are safe to cache forever. `index.html` is not
+    hashed and is the one file that tells the browser which hashed assets
+    to load — caching it at all risks a browser serving a stale page that
+    references assets from a previous deploy indefinitely, exactly the
+    failure mode a user hit after an update shipped a CSS-only fix."""
+
+    def file_response(self, full_path, stat_result, scope: Scope, status_code: int = 200):
+        response = super().file_response(full_path, stat_result, scope, status_code)
+        if str(full_path).endswith("index.html"):
+            response.headers["Cache-Control"] = "no-cache"
+        else:
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
+
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 if STATIC_DIR.is_dir():
     # A reset-password link clicked from an email is a real GET to this
@@ -63,6 +81,6 @@ if STATIC_DIR.is_dir():
     # Registered before the "/" mount so it takes priority.
     @app.get("/reset-password", include_in_schema=False)
     async def reset_password_page():
-        return FileResponse(STATIC_DIR / "index.html")
+        return FileResponse(STATIC_DIR / "index.html", headers={"Cache-Control": "no-cache"})
 
-    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
+    app.mount("/", _CacheAwareStaticFiles(directory=STATIC_DIR, html=True), name="static")
