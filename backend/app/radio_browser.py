@@ -122,6 +122,11 @@ _LOGO_OVERRIDES_BY_HOST = {
 
 _LOGO_OVERRIDES_BY_NAME = {
     "KUSC": "https://www.kusc.org/icons/cc/apple-touch-icon.png",
+    # ".977" tokenises to "977", which image search repeatedly matched
+    # to the unrelated US FM station "97.9 JAMZ" — close enough digits
+    # to satisfy any word-level check, and it happened twice. Pin the
+    # real .977 Music logo instead.
+    ".977 Jamz": "https://kuasark.com/files/stations-logos/977-jamz.png",
 }
 
 
