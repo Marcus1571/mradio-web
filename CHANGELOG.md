@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.15] - 2026-09-06
+
+Added Japanese as a thirteenth UI/AI-liner-notes language, alongside
+English, Spanish, Italian, Portuguese, French, Russian, German, Greek,
+Dutch, Danish, Swedish, and Norwegian (Bokmål) — switch instantly from
+the top bar, same as the others.
+
 ## [0.5.14] - 2026-09-06
 
 Added Norwegian Bokmål as a twelfth UI/AI-liner-notes language,
