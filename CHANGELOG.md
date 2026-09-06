@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.10] - 2026-09-06
+
+Added French as a fifth UI/AI-liner-notes language, following the same
+pattern as Italian and Portuguese: new `frontend/src/i18n/fr.ts`,
+registered in `index.ts`'s `Language` type and `LANGUAGES` list, added
+to `Config.language`'s union in `api/types.ts`, and to the backend's
+`_VALID_LANGUAGES` (`routers/config.py`) and `_LANGUAGE_INSTRUCTIONS`
+(`enricher.py`). README's language-support bullet updated to match.
+
+Verified live: logged in, switched the top-bar language to Français,
+and confirmed every screen (player, Analytics/Dashboard, admin user
+menu) renders fully in French with no missing keys or English
+fallback text.
+
 ## [0.3.9] - 2026-09-06
 
 Follow-up to 0.3.8: the manifest covered Android/Chrome install, but
