@@ -2217,6 +2217,30 @@ unrelated user of that class — worth checking every place a modified
 shared class is actually used, not just the one page the fix was
 written for.
 
+## 1.0.0 (2026-09-07)
+
+Moved from 0.5.47 to **1.0.0** at the user's call — the app had been
+running in production continuously since 0.1.1 across 78 tags, with
+every feature in daily use. No code change accompanied the bump; it's
+a statement about maturity, not a release gate.
+
+**Corrected a factual error from the same session**: I told the user
+the repo had *no* LICENSE, based on `gh repo view` returning
+`licenseInfo: null`. Wrong — a valid, complete MIT LICENSE is present
+and git-tracked; GitHub's detector simply hadn't indexed it. That
+error mattered, because I'd used "no license" as an argument against
+publishing a Docker image (see below). The image decision still holds
+on its other grounds, but not that one. **Check the file, not just the
+API.**
+
+Also added a "Before you install" section to README.md covering the
+three things most likely to trip up a stranger: HTTPS is mandatory
+(Secure cookies mean plain HTTP silently fails at login), the ChatGPT
+provider is an unofficial mechanism, and the app is household-scale by
+design rather than multi-tenant. All three were already documented in
+KB.md, but buried where a hurried installer wouldn't look until
+already stuck.
+
 ## Deployment stays a source build, no published image (decided 2026-09-07)
 
 Asked why the project never produces a Docker image and whether it
@@ -2241,9 +2265,10 @@ revisits this:
   that KB.md already flags as risky. Publishing invites strangers into
   that, a different posture from "the admin, on their own box,
   knowingly."
-- The repo is **public with no LICENSE** — all rights reserved, so
-  nobody has permission to use it anyway. Publishing an image without
-  a license signals an invitation that hasn't actually been granted.
+- ~~The repo is public with no LICENSE.~~ **Wrong — corrected the same
+  day.** `gh repo view` returned `licenseInfo: null`, but a valid MIT
+  LICENSE is present and tracked; GitHub just hadn't indexed it. This
+  argument does not hold. The two points above still do.
 
 **The strongest argument was never speed — it was CI.** With no build
 job, a broken Dockerfile surfaces mid-deploy on LT rather than on

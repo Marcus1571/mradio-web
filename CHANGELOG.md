@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.0.0] - 2026-09-07
+
+First stable release. The app has been running in production
+continuously since v0.1.1 and everything below is in daily use.
+
+**What it does**
+
+- Plays 104 curated stations across ten genres (classical, jazz,
+  blues, country, rock, pop, focus, chill, funk, hip-hop), plus any
+  stream URL you add, with 12 favourite slots per account.
+- Shows live now-playing metadata pushed over a WebSocket, with AI
+  liner notes about the artist and track — from OpenCode (bundled),
+  Ollama, ChatGPT, or any OpenAI-compatible endpoint. Results are
+  cached and shared, so the same track is never queried twice.
+- Speaks 13 languages, in both the interface and the AI liner notes.
+- Supports multiple accounts, admin-created, each with their own
+  favourites, provider choice and display name — plus self-service
+  password reset once email is configured.
+- Includes an admin dashboard: who's listening and from where on a
+  live map, full play history, and station/genre/listener stats.
+
+**Notes for new installations**
+
+- A reverse proxy with HTTPS is required — session cookies are set
+  `Secure`. See the "Before you install" section in the README.
+- The ChatGPT provider uses an unofficial sign-in mechanism and may
+  stop working if OpenAI changes it. Every other provider is
+  unaffected, and the app runs fine with none configured.
+
 ## [0.5.47] - 2026-09-07
 
 Fixed the top bar overflowing on phones, which pushed the account menu
