@@ -685,6 +685,44 @@ observation (an effect calling a non-idempotent toggle function is
 fragile against StrictMode/concurrent-rendering assumptions) but not
 worth "fixing" on its own since production behavior is already correct.
 
+## "Install as web app" showed a generic icon, not mradio's own (fixed 2026-09-06, 0.3.8)
+
+Reported by the user: Edge's "Install as web app" / "Create a
+shortcut" used a generic placeholder icon instead of mradio's own
+lightning-bolt favicon, even though the favicon itself renders fine in
+the browser tab. User's own hunch (confirmed correct): a favicon alone
+isn't enough — installed-app icons are a separate system.
+
+Root cause: `index.html` only had `<link rel="icon" type="image/svg+xml"
+href="/favicon.svg">`, which controls the browser tab only.
+"Install as web app"/"Add to home screen" flows read a completely
+separate `manifest.webmanifest` file with **raster PNG** icons (SVG in
+a manifest's `icons` array isn't reliably supported by
+Chromium/Edge's install flow) — no manifest existed, so the browser
+fell back to a generic icon. iOS Safari ignores the manifest entirely
+and needs its own `<link rel="apple-touch-icon">` tag, which also
+didn't exist.
+
+Fix: generated `manifest.webmanifest` plus `icon-192.png`,
+`icon-512.png`, `icon-maskable-512.png` (extra padding/safe-zone for
+Android's adaptive-icon masking), and `apple-touch-icon.png`, all in
+`frontend/public/`. Icons were rasterized from the *existing* favicon
+mark (not redrawn) via `rsvg-convert`, centered on a square tile filled
+with the app's own dark background color rather than plain white/
+transparent — computed as `#111419` by manually converting the CSS
+custom property `--paper: oklch(19% 0.012 260)` to sRGB (OKLab
+intermediate space, matrix multiply; no existing tool/dependency in
+the project does this conversion). Added the matching
+`<link rel="apple-touch-icon">`, `<link rel="manifest">`, and
+`<meta name="theme-color" content="#111419">` tags to `index.html`,
+right below the existing favicon link.
+
+Verified with more than a JSON eyeball-check: used Playwright + Chrome
+DevTools Protocol's `Page.getAppManifest` — the same manifest parser
+Edge/Chrome's actual install flow uses — confirming `errors: []` and
+correct resolution of all three icon sizes/purposes, `display:
+standalone`, and both colors.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

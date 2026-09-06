@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.3.8] - 2026-09-06
+
+Fixed "Install as web app" (Edge/Chrome) using a generic icon instead
+of mradio's own lightning-bolt mark — the browser tab favicon and an
+installed-app icon are two entirely separate systems, and only the
+former existed. Added the second: a proper `manifest.webmanifest`
+(192×192, 512×512, and a maskable 512×512 variant, all PNG — the
+manifest spec requires raster, not the existing SVG) plus an
+`apple-touch-icon.png` for iOS home-screen bookmarks, which ignore the
+manifest entirely and need their own tag. All generated from the
+existing favicon mark, preserving its real proportions and colors, on
+a square tile matching the app's own dark background
+(`#111419`) with generous safe-zone padding for Android's adaptive
+icon masking.
+
+Verified via Chrome's own manifest parser (DevTools Protocol
+`Page.getAppManifest`), not just by eyeballing the JSON — confirmed
+zero parse errors and all three icons recognized at their declared
+sizes.
+
 ## [0.3.7] - 2026-09-06
 
 Moved the Analytics page one click closer: a **Dashboard** button now
