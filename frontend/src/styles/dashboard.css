@@ -337,13 +337,16 @@
 }
 
 /* A station logo overhangs from .panel-head into this space (see
-   .station-logo) — push the metrics row's own divider down so the
-   logo gets the same padding below it as it has above/beside it,
-   confirmed against a real rendered screenshot, not computed by hand
-   (an earlier attempt at this exact spacing, done by arithmetic alone,
-   shipped with the logo crashing into this very divider). */
+   .station-logo) — extend the gap between the metrics text and its
+   own divider (not the metrics row's position itself, which must stay
+   flush with the header like the no-logo case — using margin-top here
+   instead pushed the whole row down and left a visibly oversized gap
+   above the metrics text, caught live) so the logo gets the same
+   padding below it as it has above/beside it. Confirmed against a
+   real rendered screenshot with boundingBox() measurements, not
+   computed by hand. */
 .panel:has(.station-logo) .np-metrics {
-  margin-top: 27px;
+  padding-bottom: 38px;
 }
 
 .np-metric {
