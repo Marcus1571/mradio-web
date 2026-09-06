@@ -8,6 +8,7 @@ export type Genre =
   | 'focus'
   | 'chill'
   | 'funk'
+  | 'hiphop'
   | 'other'
 
 export interface Station {

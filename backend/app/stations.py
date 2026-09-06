@@ -5,11 +5,11 @@
 MAX_FAV = 12  # total favorites slots
 
 GENRES = ("classical", "jazz", "blues", "country", "rock", "pop", "focus",
-          "chill", "funk", "other")
+          "chill", "funk", "hiphop", "other")
 GENRE_LABELS = {"classical": "Classical", "jazz": "Jazz",
                 "blues": "Blues", "country": "Country", "rock": "Rock",
                 "pop": "Pop", "focus": "Focus", "chill": "Chill",
-                "funk": "Funk", "other": "Other"}
+                "funk": "Funk", "hiphop": "Hip-Hop", "other": "Other"}
 
 _GENRE_KEYWORDS = {
     "blues": ("blues",),
@@ -26,6 +26,7 @@ _GENRE_KEYWORDS = {
     "chill": ("chill", "chillout", "lounge", "downtempo", "del mar"),
     "funk": ("funk", "funky", "groove", "grooves", "boogie", "soul", "r&b",
              "rnb", "rhythm and blues", "disco funk", "jazz funk"),
+    "hiphop": ("hip hop", "hip-hop", "hiphop", "rap", "urban", "jamz"),
 }
 
 DEFAULT_STATIONS = [
@@ -230,6 +231,31 @@ DEFAULT_STATIONS = [
      "url": "https://soul.stream.laut.fm/soul", "genre": "funk"},
     {"name": "Funky Radio Disco Funk",
      "url": "https://funky.radio/discofunk_modernsoul_boogie/", "genre": "funk"},
+    {"name": "181.FM - Old School HipHop/RnB",
+     "url": "http://listen.181fm.com/181-oldschool_128k.mp3", "genre": "hiphop"},
+    {"name": "181.FM - The Beat (HipHop/R&B)",
+     "url": "https://listen.181fm.com/181-beat_128k.mp3", "genre": "hiphop"},
+    {"name": "90s90s HipHop & Rap",
+     "url": "http://streams.90s90s.de/hiphop/mp3-192/streams.90s90s.de/",
+     "genre": "hiphop"},
+    {"name": "100 Hip Hop and RNB FM",
+     "url": "https://ice64.securenetsystems.net/LFTM", "genre": "hiphop"},
+    {"name": ".977 Jamz",
+     "url": "http://26343.live.streamtheworld.com:3690/977_JAMZ_SC",
+     "genre": "hiphop"},
+    {"name": "BBC Radio 1Xtra",
+     "url": "https://a.files.bbci.co.uk/ms6/live/3441A116-B12E-4D2F-ACA8-"
+            "C1984642FA4B/audio/simulcast/hls/nonuk/audio_syndication_low_sbr_"
+            "v1/aks/bbc_1xtra.m3u8", "genre": "hiphop"},
+    {"name": "All Underground Hip Hop Radio",
+     "url": "http://stream.radiojar.com/c1912tk5rtzuv", "genre": "hiphop"},
+    {"name": "WEFUNK",
+     "url": "https://s-17.wefunkradio.com:8443/wefunk64.mp3", "genre": "hiphop"},
+    {"name": "Hot 108 Jamz",
+     "url": "https://live.powerhitz.com/hot108", "genre": "hiphop"},
+    {"name": "Top Urbano",
+     "url": "https://radio.dominiserver.com/proxy/topurbano?mp=/stream",
+     "genre": "hiphop"},
 ]
 
 
@@ -237,7 +263,7 @@ def genre_of(name):
     """Best-effort genre for a station by its name; 'other' when unknown."""
     n = (name or "").lower()
     for genre in ("blues", "jazz", "country", "rock", "pop", "focus", "chill",
-                  "funk", "classical"):
+                  "funk", "hiphop", "classical"):
         for kw in _GENRE_KEYWORDS[genre]:
             if kw in n:
                 return genre
@@ -269,7 +295,7 @@ def genre_stations_for(fav_stations, genre):
             if not is_empty_slot(e)
             and (e.get("genre") or "other") == genre]
     if genre not in ("classical", "jazz", "blues", "country", "rock", "pop",
-                     "focus", "chill", "funk"):
+                     "focus", "chill", "funk", "hiphop"):
         return favs
     seen = set()
     out = []
