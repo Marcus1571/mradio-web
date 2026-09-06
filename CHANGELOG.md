@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.1] - 2026-09-06
+
+Replaced the growing flat list of admin dropdown entries ("Users", "AI
+providers", ...) with a single "Settings" entry that opens a hub page —
+a card per section, each linking to the existing page. Users and AI
+providers pages gained a "← Settings" breadcrumb to get back to the hub.
+Groundwork for adding an "Email (SMTP)" section without the dropdown
+growing indefinitely with every new admin feature.
+
 ## [0.4.0] - 2026-09-06
 
 Added a `full_name` field to user accounts — a proper, emoji-capable

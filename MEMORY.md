@@ -814,6 +814,39 @@ which only serves `index.html` for the root path, not arbitrary
 unmatched paths. Needs one small explicit backend route before that
 mount when the forgot-password feature is built.
 
+## Settings hub — admin dropdown consolidated (added 2026-09-06, 0.4.1)
+
+User noticed while asking "where do SMTP settings for forgot-password
+live?" that the admin dropdown was just accumulating flat entries
+("Users", "AI providers", soon "Email") with no ceiling — asked to add
+a proper Settings landing page with sections instead, where e.g. the
+Users section opens the already-existing Users page.
+
+Replaced the two direct dropdown entries with one "Settings" entry →
+new `frontend/src/pages/SettingsPage.tsx`, a simple card grid (`.settings-
+grid`/`.settings-card` in `admin.css`) driven by a plain array of
+`{page, title, description}` — adding a future section (Email, and
+whatever comes after) is one array entry, not a `TopBar.tsx` edit.
+Clicking a card calls the same `onNavigate(page)` prop `Dashboard.tsx`
+already threads everywhere else (plain `useState<Page>` routing, no
+new abstraction). `UsersPage.tsx`/`AISettingsPage.tsx` gained an optional
+`onBack` prop rendering a small "← Settings" breadcrumb (`.admin-breadcrumb`)
+above their existing header — added specifically because these two pages
+are now one level deeper than before (dropdown → Settings → page, vs.
+dropdown → page), so a way back to the hub specifically (not all the way
+to the player, which "Back to player" already covered) mattered enough
+to add, per explicit ask rather than assumption.
+
+Verified live: dropdown now shows only "Settings" for admins (confirmed
+the old "Users"/"AI providers" entries are gone), the hub renders both
+cards correctly, and clicking a card → breadcrumb → back to hub → other
+card all work as a real click-through, not just code review.
+
+The now-planned `EmailSettingsPage` (SMTP + forgot-password, see the
+entry above — still not built) will be a third card here, not a new
+dropdown entry — this was designed with that in mind, not just for the
+two sections that exist today.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
