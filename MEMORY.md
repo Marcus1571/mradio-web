@@ -1509,7 +1509,7 @@ round-trip correctly through the existing API endpoints unchanged
 (no backend changes needed for this — pure frontend UI swap), and the
 modal renders correctly in both dark and light themes.
 
-## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30; bigger + divider redesign 0.5.31; layout bug fixed 0.5.32; equal padding fixed with real screenshots 0.5.33; margin-vs-padding bug fixed 0.5.34; tokenized + rebalanced 0.5.35; shaved smaller for mobile 0.5.36)
+## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30; bigger + divider redesign 0.5.31; layout bug fixed 0.5.32; equal padding fixed with real screenshots 0.5.33; margin-vs-padding bug fixed 0.5.34; tokenized + rebalanced 0.5.35; shaved smaller for mobile 0.5.36; metadata centred + logo resized 0.5.37)
 
 The now-playing panel's station row had visible empty space next to the
 station name — the user asked whether a logo could be shown there, and
@@ -1818,6 +1818,41 @@ else derives from that one variable) automatically shrunk the
 divider-shortening and padding-bottom to match with no further
 manual tuning — the clearest payoff yet of 0.5.35's tokenization work
 paying for itself on the very next request.
+
+**Metadata centred, logo resized — and the insight that ended the
+tuning loop (0.5.37)**: user asked for two things at once (metadata
+halfway between the two dividers instead of hugging the lower one; a
+bigger logo with evenly-reduced margins) and mentioned switching models
+because the previous approach was "running in circles" — fair, five
+straight releases had gone into nudging the same numbers. What broke
+the loop was measuring the *boxes* rather than the gaps:
+`getComputedStyle` on `.np-metrics` showed the carefully-derived
+`min-height` calc was resolving to **4px** — it had never once been the
+binding constraint. The band's height was always just its natural
+content (text + padding), so several rounds of tuning had been spent on
+a value that did nothing. Two consequences: (a) the off-centre metadata
+was never a padding problem at all, it was `.np-metrics` having no
+vertical alignment — a single `align-content: center` fixed it, and all
+the accumulated `padding-bottom`/`min-height` machinery got deleted
+rather than re-tuned; (b) with the band's height set by its content,
+the logo's bottom margin can only be closed by *growing the logo* —
+which is why the user's two requests were really one. 4.4rem lands the
+logo exactly `--logo-inset` above the lower divider: 13/13/12.6px on
+all three sides.
+
+Mobile needed the opposite call, worth recording: below 480px the
+metrics text wraps to two lines, so that band becomes *taller* than any
+sane logo and "even margins all round" stops being achievable —
+chasing it would need an absurdly large logo, the opposite of what a
+phone wants. Shrank the logo there instead (2.75rem) and accepted the
+looser gap below it as ordinary breathing room. **Lesson**: when
+several rounds of tuning a value give disappointing results, confirm
+the value is actually taking effect (`getComputedStyle`) before tuning
+it again — and when a target can't be met at one breakpoint, say so and
+choose a different goal there rather than distorting the design to
+force it.
+
+Right after [[mradio_web_status]]'s 0.5.16 pins/heatmap split shipped, the
 user noticed Pins mode was *still* using `radius={6 + count}` — the split
 correctly gave heat-intensity its own dedicated view, but nobody had
 actually removed the same encoding from the pins view it was split out of,

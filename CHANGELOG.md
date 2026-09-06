@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.37] - 2026-09-06
+
+Centred the playback metadata vertically between the two divider lines
+(it was sitting closer to the lower one), and made the station logo
+bigger with tighter, even margins on all three sides.
+
 ## [0.5.36] - 2026-09-06
 
 Shaved the station logo's size and surrounding padding further, all
