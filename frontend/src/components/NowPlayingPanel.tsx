@@ -4,6 +4,7 @@ import type { Station, TriviaHistoryEntry } from '../api/types'
 import type { TFunction } from '../i18n'
 import type { PlayerState } from '../hooks/usePlayer'
 import { useProviders } from '../hooks/useProviders'
+import { useStationLogo } from '../hooks/useStationLogo'
 import { formatCache, formatElapsed, formatKHz, formatKbps } from '../utils/format'
 import {
   ChevronDownIcon,
@@ -119,6 +120,12 @@ export function NowPlayingPanel({
 
   const hasStation = state.station !== null
   const hasTrack = state.rawTitle !== ''
+  const logo = useStationLogo(state.station)
+  const [logoFailed, setLogoFailed] = useState(false)
+
+  useEffect(() => {
+    setLogoFailed(false)
+  }, [logo])
 
   return (
     <section className="panel now-playing" aria-label={t('nowPlaying.ariaLabel')}>
@@ -127,6 +134,9 @@ export function NowPlayingPanel({
           {hasStation && <span className="live-dot" aria-hidden="true" />}
           <span className="station-name-strong">{hasStation ? state.stationName : t('nowPlaying.nothingPlaying')}</span>
         </div>
+        {hasStation && logo && !logoFailed && (
+          <img className="station-logo" src={logo} alt="" onError={() => setLogoFailed(true)} />
+        )}
       </div>
 
       <div className="np-body">

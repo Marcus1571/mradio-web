@@ -74,6 +74,10 @@ export interface AITestResult {
   message: string
 }
 
+export interface StationLogo {
+  logo: string | null
+}
+
 export interface SmtpSettings {
   host: string
   port: number

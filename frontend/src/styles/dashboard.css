@@ -257,6 +257,15 @@
   text-overflow: ellipsis;
 }
 
+.station-logo {
+  height: 28px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
 .np-body {
   padding: var(--space-sm) var(--space-md);
   min-height: 220px;
