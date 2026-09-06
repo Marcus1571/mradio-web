@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.46] - 2026-09-06
+
+Each AI provider on the settings page now has its own small mark
+beside its name. Drawn inline in the same monoline style as the app's
+other icons, so they inherit the page's ink and adapt to dark mode
+with no extra work.
+
 ## [0.5.45] - 2026-09-06
 
 Fixed .977 Jamz showing the logo of 97.9 JAMZ, an unrelated US FM
