@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.23] - 2026-09-06
+
+Added ChatGPT/Codex subscription as a 4th AI provider — sign in with a
+ChatGPT Plus, Pro, or Go subscription instead of an API key, from a new
+"Connect with ChatGPT" button on the AI providers settings page. Uses
+the same sign-in as the Codex CLI; unofficial and could stop working if
+OpenAI changes it, but free to use if you already pay for ChatGPT. See
+KB.md's "ChatGPT / Codex subscription" section for the full disclosure
+before enabling.
+
 ## [0.5.22] - 2026-09-06
 
 Fixed the listener map sometimes showing more dots than "Live now" —

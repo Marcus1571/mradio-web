@@ -262,6 +262,134 @@ on LT. Test-connection now reports Ollama as `True, "Connected."`.
 correct as a generic fresh-install default; it just needs pulling before
 use, same as any Ollama model does.
 
+## ChatGPT/Codex subscription as a 4th AI provider (2026-09-06, 0.5.23)
+
+User's idea: another app ("Hermes") lets you sign in with a ChatGPT
+subscription instead of an API key, via a browser OAuth redirect +
+consent screen. Initial research said this was impossible (OpenAI's
+public API and ChatGPT subscriptions are billed as fully separate
+products) — user pushed back with real screenshots proving Hermes's flow
+was genuine, not scraping. Correct: it's OpenAI's own **Codex CLI
+device-code flow** (RFC 8628, the same one `codex login` runs in a
+terminal). Two implementation attempts were needed to get this right —
+both failures and the reasoning behind the pivot are the load-bearing
+part of this entry, not just the final shape.
+
+**Attempt 1 (failed, kept as documented history, not reverted silently)**:
+reimplemented the OAuth device-code flow as raw `httpx` calls against
+`auth.openai.com/oauth/device/code` and `/oauth/token` (client_id and
+endpoints confirmed via a reference open-source project,
+`icebear0828/codex-proxy`, which does the same thing at production
+scale). **Confirmed live this is blocked**: `auth.openai.com` sits
+behind Cloudflare, which returns `cf-mitigated: challenge` (a JS/TLS
+fingerprint check) to any plain HTTP client — verified with raw `curl`
+too, not just Python, and confirmed no header/User-Agent combination
+fixes it. The reference project works around this with custom native
+TLS-fingerprinting code (mimicking a browser/Rust `reqwest` handshake) —
+real infrastructure this app has no reason to reimplement.
+
+**Attempt 2 (shipped)**: this app already bundles the real `opencode`
+CLI binary in the Docker image for an analogous reason (a trusted real
+client instead of reimplementing undocumented internals) — `codex` gets
+the identical treatment. `backend/app/codex_oauth.py` spawns
+`codex login --device-auth` as a subprocess (`CODEX_HOME` pointed at
+`DATA_DIR/codex_home`, confirmed live this directory must pre-exist or
+the CLI errors out, and confirmed it must NOT be under `/tmp` — the CLI
+refuses to create helper binaries there), parses its stdout for the
+device code + verification URL, and once the subprocess exits 0, reads
+the CLI's own `$CODEX_HOME/auth.json` for `tokens.access_token`/
+`refresh_token`/`account_id` rather than parsing any HTTP response
+itself. **Two real bugs caught only by testing against a real login,
+not just reading docs**: (1) the CLI's stdout contains ANSI color escape
+codes (`\x1b[94m...\x1b[0m`) which silently broke the code/URL regex
+matches — fixed by stripping ANSI codes before matching; (2) passing a
+fully-replaced `env={"CODEX_HOME": ..., "HOME": ...}` to
+`asyncio.create_subprocess_exec` wiped `PATH` entirely, so the
+subprocess couldn't even find the `codex` binary — fixed by spreading
+`{**os.environ, "CODEX_HOME": ...}` instead of replacing the environment.
+
+**The important, non-obvious finding**: only the device-code *initiation*
+endpoint needed this workaround. Confirmed live, separately, that both
+token refresh (`grant_type=refresh_token` against the same
+`/oauth/token` endpoint) and the actual liner-notes call
+(`chatgpt.com/backend-api/codex/responses`) work completely fine as
+plain `httpx` requests once a real token is in hand — no Cloudflare
+block on either. So `providers.py`'s `llm_codex()` and
+`codex_oauth.py`'s `refresh()`/`ensure_fresh_token()` stayed as direct
+HTTP calls; only login itself goes through the bundled binary. This
+matters for anyone maintaining this later: don't assume the whole
+provider needs subprocess mediation just because login did.
+
+**Confirmed end-to-end with the user's real ChatGPT Go account**,
+through the actual running app (not a standalone script): connect
+button → real device code shown → user completes browser flow → status
+flips to `connected: true` with `chatgpt_plan_type: "go"` → Test button
+reports "Connected (go)." → selecting it as the active provider and
+playing a real station produced a genuine, well-formed AI liner note
+about Gershwin's *Rhapsody in Blue* end-to-end through the player UI.
+Correct model id (`gpt-5.6-terra` at the time of writing, confirmed by
+running `codex exec` for real and reading its own startup banner — an
+earlier guess, `gpt-5.1-codex`, was wrong and returned a 400) — **this
+will go stale as OpenAI ships new models; there is no way to query it
+generically, re-derive it the same way if liner notes start failing**.
+
+**Dockerfile**: new `codex-build` stage (`node:22-slim`, `ARG
+CODEX_VERSION`, `npm install --global @openai/codex@${CODEX_VERSION}`) —
+confirmed the npm package resolves the correct platform-specific binary
+automatically via `optionalDependencies` aliasing (not a separate
+package per platform, just version-tagged installs of the same
+`@openai/codex` package, e.g. `@openai/codex@<version>-linux-x64`).
+Final image copies `node` + the `@openai/codex` module tree and
+recreates npm's own symlink (`ln -s .../codex/bin/codex.js
+/usr/local/bin/codex`) rather than hand-rolling a wrapper script (a
+first draft did this with a shell script; simplified after confirming
+npm's own approach works and is simpler). **Verified with a real
+Docker build**, both natively (arm64, this dev machine) and cross-built
+for `linux/amd64` (LT's actual architecture) via `docker build
+--platform linux/amd64` — confirmed `codex --version` and a real device
+login attempt both work inside the actual final image on the actual
+target architecture before deploying, not assumed. `python:3.11-slim`
+(this app's base image) already ships CA certificates, unlike bare
+`node:22-slim` — relevant because Codex's Rust binary fails silently
+with a generic "error sending request" if certs are missing, which
+looked like a network problem before it was diagnosed as a missing
+`ca-certificates` package in a throwaway test image (not in the actual
+production base image, which is fine).
+
+New provider `"codex"` threaded through the existing generic
+provider-tuple machinery: `PROVIDERS` tuple, `provider_enabled()`,
+`ai_configured()`, `run_provider_test()` in `providers.py`; the if/elif
+dispatch in `enricher.py`'s `_llm()`. **The player-side "only selectable
+when configured" gating the user separately asked about was already
+fully implemented before this feature** (`NowPlayingPanel.tsx`'s
+provider dropdown already disables + labels unconfigured providers
+generically by name) — confirmed by reading the existing code, not
+assumed, and zero changes were needed there beyond adding `codex:
+'ChatGPT'` to `_PROVIDER_LABEL`.
+
+New provider card in `AISettingsPage.tsx` (4th `settings-group`, not a
+radio button inside the existing generic-OpenAI card — kept each
+provider's settings self-contained) with a `useCodexStatus` polling hook
+(`frontend/src/hooks/useCodexStatus.ts`, 3s interval while `pending`,
+modeled on `AnalyticsPage.tsx`'s only prior polling precedent in this
+frontend). New backend router `routers/codex.py`
+(`GET /api/settings/codex`, `GET .../status`, `POST .../connect`,
+`POST .../disconnect`, `POST .../test`) mirrors `routers/smtp.py`'s
+shape. New `codex_settings.py` (token/plan-type JSON store, mirrors
+`settings.py`/`smtp_settings.py`'s `_DEFAULTS`/`_SECRET_FIELDS`/
+`load`/`save`/`redacted` shape exactly).
+
+**On the hardcoded `CLIENT_ID`**: `app_EMoamEEZ73f0CkXaXp7hrann` is
+OpenAI's own public client identifier for the Codex CLI itself — not a
+secret, not tied to any account, the same value baked into OpenAI's own
+open-source CLI. User asked directly whether this bakes in anyone's
+personal authorization; it does not — every install gets its own empty
+`codex_settings.json`/`codex_home/`, and only becomes "connected" if
+that install's own admin completes their own OAuth login with their own
+account. Worth remembering this question will likely come up again from
+other users/reviewers of this code; the answer belongs here, not just
+in a chat transcript.
+
 ## Hip-Hop genre added (2026-09-06, 0.5.21)
 
 Tenth curated genre, following the exact pattern of every prior genre
