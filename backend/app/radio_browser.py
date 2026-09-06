@@ -48,6 +48,7 @@ word with the original curated name, as a cheap extra check against
 coincidental collisions. A station that fails all of this ends up with
 no logo rather than risk a wrong one."""
 
+import asyncio
 import re
 import urllib.parse
 
@@ -56,10 +57,24 @@ import httpx
 _API_BASE = "https://de1.api.radio-browser.info/json"
 _HEADERS = {"User-Agent": "mradio-web/1.0 (station logo lookup)"}
 _TIMEOUT = 5
+_OG_TIMEOUT = 4
+# Whole-lookup ceiling; see find_logo.
+_TOTAL_TIMEOUT = 12
 
 _PIPE_SUFFIX_RE = re.compile(r"\s*\|.*$")
 _TRAILING_PAREN_RE = re.compile(r"\s*\([^)]*\)\s*$")
 _WORD_RE = re.compile(r"[a-z0-9]{3,}")
+
+# Some station sites return a stub page to non-browser clients.
+_BROWSER_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+)
+_OG_IMAGE_RE = re.compile(
+    r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']'
+    r'|<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',
+    re.IGNORECASE,
+)
 
 # Stations whose real logo Radio-Browser simply doesn't have. Keyed by
 # the stream URL's host where that identifies the broadcaster (1.FM
@@ -73,9 +88,7 @@ _WORD_RE = re.compile(r"[a-z0-9]{3,}")
 # search rather than serving a broken image. Deliberately small and
 # hand-checked — a last resort for well-known stations the directory
 # gets wrong, not a general substitute for it.
-_LOGO_OVERRIDES_BY_HOST = {
-    "strm112.1.fm": "https://i.imgur.com/i2EdxRl.png",
-}
+_LOGO_OVERRIDES_BY_HOST: dict[str, str] = {}
 
 _LOGO_OVERRIDES_BY_NAME = {
     "KUSC": "https://www.kusc.org/icons/cc/apple-touch-icon.png",
@@ -151,30 +164,82 @@ async def _is_usable_image(client: httpx.AsyncClient, url: str) -> bool:
     return head.headers.get("content-type", "").lower().startswith("image/")
 
 
-def _is_favicon(url: str) -> bool:
-    """A 16x16-ish site icon rather than a real station logo. These do
-    render, but upscaled into the now-playing panel they look visibly
-    blurry, so they're only worth using when nothing better exists."""
-    return url.rsplit("?", 1)[0].lower().endswith((".ico", "favicon.png"))
+def _is_site_icon(url: str) -> bool:
+    """A tiny browser favicon rather than a real logo — these are the
+    ones that look visibly blurry upscaled into the now-playing panel,
+    so they're only worth using when nothing better verifies.
+
+    Deliberately does NOT include apple-touch-icons: those are ~180px,
+    which is sharp at the size the panel renders. Treating them as
+    low-quality meant fetching a station homepage even when a perfectly
+    good icon was already in hand — needless latency on every lookup,
+    and one station's site hung long enough to stall the whole thing."""
+    path = urllib.parse.urlparse(url).path.lower()
+    return path.endswith(".ico") or path.endswith("favicon.png")
+
+
+async def _og_image(client: httpx.AsyncClient, homepage: str) -> str | None:
+    """The station's own og:image — the logo it publishes for link
+    previews, and in practice the best source available.
+
+    Radio-Browser's favicon field is often a 16x16 .ico even when the
+    broadcaster has a proper logo: 181.FM's directory entry is a 4KB
+    favicon, while its own homepage advertises a 1200x630 wordmark via
+    og:image. Worth the extra request precisely because it's the image
+    the station chose to represent itself with.
+
+    Needs a browser User-Agent (a plain fetch of some station sites
+    returns a stub) and only reads the <head>, since og:image is
+    always declared there — no point pulling a megabyte of markup.
+
+    Timeout is deliberately tighter than the directory's: this is an
+    optional upgrade over a favicon we may already have, so a slow or
+    hanging station site (confirmed live that at least one stalls well
+    past the normal timeout) must not hold up the logo lookup."""
+    if not homepage:
+        return None
+    try:
+        r = await client.get(
+            homepage, follow_redirects=True, timeout=_OG_TIMEOUT,
+            headers={"User-Agent": _BROWSER_UA, "Range": "bytes=0-20000"},
+        )
+    except (httpx.HTTPError, httpx.InvalidURL):
+        return None
+    if r.status_code not in (200, 206):
+        return None
+    m = _OG_IMAGE_RE.search(r.text)
+    if not m:
+        return None
+    # Two alternation branches, for either attribute order.
+    raw = m.group(1) or m.group(2)
+    if not raw:
+        return None
+    return urllib.parse.urljoin(str(r.url), raw.strip())
 
 
 async def _first_working_favicon(
-    client: httpx.AsyncClient, results: list[dict], require_words: set[str] | None = None,
+    client: httpx.AsyncClient, results: list[dict],
+    require_words: set[str] | None = None, homepages: list[str] | None = None,
 ) -> str | None:
-    """Best usable image across the results, preferring a real logo
-    over a tiny favicon — several stations (181.FM, KJazz) are indexed
-    with both, and taking whichever came first meant serving the
-    blurry one."""
+    """Best usable image the directory itself lists, preferring a real
+    logo over a tiny favicon. Any station homepages seen along the way
+    are collected into `homepages` for the caller to try as an
+    og:image source afterwards, rather than being fetched here — doing
+    that inline meant a station matching several name variants fetched
+    a homepage per variant, which is what pushed one lookup past 90s."""
     fallback: str | None = None
     for r in results:
+        if require_words and not (_distinguishing_words(r.get("name", "")) & require_words):
+            continue
+        homepage = r.get("homepage")
+        if homepages is not None and homepage and homepage not in homepages:
+            homepages.append(homepage)
         favicon = r.get("favicon")
         if not favicon:
             continue
-        if require_words and not (_distinguishing_words(r.get("name", "")) & require_words):
-            continue
         if not await _is_usable_image(client, favicon):
             continue
-        if not _is_favicon(favicon):
+        if not _is_site_icon(favicon):
             return favicon
         if fallback is None:
             fallback = favicon
@@ -182,6 +247,23 @@ async def _first_working_favicon(
 
 
 async def find_logo(stream_url: str, station_name: str) -> str | None:
+    """Best-effort; returns None rather than raising or hanging.
+
+    Bounded by an overall deadline, not just per-request timeouts: a
+    single lookup can make many sequential requests (a name-variant
+    search, then a HEAD per candidate, then possibly a homepage fetch),
+    each individually under its own limit while the total runs away.
+    Confirmed live that three stations took >30s this way before the
+    deadline was added."""
+    try:
+        return await asyncio.wait_for(
+            _find_logo(stream_url, station_name), timeout=_TOTAL_TIMEOUT
+        )
+    except (asyncio.TimeoutError, httpx.HTTPError):
+        return None
+
+
+async def _find_logo(stream_url: str, station_name: str) -> str | None:
     async with httpx.AsyncClient(timeout=_TIMEOUT, headers=_HEADERS) as client:
         override = _LOGO_OVERRIDES_BY_NAME.get(station_name)
         if override is None:
@@ -190,12 +272,21 @@ async def find_logo(stream_url: str, station_name: str) -> str | None:
         if override and await _is_usable_image(client, override):
             return override
 
+        # Homepages seen while searching, tried as an og:image source
+        # only after the directory is exhausted — a real logo the
+        # directory lists outright is both better and far cheaper than
+        # scraping, and this keeps homepage fetches to at most a couple
+        # per lookup no matter how many variants matched.
+        homepages: list[str] = []
+        site_icon: str | None = None
+
         try:
             r = await client.get(f"{_API_BASE}/stations/byurl", params={"url": stream_url})
             if r.status_code == 200:
-                logo = await _first_working_favicon(client, r.json())
-                if logo:
+                logo = await _first_working_favicon(client, r.json(), None, homepages)
+                if logo and not _is_site_icon(logo):
                     return logo
+                site_icon = site_icon or logo
         except (httpx.HTTPError, ValueError):
             pass
 
@@ -208,10 +299,20 @@ async def find_logo(stream_url: str, station_name: str) -> str | None:
                 )
                 if r.status_code == 200:
                     require_words = distinguishing_words if loose else None
-                    logo = await _first_working_favicon(client, r.json(), require_words)
-                    if logo:
+                    logo = await _first_working_favicon(
+                        client, r.json(), require_words, homepages
+                    )
+                    if logo and not _is_site_icon(logo):
                         return logo
+                    site_icon = site_icon or logo
             except (httpx.HTTPError, ValueError):
                 continue
 
-    return None
+        # Nothing but favicons (or nothing at all) — ask the station's
+        # own site what logo it publishes before settling.
+        for homepage in homepages[:2]:
+            og = await _og_image(client, homepage)
+            if og and not _is_site_icon(og) and await _is_usable_image(client, og):
+                return og
+
+        return site_icon
