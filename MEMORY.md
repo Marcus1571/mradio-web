@@ -2217,6 +2217,43 @@ unrelated user of that class — worth checking every place a modified
 shared class is actually used, not just the one page the fix was
 written for.
 
+## Deployment stays a source build, no published image (decided 2026-09-07)
+
+Asked why the project never produces a Docker image and whether it
+should publish one. Reviewed and **deliberately declined** — worth
+recording so it isn't reopened without new reasons.
+
+Why there's no image today (it follows from the setup, not oversight):
+- Deploys are `git pull && docker compose build` on LT, ~30-60s. A
+  registry saves no meaningful time for a single operator.
+- Host-specific config (port 8123, appdata path, `MRADIO_SEARXNG_URL`)
+  lives in an untracked `docker-compose.override.yml`. Nothing about
+  that needs a registry.
+- Both GitHub workflows are version-bump PR openers by design ("never
+  publishes or auto-merges anything"). No job has ever built the image.
+
+Two constraints publishing would expose, worth knowing before anyone
+revisits this:
+- The image bakes in **GeoLite2-City.mmdb** at build time. Shipping it
+  in a public image means redistributing CC-BY-SA data, with
+  attribution obligations the project doesn't currently carry.
+- It bundles the **Codex CLI** for the unofficial ChatGPT auth path
+  that KB.md already flags as risky. Publishing invites strangers into
+  that, a different posture from "the admin, on their own box,
+  knowingly."
+- The repo is **public with no LICENSE** — all rights reserved, so
+  nobody has permission to use it anyway. Publishing an image without
+  a license signals an invitation that hasn't actually been granted.
+
+**The strongest argument was never speed — it was CI.** With no build
+job, a broken Dockerfile surfaces mid-deploy on LT rather than on
+push; several Dockerfile edits (the `codex-build` stage, the GeoLite2
+fetch) could have failed there. If this is revisited, **start with a
+build-only CI job and leave publishing out of it** — that captures
+most of the value with none of the licensing/redistribution questions.
+User's call was to leave it as is, which is reasonable: it has held
+across 47 releases.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
