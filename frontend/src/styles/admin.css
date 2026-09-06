@@ -94,12 +94,17 @@
   vertical-align: middle;
 }
 
-.admin-table td:first-child {
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table-users td:first-child {
   min-width: 12rem;
 }
 
-.admin-table tr:last-child td {
-  border-bottom: none;
+.admin-table-status-col {
+  width: 1%;
+  white-space: nowrap;
 }
 
 .pill {

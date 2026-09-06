@@ -134,7 +134,7 @@ export function UsersPage({ onBack, t }: { onBack?: () => void; t: TFunction }) 
 
       <div className="admin-panel">
         {!loading && (
-          <table className="admin-table">
+          <table className="admin-table admin-table-users">
             <thead>
               <tr>
                 <th>{t('users.colUsername')}</th>

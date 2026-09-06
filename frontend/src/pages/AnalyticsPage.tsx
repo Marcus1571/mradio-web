@@ -31,7 +31,7 @@ function LiveTable({ sessions, t }: { sessions: LiveSession[]; t: TFunction }) {
     <table className="admin-table">
       <thead>
         <tr>
-          <th></th>
+          <th className="admin-table-status-col"></th>
           <th>{t('analytics.colUser')}</th>
           <th>{t('analytics.colStation')}</th>
           <th>{t('analytics.colGenre')}</th>
@@ -42,7 +42,7 @@ function LiveTable({ sessions, t }: { sessions: LiveSession[]; t: TFunction }) {
       <tbody>
         {sessions.map((s) => (
           <tr key={`${s.user_id}-${s.station}`}>
-            <td>
+            <td className="admin-table-status-col">
               <span className="live-dot" />
             </td>
             <td>{displayName(s)}</td>
