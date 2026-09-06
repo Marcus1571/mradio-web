@@ -21,11 +21,13 @@ async def update_smtp_settings(body: SmtpSettingsUpdate, admin: dict = Depends(r
 
 
 @router.post("/test", response_model=AITestResult)
-async def test_smtp(admin: dict = Depends(require_admin)) -> AITestResult:
+async def test_smtp(overrides: SmtpSettingsUpdate,
+                    admin: dict = Depends(require_admin)) -> AITestResult:
     if not admin.get("email"):
         return AITestResult(ok=False, message="Your admin account has no email address set.")
     ok, message = await email_sender.send_email(
         admin["email"], "mradio-web SMTP test",
         "This is a test email from mradio-web's Email settings page.",
+        overrides=overrides.model_dump(exclude_unset=True),
     )
     return AITestResult(ok=ok, message=message)

@@ -255,6 +255,12 @@
   padding: var(--space-2xs) var(--space-xs);
   font-size: var(--text-sm);
   width: 100%;
+  color: var(--ink);
+}
+
+.settings-row input::placeholder {
+  color: var(--ink-3);
+  opacity: 1;
 }
 
 .test-actions {

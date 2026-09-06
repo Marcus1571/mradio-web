@@ -23,13 +23,19 @@ def _send_sync(cfg: dict, to_address: str, subject: str, body: str) -> None:
         smtp.send_message(msg)
 
 
-async def send_email(to_address: str, subject: str, body: str) -> tuple[bool, str]:
+async def send_email(to_address: str, subject: str, body: str,
+                     overrides: dict | None = None) -> tuple[bool, str]:
     """Runs the blocking smtplib call in a thread so it doesn't stall the
     event loop. Returns (ok, message) instead of raising, so callers can
-    build a clean test-result response without their own try/except."""
-    cfg = smtp_settings.load()
+    build a clean test-result response without their own try/except.
+
+    `overrides` lets the settings page's "Test" button check whatever is
+    currently typed into the form, not just what's already been saved —
+    same reasoning as the AI providers page's own test buttons, which
+    test in-progress field values rather than requiring a save first."""
+    cfg = {**smtp_settings.load(), **(overrides or {})}
     if not cfg["host"]:
-        return False, "SMTP is not configured."
+        return False, "Enter a host and click Save before testing."
     try:
         await asyncio.to_thread(_send_sync, cfg, to_address, subject, body)
         return True, "sent"

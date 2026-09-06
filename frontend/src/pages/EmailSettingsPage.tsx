@@ -45,9 +45,18 @@ export function EmailSettingsPage({ onBack, t }: { onBack?: () => void; t: TFunc
   }
 
   async function sendTest() {
+    if (!settings) return
     setTest({ status: 'testing' })
     try {
-      const res = await api.post<AITestResult>('/api/settings/smtp/test', {})
+      const overrides: Partial<SmtpSettings> = {
+        host: settings.host,
+        port: settings.port,
+        username: settings.username,
+        from_address: settings.from_address,
+        use_tls: settings.use_tls,
+        ...(passwordInput ? { password: passwordInput } : {}),
+      }
+      const res = await api.post<AITestResult>('/api/settings/smtp/test', overrides)
       setTest({ status: res.ok ? 'success' : 'failure', message: res.message })
     } catch {
       setTest({ status: 'failure', message: t('aiSettings.testError') })
