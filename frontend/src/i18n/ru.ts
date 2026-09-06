@@ -26,7 +26,7 @@ const ru: Dict = {
     usersTitle: 'Пользователи',
     usersDescription: 'Аккаунты, роли и отображаемые имена.',
     aiTitle: 'Провайдеры ИИ',
-    aiDescription: 'OpenCode, Ollama и совместимые с OpenAI эндпоинты.',
+    aiDescription: 'OpenCode, Ollama, ChatGPT и совместимые с OpenAI эндпоинты.',
     emailTitle: 'Почта (SMTP)',
     emailDescription: 'Отправка писем для сброса пароля.',
   },
@@ -77,7 +77,7 @@ const ru: Dict = {
   aiSettings: {
     title: 'Провайдеры ИИ',
     intro:
-      'Общие учётные данные для OpenCode, Ollama и любого совместимого с OpenAI эндпоинта (например, NVIDIA NIM). ' +
+      'Общие учётные данные для OpenCode, Ollama, ChatGPT и любого совместимого с OpenAI эндпоинта (например, NVIDIA NIM). ' +
       'Каждый выбирает, каким из них пользоваться, прямо в плеере — свой ключ не нужен никому.',
     ollamaGroup: 'Ollama',
     ollamaNotePrefix: 'Впервые с Ollama? См.',

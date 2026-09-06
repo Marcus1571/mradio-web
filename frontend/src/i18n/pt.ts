@@ -26,7 +26,7 @@ const pt: Dict = {
     usersTitle: 'Utilizadores',
     usersDescription: 'Contas, funções e nomes de exibição.',
     aiTitle: 'Fornecedores de IA',
-    aiDescription: 'OpenCode, Ollama e endpoints compatíveis com OpenAI.',
+    aiDescription: 'OpenCode, Ollama, ChatGPT e endpoints compatíveis com OpenAI.',
     emailTitle: 'Email (SMTP)',
     emailDescription: 'Envio de links de redefinição de palavra-passe.',
   },
@@ -77,7 +77,7 @@ const pt: Dict = {
   aiSettings: {
     title: 'Fornecedores de IA',
     intro:
-      'Credenciais partilhadas para OpenCode, Ollama e qualquer endpoint compatível com OpenAI (ex. NVIDIA NIM). ' +
+      'Credenciais partilhadas para OpenCode, Ollama, ChatGPT e qualquer endpoint compatível com OpenAI (ex. NVIDIA NIM). ' +
       'Cada pessoa escolhe qual usar a partir do leitor — ninguém precisa da sua própria chave.',
     ollamaGroup: 'Ollama',
     ollamaNotePrefix: 'Novo no Ollama? Consulte',

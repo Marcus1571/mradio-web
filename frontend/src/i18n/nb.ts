@@ -26,7 +26,7 @@ const nb: Dict = {
     usersTitle: 'Brukere',
     usersDescription: 'Kontoer, roller og visningsnavn.',
     aiTitle: 'AI-leverandører',
-    aiDescription: 'OpenCode, Ollama og OpenAI-kompatible endepunkter.',
+    aiDescription: 'OpenCode, Ollama, ChatGPT og OpenAI-kompatible endepunkter.',
     emailTitle: 'E-post (SMTP)',
     emailDescription: 'Sender tilbakestilling av passord.',
   },
@@ -77,7 +77,7 @@ const nb: Dict = {
   aiSettings: {
     title: 'AI-leverandører',
     intro:
-      'Delte påloggingsopplysninger for OpenCode, Ollama og alle OpenAI-kompatible endepunkter (f.eks. NVIDIA NIM). ' +
+      'Delte påloggingsopplysninger for OpenCode, Ollama, ChatGPT og alle OpenAI-kompatible endepunkter (f.eks. NVIDIA NIM). ' +
       'Hver bruker velger i spilleren hvilken de vil bruke — ingen trenger sin egen nøkkel.',
     ollamaGroup: 'Ollama',
     ollamaNotePrefix: 'Ny på Ollama? Se',

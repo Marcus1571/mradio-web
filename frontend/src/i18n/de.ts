@@ -26,7 +26,7 @@ const de: Dict = {
     usersTitle: 'Benutzer',
     usersDescription: 'Konten, Rollen und Anzeigenamen.',
     aiTitle: 'KI-Anbieter',
-    aiDescription: 'OpenCode, Ollama und OpenAI-kompatible Endpunkte.',
+    aiDescription: 'OpenCode, Ollama, ChatGPT und OpenAI-kompatible Endpunkte.',
     emailTitle: 'E-Mail (SMTP)',
     emailDescription: 'Versand von Passwort-Zurücksetzungen.',
   },
@@ -77,7 +77,7 @@ const de: Dict = {
   aiSettings: {
     title: 'KI-Anbieter',
     intro:
-      'Gemeinsame Zugangsdaten für OpenCode, Ollama und jeden OpenAI-kompatiblen Endpunkt (z. B. NVIDIA NIM). ' +
+      'Gemeinsame Zugangsdaten für OpenCode, Ollama, ChatGPT und jeden OpenAI-kompatiblen Endpunkt (z. B. NVIDIA NIM). ' +
       'Jede Person wählt im Player, welchen davon sie nutzt — niemand benötigt einen eigenen Schlüssel.',
     ollamaGroup: 'Ollama',
     ollamaNotePrefix: 'Neu bei Ollama? Siehe',

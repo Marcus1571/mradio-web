@@ -26,7 +26,7 @@ const sv: Dict = {
     usersTitle: 'Användare',
     usersDescription: 'Konton, roller och visningsnamn.',
     aiTitle: 'AI-leverantörer',
-    aiDescription: 'OpenCode, Ollama och OpenAI-kompatibla endpoints.',
+    aiDescription: 'OpenCode, Ollama, ChatGPT och OpenAI-kompatibla endpoints.',
     emailTitle: 'E-post (SMTP)',
     emailDescription: 'Skickar lösenordsåterställningar.',
   },
@@ -77,7 +77,7 @@ const sv: Dict = {
   aiSettings: {
     title: 'AI-leverantörer',
     intro:
-      'Delade inloggningsuppgifter för OpenCode, Ollama och alla OpenAI-kompatibla endpoints (t.ex. NVIDIA NIM). ' +
+      'Delade inloggningsuppgifter för OpenCode, Ollama, ChatGPT och alla OpenAI-kompatibla endpoints (t.ex. NVIDIA NIM). ' +
       'Var och en väljer i spelaren vilken de vill använda — ingen behöver en egen nyckel.',
     ollamaGroup: 'Ollama',
     ollamaNotePrefix: 'Ny på Ollama? Se',
