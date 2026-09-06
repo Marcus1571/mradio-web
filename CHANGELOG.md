@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.39] - 2026-09-06
+
+Much better station logos again: when the directory only offers a
+blurry 16x16 favicon, the station's own website is now asked for the
+logo it publishes for link previews. That's how 181.FM and 1.FM get
+their real full-size logos instead of a fuzzy icon. 94 of 104 curated
+stations show a logo.
+
+Also fixed a lookup that could hang for over a minute on a handful of
+stations, and stopped one station showing an unrelated broadcaster's
+logo.
+
 ## [0.5.38] - 2026-09-06
 
 Radio Paradise now streams at 320 kbps instead of 128.
@@ -8,10 +20,8 @@ Fixed and improved station logos: some stations showed no logo because
 the directory had a homepage URL where the image should be (it passed
 the reachability check but rendered as nothing), and others showed a
 blurry site favicon even when a proper logo was listed alongside it.
-Logos are now verified to actually be images, real logos are preferred
-over favicons, and a few well-known stations the directory gets wrong
-(the 1.FM family, KUSC) have a curated logo. 90 of 104 curated stations
-now show a logo.
+Logos are now verified to actually be images, and real logos are
+preferred over favicons.
 
 ## [0.5.37] - 2026-09-06
 

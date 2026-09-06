@@ -1870,22 +1870,45 @@ all presented identically:
    upscaled into the panel. `_first_working_favicon()` now scans all
    candidates and only falls back to a `.ico` if nothing better
    verifies.
-3. **Genuinely absent from the directory.** For these a small
-   hand-checked override map was added — keyed by stream *host* where
-   that identifies the broadcaster (one entry covers all ~dozen 1.FM
-   channels, which share `strm112.1.fm`), and by curated *name* where
-   the host is a shared CDN that says nothing about the broadcaster
-   (KUSC streams via streamtheworld, as do many unrelated stations —
-   keying that host would have mislabelled all of them). Overrides are
-   HEAD-verified like any other candidate, so a rotted entry degrades
-   to the normal search instead of serving a broken image.
+3. **Genuinely absent from the directory.** A small hand-checked
+   override map keyed by curated *name* (KUSC — its stream host is a
+   shared CDN, so keying the host would mislabel every other station
+   on it). Overrides are HEAD-verified like any other candidate.
 
-Result: 90/104 curated stations resolve a logo. The remaining 14 have
-nothing usable anywhere (KCSM's own site 404s its favicon), and
-correctly show blank rather than something wrong. Verified no
-regressions by re-validating every URL in production's cache against
-the new stricter check — exactly one was rejected, the Radio Paradise
-homepage that prompted the work.
+**The real fix, found only because the user pushed back (0.5.38,
+second pass)**: told the 181.FM logo was still crappy, with "just put
+181.fm into search and look at the website." I had checked the two
+URLs the directory listed and the homepage's declared
+`<link rel="icon">` — but never the image the site actually *shows*.
+Fetching the homepage with a browser User-Agent (it serves a stub to
+plain clients) revealed **`og:image`**: `og181fmlogo.jpg`, 1200x630,
+86KB, the exact logo the user screenshotted, versus the 4KB favicon we
+were serving. This is a general convention, not a one-off — it also
+found 1.FM's real logo (`radio.1cloud.fm/og_image.png`), letting the
+hardcoded imgur override be deleted entirely. **Lesson: when a site
+"has no usable logo", check `og:image` before concluding that — it's
+the image a site publishes to represent itself, and it beats both
+`favicon.ico` and directory metadata.**
+
+Two performance traps this introduced, both caught by measuring:
+- **Deprioritising apple-touch-icons was wrong.** Treating them as
+  low-quality forced a homepage fetch even when a fine ~180px icon was
+  already in hand. Only `.ico`/favicons are genuinely blurry at the
+  panel's render size; the rule now covers just those.
+- **Per-request timeouts don't bound a multi-request lookup.** One
+  lookup makes a search per name variant, a HEAD per candidate, then
+  possibly homepage fetches — each under `_TIMEOUT` while the total
+  ran to 90s+ for VCR. Fixed twice over: og:image is now tried once
+  after the directory is exhausted (not inside every variant's result
+  set), and `find_logo()` wraps everything in an overall
+  `_TOTAL_TIMEOUT` deadline. Full-catalogue run went 47s → 18s.
+
+Result: 94/104 curated stations resolve a logo. The remaining 10 have
+nothing usable anywhere (KCSM's own site 404s its favicon) and
+correctly show blank. Verified no regressions by re-resolving every
+station in production's cache: the only "loss" was Radio ROKS Ballads,
+which had been showing *Radio Białystok's* favicon — a Polish station's
+logo on a Ukrainian one — so blank is strictly better.
 
 **Audio quality**: probed `icy-br` across all 104 streams in parallel
 (sequential took >6min and timed out; `xargs -0 -P 20` with a NUL
