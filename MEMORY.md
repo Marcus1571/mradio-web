@@ -262,7 +262,7 @@ on LT. Test-connection now reports Ollama as `True, "Connected."`.
 correct as a generic fresh-install default; it just needs pulling before
 use, same as any Ollama model does.
 
-## ChatGPT/Codex subscription as a 4th AI provider (2026-09-06, 0.5.23; timeout fixed 0.5.24)
+## ChatGPT/Codex subscription as a 4th AI provider (2026-09-06, 0.5.23; timeout fixed 0.5.24; 4-way comparison + settings redesign 0.5.25)
 
 **Real-production timing data, first day**: user tested two real liner
 notes live on LT after connecting their own ChatGPT Go account. Log
@@ -409,6 +409,51 @@ that install's own admin completes their own OAuth login with their own
 account. Worth remembering this question will likely come up again from
 other users/reviewers of this code; the answer belongs here, not just
 in a chat transcript.
+
+**4-way real-production comparison (0.5.25)**: user's explicit bar —
+"I accept the OpenAI dependency risk only if it delivers a substantial
+improvement over the other three free providers." Ran a one-off
+diagnostic script directly on LT (cleaned up after, no trace left in
+app state) firing the same 6 real tracks through opencode/ollama/openai
+(NIM)/codex and comparing timing + quality. Findings: **NIM failed on
+every single call** ("no response") — a real, separate, still-unfixed
+problem, not investigated further since the user moved straight to the
+settings redesign request without confirming it as a task. ChatGPT was
+often faster than opencode (which had two 100+ second outliers) but was
+NOT substantially better in quality than opencode/ollama — verdict
+given to the user: does not clear the stated bar, but remains a
+roughly-equal fourth option worth keeping. Ollama had one genuine
+factual error (wrong date for a Myaskovsky symphony) in this sample.
+Based on this data, user picked a preference order — ChatGPT, opencode,
+Ollama, NIM — for both the settings-page card order and the player's
+dropdown/fallback order.
+
+**Settings-page redesign (0.5.25)**: reordering the fallback/dropdown
+order needed exactly one change — `providers.py`'s `PROVIDERS` tuple —
+since `routers/enrich.py`'s `list_providers()` and `enricher.py`'s
+fallback logic both already iterate that same tuple generically; no
+other backend logic needed touching. `AISettingsPage.tsx`'s four
+provider blocks were reordered to match and each wrapped in a new
+`.provider-bubbles` container; `.settings-group` (previously a bare
+flex column with no visual separation) gained a `--paper-3` background,
+`--line` border, and rounded corners so each provider reads as a
+distinct card, plus a small `.provider-status-dot` next to each
+heading (grey when unconfigured, `--live` green when configured) —
+"configured" is derived client-side straight from already-loaded state
+(`codexStatus?.connected`, `settings.opencode`, `settings.ollama_url`,
+`settings.api_key`) rather than fetching `/api/enrich/providers`
+separately, since that data was already in hand. Verified end-to-end
+locally: spun up the real backend against a throwaway `MRADIO_DATA_DIR`
++ venv (exact setup this file's own "Local development" section
+documents) and the real Vite dev server, confirmed via `curl` that
+`/api/enrich/providers` really does return `codex, opencode, ollama,
+openai` in that order post-change — **no screenshot/browser tool was
+available in that session, so the actual pixel-level "bubble" look was
+not visually confirmed before shipping**, only the DOM/CSS pairing and
+data-flow correctness; flagged this gap to the user rather than
+claiming a visual check that didn't happen, consistent with
+[[feedback_verify_ui_visually]]'s spirit even when the ideal tool isn't
+on hand.
 
 ## Hip-Hop genre added (2026-09-06, 0.5.21)
 

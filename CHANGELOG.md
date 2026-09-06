@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.25] - 2026-09-06
+
+Redesigned the AI providers settings page: each provider (ChatGPT,
+opencode, Ollama, NIM) now sits in its own visually separated card with
+a small status dot showing whether it's configured. Reordered the
+cards — and the player's AI dropdown / automatic-fallback order — to
+ChatGPT, opencode, Ollama, NIM, based on a real production comparison
+across all four providers.
+
 ## [0.5.24] - 2026-09-06
 
 Raised the ChatGPT/Codex provider's request timeout from 60s to 180s —
