@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.40] - 2026-09-06
+
+Added Wikipedia as a last-resort logo source, for stations that have
+neither a directory logo nor one on their own site. It only accepts an
+article whose title genuinely matches the station, so it stays quiet
+rather than risking a similarly-named station's logo — TSF Jazz gains
+its real logo this way.
+
 ## [0.5.39] - 2026-09-06
 
 Much better station logos again: when the directory only offers a

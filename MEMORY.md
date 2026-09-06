@@ -1910,6 +1910,43 @@ station in production's cache: the only "loss" was Radio ROKS Ballads,
 which had been showing *Radio Białystok's* favicon — a Polish station's
 logo on a Ukrainian one — so blank is strictly better.
 
+**Wikipedia as a last tier, and why not Google Images (0.5.40)**: user
+asked for a Google Images fallback filtered to transparent PNGs.
+Checked rather than assumed: a server-side fetch of Google Images
+returns a **JavaScript shell with zero image URLs** — scraping it would
+need a headless browser in the container and breaches Google's terms.
+Wikipedia's API is the sound equivalent: free, no key, content licensed
+for reuse. It runs only when everything else found nothing, so it costs
+one request on the rare blank.
+
+**Its search always returns *something*, which is the whole danger**,
+and two live near-misses forced the guard to be tightened twice:
+- `TSF Jazz` matched a different French station called `Jazz Radio` —
+  the word-overlap check passed because both contain "jazz". Added
+  `_GENERIC_STATION_WORDS` (radio/jazz/blues/rock/country/…) which are
+  excluded from identity matching; overlap on those alone proves
+  nothing.
+- `WSM 650 AM` then matched `WSM-FM` — same call sign, *different
+  station* — and would have shown the FM logo. Fixed by requiring the
+  article title to contain **every** specific word, not merely one.
+  Notably the correct `WSM (AM)` article has no image at all, so
+  showing nothing is the genuinely right answer there.
+
+Net effect: Wikipedia fires for exactly one station (TSF Jazz, 95/104
+total). That low hit rate is the design working — the alternative to a
+strict guard isn't more logos, it's confidently-wrong ones, which this
+feature has now produced twice (VCR→Congolese station, Radio
+ROKS→Radio Białystok) and which is always worse than a blank space.
+
+**A separate lesson about stale cache entries**: user reported
+"1.FM Hot Country" blank, which isn't in `stations.py` at all — it's
+the *ICY name* broadcast by `1.FM Absolute Country Hits`. Its cache
+entry was `None` from a transient failure during a warm run, while
+sibling channels on the same host had resolved fine. When a station
+looks inconsistent with its siblings, suspect a cached miss before
+suspecting the lookup logic; re-running just the misses recovered
+three stations without rebuilding the whole cache.
+
 **Audio quality**: probed `icy-br` across all 104 streams in parallel
 (sequential took >6min and timed out; `xargs -0 -P 20` with a NUL
 delimiter is the pattern — station names contain spaces, so plain
