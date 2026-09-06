@@ -65,6 +65,15 @@ _PIPE_SUFFIX_RE = re.compile(r"\s*\|.*$")
 _TRAILING_PAREN_RE = re.compile(r"\s*\([^)]*\)\s*$")
 _WORD_RE = re.compile(r"[a-z0-9]{3,}")
 
+# Words shared by hundreds of stations — matching on these alone says
+# nothing about whether two names refer to the same broadcaster.
+_GENERIC_STATION_WORDS = {
+    "radio", "fmm", "the", "and", "station", "music", "live", "online",
+    "stream", "channel", "network", "classic", "classical", "jazz", "blues",
+    "rock", "pop", "country", "soul", "funk", "chill", "chillout", "lounge",
+    "dance", "hits", "hip", "hop", "rap", "smooth", "easy", "gold", "one",
+}
+
 # Some station sites return a stub page to non-browser clients.
 _BROWSER_UA = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
@@ -176,6 +185,68 @@ def _is_site_icon(url: str) -> bool:
     and one station's site hung long enough to stall the whole thing."""
     path = urllib.parse.urlparse(url).path.lower()
     return path.endswith(".ico") or path.endswith("favicon.png")
+
+
+async def _wikipedia_logo(
+    client: httpx.AsyncClient, station_name: str, require_words: set[str]
+) -> str | None:
+    """Last resort: the lead image of the station's Wikipedia article.
+
+    Free, licensed for reuse, and often a proper logo — confirmed live
+    it's the only source that has one for TSF Jazz. But its search will
+    happily return *something* for any query, so the article title must
+    share a real word with the station name before its image is
+    trusted: searching "1.FM" returns an unrelated station called
+    "Hitz", and "181.FM" returns a list of Greek radio stations. A
+    wrong logo is worse than none, so an unverifiable match is
+    discarded.
+
+    (Google Images was the obvious thing to reach for here, but a
+    server-side fetch of it returns a JavaScript shell with no image
+    URLs at all — scraping it would need a headless browser in the
+    container and would breach Google's terms. Wikipedia has a real
+    API, no key, and content that's actually licensed for reuse.)"""
+    try:
+        r = await client.get(
+            "https://en.wikipedia.org/w/api.php",
+            params={
+                "action": "query", "format": "json",
+                "prop": "pageimages", "piprop": "original",
+                "generator": "search",
+                "gsrsearch": f"{station_name} radio station", "gsrlimit": "3",
+            },
+            timeout=_OG_TIMEOUT,
+        )
+        if r.status_code != 200:
+            return None
+        pages = r.json().get("query", {}).get("pages", {})
+    except (httpx.HTTPError, ValueError, AttributeError):
+        return None
+
+    # Genre/format words are shared by hundreds of stations, so an
+    # overlap on those alone proves nothing — confirmed live that
+    # "TSF Jazz" matched a different French station simply called
+    # "Jazz Radio", whose logo would have been served with confidence.
+    specific = require_words - _GENERIC_STATION_WORDS
+    if not specific:
+        return None
+
+    for page in pages.values():
+        source = (page.get("original") or {}).get("source")
+        if not source:
+            continue
+        title_words = _distinguishing_words(page.get("title", ""))
+        # Every specific word must appear, not merely one: sharing a
+        # single token is far too weak for sibling stations. Confirmed
+        # live that "WSM 650 AM" matched "WSM-FM" — same call sign,
+        # different station — and would have shown the FM logo. (The
+        # correct "WSM (AM)" article has no image at all, so the right
+        # outcome here really is nothing.)
+        if not specific <= title_words:
+            continue
+        if await _is_usable_image(client, source):
+            return source
+    return None
 
 
 async def _og_image(client: httpx.AsyncClient, homepage: str) -> str | None:
@@ -315,4 +386,9 @@ async def _find_logo(stream_url: str, station_name: str) -> str | None:
             if og and not _is_site_icon(og) and await _is_usable_image(client, og):
                 return og
 
-        return site_icon
+        if site_icon:
+            return site_icon
+
+        # Still nothing at all: try Wikipedia. Only worth the request
+        # when we'd otherwise show a blank space.
+        return await _wikipedia_logo(client, station_name, distinguishing_words)
