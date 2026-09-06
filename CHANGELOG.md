@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.41] - 2026-09-06
+
+181.FM stations now use the broadcaster's own transparent logo instead
+of the version flattened onto a white box.
+
+Also fixed logo validation rejecting perfectly good images served
+without a content-type header — it now checks the file's actual bytes
+when the header is missing, which is what made the above possible.
+
 ## [0.5.40] - 2026-09-06
 
 Added Wikipedia as a last-resort logo source, for stations that have

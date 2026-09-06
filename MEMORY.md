@@ -1938,6 +1938,39 @@ strict guard isn't more logos, it's confidently-wrong ones, which this
 feature has now produced twice (VCR→Congolese station, Radio
 ROKS→Radio Białystok) and which is always worse than a blank space.
 
+**Brave Search evaluated and rejected; transparency (0.5.41)**: user
+asked about Brave Search as a Google Images substitute. Checked:
+its API returns 422 without a key (needs signup *and a credit card*,
+$5/1000 requests beyond free credits), and its HTML endpoint is
+CAPTCHA-gated. So it's not unusable like Google — it's a real option —
+but it means asking the user to obtain and configure a key with card
+details on file, for a fallback that would fire on <10 stations. Not
+worth it unless they ask again; noted here so it isn't re-researched.
+
+**Content-type headers are not sufficient to validate an image.**
+Hunting a transparent 181.FM logo turned up
+`/images/181_logo_300.webp` (referenced only inside the site's JS
+bundle — not in og:image, not in any `<link rel="icon">`, not in the
+manifest), a genuine alpha-channel WebP. Their server sends it with
+**no content-type header at all**, so 0.5.38's header-only check
+rejected it. `_is_usable_image()` now sniffs magic bytes (PNG/JPEG/
+GIF/ICO/WebP/SVG) when the header is *absent* — but still trusts the
+header when present, so the earlier "homepage returns 200" and
+"404 page pretending to be a .jpg" cases stay rejected (re-verified
+explicitly).
+
+**On transparency generally**: there's no reliable signal for finding
+a transparent logo. Checked manifests, `<link rel="icon">`, og:image —
+all either absent or flattened. 181.FM's per-channel
+`/images/station-thumbnails/*_300.webp` files exist but are
+photographic album art, not logos, and read as mush at 70px. So the
+transparent file is a host-keyed override (one entry covers every
+181.FM channel), not a general mechanism. Transparency also can't
+become a *filter*: it would reject correct opaque logos like TSF
+Jazz's. If white boxes keep bothering the user, the better fix is
+ours — rounding the logo's corners or blending it into the panel —
+rather than narrowing what counts as a valid logo.
+
 **A separate lesson about stale cache entries**: user reported
 "1.FM Hot Country" blank, which isn't in `stations.py` at all — it's
 the *ICY name* broadcast by `1.FM Absolute Country Hits`. Its cache
