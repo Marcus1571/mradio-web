@@ -199,20 +199,17 @@
   border-bottom: 1px solid var(--line);
 }
 
-/* The logo is taller than the header row's text, so it needs to hang
-   below the divider into its own reserved strip rather than stretch
-   the row (which would push the divider down with it) — the divider
-   itself is shortened above the logo's column, and .panel-head grows
-   just enough to fit the logo without relying on the panel's own
-   overflow:hidden edge to crop it. */
-.panel-head:has(.station-logo) {
-  padding-bottom: calc(var(--space-xs) + 40px);
-}
-
+/* The logo is taller than the header row's text. Rather than growing
+   .panel-head to fit it (which would push .np-body down too, leaving
+   dead empty space between the divider and the actual now-playing
+   content below it — tried this first, confirmed wrong live), the
+   header's own box stays exactly as compact as before; only the
+   divider is shortened above the logo's column, and the logo is
+   absolutely positioned so it overhangs past .panel-head's bottom
+   edge into .np-body's space, overlapping content that sits below it
+   rather than pushing that content down. */
 .panel-head:has(.station-logo)::after {
-  top: calc(var(--space-xs) * 2 + 20px);
-  bottom: auto;
-  right: calc(var(--space-md) + 72px);
+  right: calc(var(--space-md) + 88px);
 }
 
 .panel-title {
@@ -284,12 +281,11 @@
 
 .station-logo {
   position: absolute;
-  top: 50%;
+  top: var(--space-xs);
   right: var(--space-md);
-  transform: translateY(-50%);
-  height: 64px;
+  height: 80px;
   width: auto;
-  max-width: 160px;
+  max-width: 180px;
   object-fit: contain;
   border-radius: var(--radius-sm);
   z-index: 1;
