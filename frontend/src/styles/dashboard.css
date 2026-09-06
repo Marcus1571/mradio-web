@@ -182,12 +182,37 @@
 }
 
 .panel-head {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
   padding: var(--space-xs) var(--space-md);
+}
+
+.panel-head::after {
+  content: '';
+  position: absolute;
+  left: var(--space-md);
+  right: var(--space-md);
+  bottom: 0;
   border-bottom: 1px solid var(--line);
+}
+
+/* The logo is taller than the header row's text, so it needs to hang
+   below the divider into its own reserved strip rather than stretch
+   the row (which would push the divider down with it) — the divider
+   itself is shortened above the logo's column, and .panel-head grows
+   just enough to fit the logo without relying on the panel's own
+   overflow:hidden edge to crop it. */
+.panel-head:has(.station-logo) {
+  padding-bottom: calc(var(--space-xs) + 40px);
+}
+
+.panel-head:has(.station-logo)::after {
+  top: calc(var(--space-xs) * 2 + 20px);
+  bottom: auto;
+  right: calc(var(--space-md) + 72px);
 }
 
 .panel-title {
@@ -258,12 +283,16 @@
 }
 
 .station-logo {
-  height: 28px;
+  position: absolute;
+  top: 50%;
+  right: var(--space-md);
+  transform: translateY(-50%);
+  height: 64px;
   width: auto;
-  max-width: 120px;
+  max-width: 160px;
   object-fit: contain;
   border-radius: var(--radius-sm);
-  flex-shrink: 0;
+  z-index: 1;
 }
 
 .np-body {
