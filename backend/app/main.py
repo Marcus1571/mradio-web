@@ -57,19 +57,23 @@ app.include_router(ws_router.router)
 app.include_router(analytics_router.router)
 
 class _CacheAwareStaticFiles(StaticFiles):
-    """Vite hashes every filename under /assets/* (a new build always gets
-    a new name), so those are safe to cache forever. `index.html` is not
-    hashed and is the one file that tells the browser which hashed assets
-    to load — caching it at all risks a browser serving a stale page that
-    references assets from a previous deploy indefinitely, exactly the
-    failure mode a user hit after an update shipped a CSS-only fix."""
+    """Only files actually under /assets/* are Vite-content-hashed (a new
+    build always gets a new filename there) — those are safe to cache
+    forever. Everything else served from this mount, including files Vite
+    just copies verbatim from public/ (manifest.webmanifest, favicon.svg,
+    the PWA icons, apple-touch-icon.png) as well as index.html itself,
+    keeps the *same* filename across deploys despite content changing, so
+    caching those at all risks a browser holding onto a stale copy
+    indefinitely — this bit us twice already: once with index.html
+    pointing at a previous deploy's JS/CSS, and once with the PWA install
+    prompt quoting a manifest name from before a rename."""
 
     def file_response(self, full_path, stat_result, scope: Scope, status_code: int = 200):
         response = super().file_response(full_path, stat_result, scope, status_code)
-        if str(full_path).endswith("index.html"):
-            response.headers["Cache-Control"] = "no-cache"
-        else:
+        if "/assets/" in str(full_path).replace("\\", "/"):
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        else:
+            response.headers["Cache-Control"] = "no-cache"
         return response
 
 
