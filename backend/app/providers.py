@@ -137,6 +137,12 @@ async def llm_openai(settings: dict, prompt: str) -> str | None:
 
 _CODEX_API_URL = "https://chatgpt.com/backend-api/codex/responses"
 _CODEX_MODEL = "gpt-5.6-terra"
+# Observed live: 23-70s response times (vs. NIM/Ollama's usual 5-20s) —
+# routed through OpenAI's own subscription-tier backend, not a direct
+# model endpoint, so it's slower and more variable. Matches opencode's
+# 180s ceiling rather than a tighter one, for the same "this mediates
+# through something heavier than a plain API call" reason.
+_CODEX_TIMEOUT = 180
 
 
 async def llm_codex(settings: dict, prompt: str) -> str | None:
@@ -165,7 +171,7 @@ async def llm_codex(settings: dict, prompt: str) -> str | None:
         headers["ChatGPT-Account-Id"] = cfg["account_id"]
     text_parts: list[str] = []
     try:
-        async with httpx.AsyncClient(timeout=60) as client:
+        async with httpx.AsyncClient(timeout=_CODEX_TIMEOUT) as client:
             async with client.stream("POST", _CODEX_API_URL, json=payload, headers=headers) as r:
                 if r.status_code != 200:
                     return None
