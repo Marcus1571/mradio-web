@@ -26,6 +26,11 @@
   margin-bottom: var(--space-sm);
 }
 
+.map-live-dot-icon {
+  background: none;
+  border: none;
+}
+
 .analytics-map {
   height: 320px;
   width: 100%;

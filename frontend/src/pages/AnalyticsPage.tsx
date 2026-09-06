@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Tooltip, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet.heat'
@@ -9,6 +9,7 @@ import type { TFunction } from '../i18n'
 import { displayName } from '../utils/format'
 import '../styles/admin.css'
 import '../styles/analytics.css'
+import '../styles/dashboard.css'
 
 type Since = '7d' | '30d' | 'all'
 
@@ -127,6 +128,13 @@ function buildPins(sessions: LiveSession[], history: HistoryEntry[]): Pin[] {
 
 type MapMode = 'pins' | 'heatmap'
 
+const LIVE_DOT_ICON = L.divIcon({
+  className: 'map-live-dot-icon',
+  html: '<span class="live-dot" />',
+  iconSize: [8, 8],
+  iconAnchor: [4, 4],
+})
+
 function HeatLayer({ pins }: { pins: Pin[] }) {
   const map = useMap()
   useEffect(() => {
@@ -184,9 +192,9 @@ function AnalyticsMap({
         />
         {mode === 'pins' ? (
           pins.map((p, i) => (
-            <CircleMarker key={i} center={[p.lat, p.lon]} radius={6 + p.count} pathOptions={{ color: 'var(--accent)' }}>
+            <Marker key={i} position={[p.lat, p.lon]} icon={LIVE_DOT_ICON}>
               <Tooltip>{p.label}</Tooltip>
-            </CircleMarker>
+            </Marker>
           ))
         ) : (
           <HeatLayer pins={pins} />
