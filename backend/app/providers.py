@@ -13,7 +13,7 @@ import httpx
 
 from . import codex_oauth, codex_settings
 
-PROVIDERS = ("opencode", "openai", "codex", "ollama")
+PROVIDERS = ("codex", "opencode", "ollama", "openai")
 
 _OC_ONPATH: bool | None = None
 

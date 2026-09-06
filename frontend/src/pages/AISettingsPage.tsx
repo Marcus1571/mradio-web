@@ -116,181 +116,203 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
 
       <form className="admin-panel" onSubmit={onSubmit}>
         <div className="settings-form">
-          <div className="settings-group">
-            <h2>{t('aiSettings.ollamaGroup')}</h2>
-            <KbNote
-              prefix={t('aiSettings.ollamaNotePrefix')}
-              linkLabel={t('aiSettings.ollamaNoteLink')}
-              anchor="ollama"
-              suffix={t('aiSettings.ollamaNoteSuffix')}
-            />
-            <div className="settings-row">
-              <label htmlFor="ollama_url">{t('aiSettings.serverUrl')}</label>
-              <input
-                id="ollama_url"
-                placeholder="e.g. http://192.168.1.12:11434"
-                value={settings.ollama_url}
-                onChange={(e) => field('ollama_url', e.target.value)}
-              />
-            </div>
-            <div className="settings-row">
-              <label htmlFor="ollama_model">{t('aiSettings.model')}</label>
-              <input
-                id="ollama_model"
-                value={settings.ollama_model}
-                onChange={(e) => field('ollama_model', e.target.value)}
-              />
-            </div>
-            <div className="test-actions">
-              <button
-                className="test-btn"
-                type="button"
-                disabled={ollamaTest.status === 'testing'}
-                onClick={() =>
-                  void testProvider(
-                    'ollama',
-                    {
-                      ollama_url: settings.ollama_url,
-                      ollama_model: settings.ollama_model,
-                      ollama_timeout: settings.ollama_timeout,
-                      ollama_gpu: settings.ollama_gpu,
-                    },
-                    setOllamaTest,
-                  )
-                }
-              >
-                {ollamaTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
-              </button>
-              <TestBadge state={ollamaTest} t={t} />
-            </div>
-          </div>
-
-          <div className="settings-group">
-            <h2>{t('aiSettings.openaiGroup')}</h2>
-            <KbNote
-              prefix={t('aiSettings.nimNotePrefix')}
-              linkLabel={t('aiSettings.nimNoteLink')}
-              anchor="nvidia-nim-openai-compatible"
-              suffix={t('aiSettings.nimNoteSuffix')}
-            />
-            <div className="settings-row">
-              <label htmlFor="api_base">{t('aiSettings.apiBaseUrl')}</label>
-              <input id="api_base" value={settings.api_base} onChange={(e) => field('api_base', e.target.value)} />
-            </div>
-            <div className="settings-row">
-              <label htmlFor="api_model">{t('aiSettings.model')}</label>
-              <input id="api_model" value={settings.api_model} onChange={(e) => field('api_model', e.target.value)} />
-            </div>
-            <div className="settings-row">
-              <label htmlFor="api_key">{t('aiSettings.apiKey')}</label>
-              <input
-                id="api_key"
-                type="password"
-                placeholder={settings.api_key || t('aiSettings.apiKeyNotSet')}
-                value={apiKeyInput}
-                onChange={(e) => setApiKeyInput(e.target.value)}
-              />
-            </div>
-            <div className="test-actions">
-              <button
-                className="test-btn"
-                type="button"
-                disabled={openaiTest.status === 'testing'}
-                onClick={() =>
-                  void testProvider(
-                    'openai',
-                    {
-                      api_base: settings.api_base,
-                      api_model: settings.api_model,
-                      api_timeout: settings.api_timeout,
-                      ...(apiKeyInput ? { api_key: apiKeyInput } : {}),
-                    },
-                    setOpenaiTest,
-                  )
-                }
-              >
-                {openaiTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
-              </button>
-              <TestBadge state={openaiTest} t={t} />
-            </div>
-          </div>
-
-          <div className="settings-group">
-            <h2>{t('aiSettings.opencodeGroup')}</h2>
-            <div className="settings-row">
-              <label htmlFor="opencode">{t('aiSettings.opencodeEnable')}</label>
-              <input id="opencode" value={settings.opencode} onChange={(e) => field('opencode', e.target.value)} />
-            </div>
-            <div className="test-actions">
-              <button
-                className="test-btn"
-                type="button"
-                disabled={opencodeTest.status === 'testing'}
-                onClick={() =>
-                  void testProvider(
-                    'opencode',
-                    { opencode: settings.opencode, opencode_timeout: settings.opencode_timeout },
-                    setOpencodeTest,
-                  )
-                }
-              >
-                {opencodeTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
-              </button>
-              <TestBadge state={opencodeTest} t={t} />
-            </div>
-          </div>
-
-          <div className="settings-group">
-            <h2>{t('aiSettings.codexGroup')}</h2>
-            <p className="admin-note">{t('aiSettings.codexIntro')}</p>
-            {codexStatus?.connected ? (
-              <>
-                <p className="admin-note">
-                  {t('aiSettings.codexConnected', { plan: codexStatus.chatgpt_plan_type || '—' })}
-                </p>
+          <div className="provider-bubbles">
+            <div className="settings-group">
+              <div className="settings-group-head">
+                <h2>
+                  <span className={`provider-status-dot ${codexStatus?.connected ? 'on' : ''}`} aria-hidden="true" />
+                  {t('aiSettings.codexGroup')}
+                </h2>
+              </div>
+              <p className="admin-note">{t('aiSettings.codexIntro')}</p>
+              {codexStatus?.connected ? (
+                <>
+                  <p className="admin-note">
+                    {t('aiSettings.codexConnected', { plan: codexStatus.chatgpt_plan_type || '—' })}
+                  </p>
+                  <div className="test-actions">
+                    <button className="test-btn" type="button" onClick={() => void disconnectCodex()}>
+                      {t('aiSettings.codexDisconnect')}
+                    </button>
+                    <button
+                      className="test-btn"
+                      type="button"
+                      disabled={codexTest.status === 'testing'}
+                      onClick={() => void testCodex()}
+                    >
+                      {codexTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
+                    </button>
+                    <TestBadge state={codexTest} t={t} />
+                  </div>
+                </>
+              ) : codexStatus?.pending || codexPromptResult ? (
+                <div className="admin-note">
+                  <p>{t('aiSettings.codexWaiting')}</p>
+                  {codexPromptResult && (
+                    <p>
+                      {t('aiSettings.codexUserCodeHint', { code: codexPromptResult.user_code })}{' '}
+                      <a
+                        href={codexPromptResult.verification_uri}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {codexPromptResult.verification_uri}
+                      </a>
+                    </p>
+                  )}
+                </div>
+              ) : (
                 <div className="test-actions">
-                  <button className="test-btn" type="button" onClick={() => void disconnectCodex()}>
-                    {t('aiSettings.codexDisconnect')}
-                  </button>
                   <button
                     className="test-btn"
                     type="button"
-                    disabled={codexTest.status === 'testing'}
-                    onClick={() => void testCodex()}
+                    disabled={codexConnecting}
+                    onClick={() => void connectCodex()}
                   >
-                    {codexTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
+                    {codexConnecting ? t('aiSettings.testing') : t('aiSettings.codexConnect')}
                   </button>
-                  <TestBadge state={codexTest} t={t} />
                 </div>
-              </>
-            ) : codexStatus?.pending || codexPromptResult ? (
-              <div className="admin-note">
-                <p>{t('aiSettings.codexWaiting')}</p>
-                {codexPromptResult && (
-                  <p>
-                    {t('aiSettings.codexUserCodeHint', { code: codexPromptResult.user_code })}{' '}
-                    <a
-                      href={codexPromptResult.verification_uri}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {codexPromptResult.verification_uri}
-                    </a>
-                  </p>
-                )}
+              )}
+            </div>
+
+            <div className="settings-group">
+              <div className="settings-group-head">
+                <h2>
+                  <span className={`provider-status-dot ${settings.opencode ? 'on' : ''}`} aria-hidden="true" />
+                  {t('aiSettings.opencodeGroup')}
+                </h2>
               </div>
-            ) : (
+              <div className="settings-row">
+                <label htmlFor="opencode">{t('aiSettings.opencodeEnable')}</label>
+                <input id="opencode" value={settings.opencode} onChange={(e) => field('opencode', e.target.value)} />
+              </div>
               <div className="test-actions">
                 <button
                   className="test-btn"
                   type="button"
-                  disabled={codexConnecting}
-                  onClick={() => void connectCodex()}
+                  disabled={opencodeTest.status === 'testing'}
+                  onClick={() =>
+                    void testProvider(
+                      'opencode',
+                      { opencode: settings.opencode, opencode_timeout: settings.opencode_timeout },
+                      setOpencodeTest,
+                    )
+                  }
                 >
-                  {codexConnecting ? t('aiSettings.testing') : t('aiSettings.codexConnect')}
+                  {opencodeTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
                 </button>
+                <TestBadge state={opencodeTest} t={t} />
               </div>
-            )}
+            </div>
+
+            <div className="settings-group">
+              <div className="settings-group-head">
+                <h2>
+                  <span className={`provider-status-dot ${settings.ollama_url ? 'on' : ''}`} aria-hidden="true" />
+                  {t('aiSettings.ollamaGroup')}
+                </h2>
+              </div>
+              <KbNote
+                prefix={t('aiSettings.ollamaNotePrefix')}
+                linkLabel={t('aiSettings.ollamaNoteLink')}
+                anchor="ollama"
+                suffix={t('aiSettings.ollamaNoteSuffix')}
+              />
+              <div className="settings-row">
+                <label htmlFor="ollama_url">{t('aiSettings.serverUrl')}</label>
+                <input
+                  id="ollama_url"
+                  placeholder="e.g. http://192.168.1.12:11434"
+                  value={settings.ollama_url}
+                  onChange={(e) => field('ollama_url', e.target.value)}
+                />
+              </div>
+              <div className="settings-row">
+                <label htmlFor="ollama_model">{t('aiSettings.model')}</label>
+                <input
+                  id="ollama_model"
+                  value={settings.ollama_model}
+                  onChange={(e) => field('ollama_model', e.target.value)}
+                />
+              </div>
+              <div className="test-actions">
+                <button
+                  className="test-btn"
+                  type="button"
+                  disabled={ollamaTest.status === 'testing'}
+                  onClick={() =>
+                    void testProvider(
+                      'ollama',
+                      {
+                        ollama_url: settings.ollama_url,
+                        ollama_model: settings.ollama_model,
+                        ollama_timeout: settings.ollama_timeout,
+                        ollama_gpu: settings.ollama_gpu,
+                      },
+                      setOllamaTest,
+                    )
+                  }
+                >
+                  {ollamaTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
+                </button>
+                <TestBadge state={ollamaTest} t={t} />
+              </div>
+            </div>
+
+            <div className="settings-group">
+              <div className="settings-group-head">
+                <h2>
+                  <span className={`provider-status-dot ${settings.api_key ? 'on' : ''}`} aria-hidden="true" />
+                  {t('aiSettings.openaiGroup')}
+                </h2>
+              </div>
+              <KbNote
+                prefix={t('aiSettings.nimNotePrefix')}
+                linkLabel={t('aiSettings.nimNoteLink')}
+                anchor="nvidia-nim-openai-compatible"
+                suffix={t('aiSettings.nimNoteSuffix')}
+              />
+              <div className="settings-row">
+                <label htmlFor="api_base">{t('aiSettings.apiBaseUrl')}</label>
+                <input id="api_base" value={settings.api_base} onChange={(e) => field('api_base', e.target.value)} />
+              </div>
+              <div className="settings-row">
+                <label htmlFor="api_model">{t('aiSettings.model')}</label>
+                <input id="api_model" value={settings.api_model} onChange={(e) => field('api_model', e.target.value)} />
+              </div>
+              <div className="settings-row">
+                <label htmlFor="api_key">{t('aiSettings.apiKey')}</label>
+                <input
+                  id="api_key"
+                  type="password"
+                  placeholder={settings.api_key || t('aiSettings.apiKeyNotSet')}
+                  value={apiKeyInput}
+                  onChange={(e) => setApiKeyInput(e.target.value)}
+                />
+              </div>
+              <div className="test-actions">
+                <button
+                  className="test-btn"
+                  type="button"
+                  disabled={openaiTest.status === 'testing'}
+                  onClick={() =>
+                    void testProvider(
+                      'openai',
+                      {
+                        api_base: settings.api_base,
+                        api_model: settings.api_model,
+                        api_timeout: settings.api_timeout,
+                        ...(apiKeyInput ? { api_key: apiKeyInput } : {}),
+                      },
+                      setOpenaiTest,
+                    )
+                  }
+                >
+                  {openaiTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
+                </button>
+                <TestBadge state={openaiTest} t={t} />
+              </div>
+            </div>
           </div>
 
           {error && <p className="admin-note" style={{ color: 'var(--danger)' }}>{error}</p>}
