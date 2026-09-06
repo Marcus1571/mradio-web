@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.9] - 2026-09-06
+
+Added German as a seventh UI/AI-liner-notes language, alongside
+English, Spanish, Italian, Portuguese, French, and Russian — switch
+instantly from the top bar, same as the others.
+
 ## [0.5.8] - 2026-09-06
 
 Added Russian as a sixth UI/AI-liner-notes language, alongside English,
