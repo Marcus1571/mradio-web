@@ -1852,6 +1852,53 @@ it again — and when a target can't be met at one breakpoint, say so and
 choose a different goal there rather than distorting the design to
 force it.
 
+**Logo quality: three distinct bugs behind "no logo" (0.5.38)**: user
+listed stations still missing logos or showing blurry ones. Running
+`find_logo()` against the real catalogue separated three causes that
+all presented identically:
+
+1. **Non-image URLs passing validation.** Radio-Browser lists Radio
+   Paradise's favicon as bare `https://radioparadise.com` — a
+   homepage. It answers 200 to a HEAD request, so the existing check
+   accepted and cached it, and it rendered as nothing. Fixed by also
+   requiring `content-type: image/*`. This immediately caught a second
+   case too: 181.FM's indexed `181.FM.jpg` is really a 404 HTML page.
+   **Status code alone is not validation** — check the type as well.
+2. **Favicons winning over real logos.** Several stations are indexed
+   with both a 16×16 `favicon.ico` and a proper logo; the picker
+   returned whichever came first, so 181.FM/KJazz got the blurry one
+   upscaled into the panel. `_first_working_favicon()` now scans all
+   candidates and only falls back to a `.ico` if nothing better
+   verifies.
+3. **Genuinely absent from the directory.** For these a small
+   hand-checked override map was added — keyed by stream *host* where
+   that identifies the broadcaster (one entry covers all ~dozen 1.FM
+   channels, which share `strm112.1.fm`), and by curated *name* where
+   the host is a shared CDN that says nothing about the broadcaster
+   (KUSC streams via streamtheworld, as do many unrelated stations —
+   keying that host would have mislabelled all of them). Overrides are
+   HEAD-verified like any other candidate, so a rotted entry degrades
+   to the normal search instead of serving a broken image.
+
+Result: 90/104 curated stations resolve a logo. The remaining 14 have
+nothing usable anywhere (KCSM's own site 404s its favicon), and
+correctly show blank rather than something wrong. Verified no
+regressions by re-validating every URL in production's cache against
+the new stricter check — exactly one was rejected, the Radio Paradise
+homepage that prompted the work.
+
+**Audio quality**: probed `icy-br` across all 104 streams in parallel
+(sequential took >6min and timed out; `xargs -0 -P 20` with a NUL
+delimiter is the pattern — station names contain spaces, so plain
+`xargs` silently mangles them and probes only a handful). Radio
+Paradise was the one real upgrade available: swapped
+`stream-uk1.radioparadise.com/mp3-128` → `stream.radioparadise.com/mp3-320`.
+Their FLAC feed (1441k) exists but sends no `icy-metaint`, which would
+silently kill liner notes — **when changing a stream URL, check ICY
+metadata survives, not just that it plays**. Everything else at/below
+128k is broadcasting at its real ceiling (KCSM 96k, WSM 64k is an AM
+station); their "better" alternatives were dead or lower quality.
+
 Right after [[mradio_web_status]]'s 0.5.16 pins/heatmap split shipped, the
 user noticed Pins mode was *still* using `radius={6 + count}` — the split
 correctly gave heat-intensity its own dedicated view, but nobody had
