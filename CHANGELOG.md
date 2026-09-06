@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.24] - 2026-09-06
+
+Raised the ChatGPT/Codex provider's request timeout from 60s to 180s —
+observed live response times of 23-70s (slower and more variable than
+NIM/Ollama, since it's routed through OpenAI's subscription backend, not
+a direct model endpoint), and a 60s ceiling risked silently dropping a
+genuinely slow-but-successful response.
+
 ## [0.5.23] - 2026-09-06
 
 Added ChatGPT/Codex subscription as a 4th AI provider — sign in with a

@@ -262,7 +262,27 @@ on LT. Test-connection now reports Ollama as `True, "Connected."`.
 correct as a generic fresh-install default; it just needs pulling before
 use, same as any Ollama model does.
 
-## ChatGPT/Codex subscription as a 4th AI provider (2026-09-06, 0.5.23)
+## ChatGPT/Codex subscription as a 4th AI provider (2026-09-06, 0.5.23; timeout fixed 0.5.24)
+
+**Real-production timing data, first day**: user tested two real liner
+notes live on LT after connecting their own ChatGPT Go account. Log
+timestamps (title-detected → `httpx` POST completion) showed 23s and
+69s — both noticeably slower and more variable than NIM/Ollama's usual
+5-20s, consistent with this call being routed through OpenAI's own
+subscription-tier backend/load balancer rather than a direct model
+endpoint (the response headers include `x-codex-safety-buffering-enabled`
+and similar internal routing hints, seen during dev testing). The 69s
+outlier came within seconds of `llm_codex()`'s original hardcoded 60s
+`httpx` timeout — a genuinely bad near-miss, since a timeout there fails
+silently (returns `None`, falls through to no-liner-notes or a fallback
+provider) rather than erroring visibly. Fixed by raising it to 180s
+(`_CODEX_TIMEOUT`), matching opencode's existing 180s ceiling rather
+than picking a new arbitrary number — same "this mediates through
+something heavier than a plain API call" reasoning already established
+for that provider. Both real liner notes were independently assessed as
+high quality (correct movement/whole-work distinction, accurate
+historical detail, no hallucination spotted) — the timing variance is a
+real, worth-tracking trade-off of the mechanism, not a quality problem.
 
 User's idea: another app ("Hermes") lets you sign in with a ChatGPT
 subscription instead of an API key, via a browser OAuth redirect +
