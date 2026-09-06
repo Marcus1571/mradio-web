@@ -105,7 +105,7 @@ export function EmailSettingsPage({ onBack, t }: { onBack?: () => void; t: TFunc
               <label htmlFor="smtp_host">{t('emailSettings.fieldHost')}</label>
               <input
                 id="smtp_host"
-                placeholder="smtp.gmail.com"
+                placeholder="e.g. smtp.gmail.com"
                 value={settings.host}
                 onChange={(e) => field('host', e.target.value)}
               />
@@ -157,7 +157,7 @@ export function EmailSettingsPage({ onBack, t }: { onBack?: () => void; t: TFunc
               <label htmlFor="smtp_public_url">{t('emailSettings.fieldPublicUrl')}</label>
               <input
                 id="smtp_public_url"
-                placeholder="https://radio.example.com"
+                placeholder="e.g. https://radio.example.com"
                 value={settings.public_url}
                 onChange={(e) => field('public_url', e.target.value)}
               />

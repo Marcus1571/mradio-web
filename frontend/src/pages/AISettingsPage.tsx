@@ -90,7 +90,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               <label htmlFor="ollama_url">{t('aiSettings.serverUrl')}</label>
               <input
                 id="ollama_url"
-                placeholder="http://192.168.1.12:11434"
+                placeholder="e.g. http://192.168.1.12:11434"
                 value={settings.ollama_url}
                 onChange={(e) => field('ollama_url', e.target.value)}
               />
