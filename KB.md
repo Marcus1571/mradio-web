@@ -106,7 +106,7 @@ gets a same-origin exception.
 The app trusts `X-Forwarded-For`/`X-Forwarded-Proto` from its reverse
 proxy (`uvicorn --proxy-headers`) so it sees each listener's real IP
 instead of the proxy's own — this matters for the Analytics page's map
-(§10). NPM sends these headers by default; no extra configuration needed
+(§11). NPM sends these headers by default; no extra configuration needed
 on the NPM side.
 
 It also reads `X-Forwarded-Host` (falling back to the plain `Host`
@@ -327,12 +327,51 @@ same way — just fill in that provider's own host/port/username/password.
   auto-detection is ever visibly wrong (e.g. an unusual proxy setup that
   doesn't forward the host header).
 
-## 8. Data and backups
+## 8. Station logos (optional: SearXNG)
+
+Station logos are found automatically — no configuration needed. The app
+tries, in order: the Radio-Browser directory, then the station's own
+website (its `og:image`), then Wikipedia. Whatever it finds is verified
+to be a real image and cached in `station_logos.json`, including
+confirmed misses, so a station is never looked up twice.
+
+That covers most stations. For the remainder, the app can optionally use
+a **self-hosted [SearXNG](https://docs.searxng.org/)** as a last resort:
+
+```yaml
+environment:
+  - MRADIO_SEARXNG_URL=http://192.168.1.10:7777
+```
+
+Leave it unset if you don't run one — that tier is skipped and everything
+else works as before. It's deliberately last: it only runs for stations
+that would otherwise show no logo at all.
+
+Your SearXNG needs its JSON API enabled, which is off by default. In its
+`settings.yml`:
+
+```yaml
+search:
+  formats:
+    - html
+    - json
+```
+
+Then restart the SearXNG container. Results are filtered to skip icon
+libraries and stock-photo sites, and a result is only accepted if its
+title or URL still matches the station name — a wrong logo is worse than
+none, so an unverifiable match is discarded.
+
+No hosted search engine works here: Google and DuckDuckGo both refuse
+server-side requests, and Brave requires a paid API key. A SearXNG you
+already run has none of those constraints.
+
+## 9. Data and backups
 
 Everything persistent lives under the `/data` volume:
 
 - `mradio.db` — SQLite: accounts, sessions, password-reset tokens, and
-  play history (§10).
+  play history (§11).
 - `settings.json` — the AI provider credentials above.
 - `smtp_settings.json` — the outgoing-email credentials above.
 - `cache.json` — the shared AI liner-notes cache (author/track → trivia),
@@ -344,7 +383,7 @@ Back up the whole `/data` directory (or the equivalent appdata folder on
 your platform, same as any other container) — it's the entire state of
 the app.
 
-## 9. Updating
+## 10. Updating
 
 ```bash
 git pull
@@ -357,10 +396,10 @@ separate database migration step to run — schema changes (including
 adding a column to an existing table) apply themselves automatically the
 first time the new code starts up.
 Rebuilding also refreshes the geolocation database used by Analytics
-(§10) — there's no separate scheduled update for it, since it's just a
+(§11) — there's no separate scheduled update for it, since it's just a
 downloaded data file, not a version pin to review.
 
-## 10. Analytics
+## 11. Analytics
 
 Admin-only page (user menu → Analytics) — live sessions, a world map of
 listeners, top stations/genres/listeners, and full play history. Nothing

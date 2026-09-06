@@ -13,4 +13,9 @@ services:
       # password immediately (the app forces this on first login anyway).
       - MRADIO_ADMIN_USERNAME=admin
       - MRADIO_ADMIN_PASSWORD=mradio
+      # Optional: a self-hosted SearXNG, used as a last resort to find
+      # station logos that neither the radio directory nor the station's
+      # own site provides. Leave unset if you don't run one — that
+      # lookup tier is simply skipped. See KB.md § station logos.
+      - MRADIO_SEARXNG_URL=${MRADIO_SEARXNG_URL:-}
     restart: unless-stopped

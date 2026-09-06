@@ -43,7 +43,7 @@ This page is just the overview.
 - **Admin analytics dashboard** — who's listening right now and from
   where (a live world map), plus full play history and stats on the most
   popular stations, genres, and listeners. See
-  [KB §10 — Analytics](KB.md#10-analytics).
+  [KB §11 — Analytics](KB.md#11-analytics).
 
 ## Stack
 
@@ -89,9 +89,10 @@ See [`KB.md`](KB.md) for the full deployment reference:
 - [KB §5 — Managing accounts](KB.md#5-managing-accounts)
 - [KB §6 — Configuring AI providers](KB.md#6-configuring-ai-providers)
 - [KB §7 — Configuring email (SMTP)](KB.md#7-configuring-email-smtp)
-- [KB §8 — Data and backups](KB.md#8-data-and-backups)
-- [KB §9 — Updating](KB.md#9-updating)
-- [KB §10 — Analytics](KB.md#10-analytics)
+- [KB §8 — Station logos](KB.md#8-station-logos-optional-searxng)
+- [KB §9 — Data and backups](KB.md#9-data-and-backups)
+- [KB §10 — Updating](KB.md#10-updating)
+- [KB §11 — Analytics](KB.md#11-analytics)
 
 ---
 

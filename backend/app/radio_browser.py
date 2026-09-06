@@ -49,10 +49,17 @@ coincidental collisions. A station that fails all of this ends up with
 no logo rather than risk a wrong one."""
 
 import asyncio
+import os
 import re
 import urllib.parse
 
 import httpx
+
+# Optional self-hosted SearXNG, used as a last-resort image search (see
+# _searxng_logo). Unset for everyone who doesn't run one, in which case
+# that tier is simply skipped — no third-party search engine is usable
+# from a server without an API key, so there's no sensible default.
+_SEARXNG_URL = os.environ.get("MRADIO_SEARXNG_URL", "").rstrip("/")
 
 _API_BASE = "https://de1.api.radio-browser.info/json"
 _HEADERS = {"User-Agent": "mradio-web/1.0 (station logo lookup)"}
@@ -64,6 +71,14 @@ _TOTAL_TIMEOUT = 12
 _PIPE_SUFFIX_RE = re.compile(r"\s*\|.*$")
 _TRAILING_PAREN_RE = re.compile(r"\s*\([^)]*\)\s*$")
 _WORD_RE = re.compile(r"[a-z0-9]{3,}")
+
+# Image-search results are padded with icon libraries and stock photo
+# archives that match on generic words; never a station's real logo.
+_IMAGE_SEARCH_NOISE_HOSTS = (
+    "lucide", "jsdelivr", "artic.edu", "shutterstock", "istockphoto",
+    "gettyimages", "alamy", "dreamstime", "freepik", "flaticon",
+    "vecteezy", "123rf", "depositphotos",
+)
 
 # Words shared by hundreds of stations — matching on these alone says
 # nothing about whether two names refer to the same broadcaster.
@@ -210,6 +225,70 @@ def _looks_like_image(head_bytes: bytes) -> bool:
         or head_bytes.lstrip()[:5].lower() == b"<svg "        # SVG
         or b"<svg" in head_bytes[:200].lower()
     )
+
+
+async def _searxng_logo(
+    client: httpx.AsyncClient, station_name: str, require_words: set[str]
+) -> str | None:
+    """Image search via a self-hosted SearXNG, if one is configured.
+
+    This is the only usable search tier: Google and DuckDuckGo both
+    refuse server-side requests (JS shell / 403 without browser
+    cookies), and Brave needs a paid API key. A SearXNG the admin
+    already runs has none of those problems — no key, no CAPTCHA, no
+    third-party terms, and it aggregates Bing/Brave/DDG results anyway.
+    Confirmed live that it finds logos nothing else can (KCSM), and
+    that its top hit for 181.FM is the transparent WebP that otherwise
+    had to be hardcoded.
+
+    Two filters matter. Its results include icon libraries and stock
+    photo archives (lucide, artic.edu) that match on generic words, so
+    the host must not be one of those and the title must still share a
+    specific word with the station — the same guard the Wikipedia tier
+    needs, for the same reason. Transparent PNGs are preferred where
+    the URL says so, since those sit on the panel without a white box.
+    """
+    if not _SEARXNG_URL:
+        return None
+
+    specific = require_words - _GENERIC_STATION_WORDS
+    if not specific:
+        return None
+
+    try:
+        r = await client.get(
+            f"{_SEARXNG_URL}/search",
+            params={
+                "q": f"{station_name} radio logo",
+                "categories": "images", "format": "json",
+            },
+            timeout=_OG_TIMEOUT,
+        )
+        if r.status_code != 200:
+            return None
+        results = r.json().get("results", [])
+    except (httpx.HTTPError, ValueError, AttributeError):
+        return None
+
+    candidates: list[str] = []
+    for item in results[:20]:
+        src = item.get("img_src") or ""
+        if not src.startswith("http"):
+            continue
+        host = (urllib.parse.urlparse(src).hostname or "").lower()
+        if any(bad in host for bad in _IMAGE_SEARCH_NOISE_HOSTS):
+            continue
+        haystack = f"{item.get('title', '')} {src}".lower()
+        if not any(w in haystack for w in specific):
+            continue
+        candidates.append(src)
+
+    # Prefer PNG/WebP/SVG (can carry transparency) over JPEG (cannot).
+    candidates.sort(key=lambda u: ".jpg" in u.lower() or ".jpeg" in u.lower())
+    for src in candidates[:4]:
+        if await _is_usable_image(client, src):
+            return src
+    return None
 
 
 def _is_site_icon(url: str) -> bool:
@@ -425,9 +504,15 @@ async def _find_logo(stream_url: str, station_name: str) -> str | None:
             if og and not _is_site_icon(og) and await _is_usable_image(client, og):
                 return og
 
-        if site_icon:
-            return site_icon
+        # A real logo beats the blurry favicon we may be holding, so
+        # these two run before falling back to it — but only when we
+        # have nothing better, since both cost an extra request.
+        wiki = await _wikipedia_logo(client, station_name, distinguishing_words)
+        if wiki:
+            return wiki
 
-        # Still nothing at all: try Wikipedia. Only worth the request
-        # when we'd otherwise show a blank space.
-        return await _wikipedia_logo(client, station_name, distinguishing_words)
+        searx = await _searxng_logo(client, station_name, distinguishing_words)
+        if searx:
+            return searx
+
+        return site_icon
