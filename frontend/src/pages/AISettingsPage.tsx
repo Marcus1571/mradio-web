@@ -5,6 +5,7 @@ import type { AISettings, AITestResult, CodexConnectResponse } from '../api/type
 import { IDLE_TEST, KbNote, TestBadge } from '../components/AdminSettingsShared'
 import type { TestState } from '../components/AdminSettingsShared'
 import { useCodexStatus } from '../hooks/useCodexStatus'
+import { useProviders } from '../hooks/useProviders'
 import type { TFunction } from '../i18n'
 import '../styles/admin.css'
 
@@ -23,14 +24,22 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
   const { status: codexStatus, refresh: refreshCodexStatus } = useCodexStatus()
   const [codexConnecting, setCodexConnecting] = useState(false)
   const [codexPromptResult, setCodexPromptResult] = useState<CodexConnectResponse | null>(null)
+  const { providers, refresh: refreshProviders } = useProviders()
+
+  function isEnabled(name: Provider): boolean {
+    return providers.find((p) => p.name === name)?.enabled ?? false
+  }
 
   useEffect(() => {
     api.get<AISettings>('/api/settings/ai').then(setSettings)
   }, [])
 
   useEffect(() => {
-    if (codexStatus?.connected) setCodexPromptResult(null)
-  }, [codexStatus?.connected])
+    if (codexStatus?.connected) {
+      setCodexPromptResult(null)
+      void refreshProviders()
+    }
+  }, [codexStatus?.connected, refreshProviders])
 
   function field<K extends keyof AISettings>(key: K, value: AISettings[K]) {
     setSettings((s) => (s ? { ...s, [key]: value } : s))
@@ -49,6 +58,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
       setSettings(res)
       setApiKeyInput('')
       setSaved(true)
+      await refreshProviders()
       window.setTimeout(() => setSaved(false), 2500)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('aiSettings.errorFallback'))
@@ -88,6 +98,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
       const res = await api.post<CodexConnectResponse>('/api/settings/codex/connect', {})
       setCodexPromptResult(res)
       await refreshCodexStatus()
+      await refreshProviders()
     } finally {
       setCodexConnecting(false)
     }
@@ -98,6 +109,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
     setCodexPromptResult(null)
     setCodexTest(IDLE_TEST)
     await refreshCodexStatus()
+    await refreshProviders()
   }
 
   if (!settings) return null
@@ -120,7 +132,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
             <div className="settings-group">
               <div className="settings-group-head">
                 <h2>
-                  <span className={`provider-status-dot ${codexStatus?.connected ? 'on' : ''}`} aria-hidden="true" />
+                  <span className={`provider-status-dot ${isEnabled('codex') ? 'on' : ''}`} aria-hidden="true" />
                   {t('aiSettings.codexGroup')}
                 </h2>
               </div>
@@ -178,7 +190,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
             <div className="settings-group">
               <div className="settings-group-head">
                 <h2>
-                  <span className={`provider-status-dot ${settings.opencode ? 'on' : ''}`} aria-hidden="true" />
+                  <span className={`provider-status-dot ${isEnabled('opencode') ? 'on' : ''}`} aria-hidden="true" />
                   {t('aiSettings.opencodeGroup')}
                 </h2>
               </div>
@@ -208,7 +220,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
             <div className="settings-group">
               <div className="settings-group-head">
                 <h2>
-                  <span className={`provider-status-dot ${settings.ollama_url ? 'on' : ''}`} aria-hidden="true" />
+                  <span className={`provider-status-dot ${isEnabled('ollama') ? 'on' : ''}`} aria-hidden="true" />
                   {t('aiSettings.ollamaGroup')}
                 </h2>
               </div>
@@ -262,7 +274,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
             <div className="settings-group">
               <div className="settings-group-head">
                 <h2>
-                  <span className={`provider-status-dot ${settings.api_key ? 'on' : ''}`} aria-hidden="true" />
+                  <span className={`provider-status-dot ${isEnabled('openai') ? 'on' : ''}`} aria-hidden="true" />
                   {t('aiSettings.openaiGroup')}
                 </h2>
               </div>

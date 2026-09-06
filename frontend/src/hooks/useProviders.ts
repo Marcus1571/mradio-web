@@ -23,5 +23,5 @@ export function useProviders() {
     [refresh],
   )
 
-  return { providers: data?.providers ?? [], active: data?.active ?? '', activate }
+  return { providers: data?.providers ?? [], active: data?.active ?? '', activate, refresh }
 }
