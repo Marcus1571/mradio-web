@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.27] - 2026-09-06
+
+Capitalized "OpenCode" consistently everywhere it's shown as a provider
+name — the AI settings page, the player's provider dropdown (which was
+showing lowercase "opencode"), and the docs. Literal binary/CLI/file
+names (e.g. the `opencode` command, `bump-opencode.yml`) are left
+lowercase since that's their real name.
+
 ## [0.5.26] - 2026-09-06
 
 Fixed the AI settings page's status dots: opencode showed grey even

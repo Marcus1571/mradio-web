@@ -455,6 +455,22 @@ claiming a visual check that didn't happen, consistent with
 [[feedback_verify_ui_visually]]'s spirit even when the ideal tool isn't
 on hand.
 
+**Display casing fixed (0.5.27)**: "opencode" was shown lowercase
+everywhere in the UI (settings page, docs) except one spot that had it
+worse — `NowPlayingPanel.tsx`'s `_PROVIDER_LABEL` map had BOTH
+`opencode: 'opencode'` and `ollama: 'ollama'` lowercase, meaning the
+player's own AI-provider dropdown/label had been showing lowercase
+provider names in production the whole time, not just the settings
+page. Fixed to `'OpenCode'`/`'Ollama'` there, plus every i18n string
+across all 13 languages (`aiDescription`, the shared-credentials intro
+line, `opencodeGroup`) and KB.md's `### opencode` heading → `### OpenCode`
+(README.md too). Left every literal binary/CLI/package/filename
+reference lowercase (`` `opencode` `` the binary, `bump-opencode.yml`,
+`opencode-ai` the npm package) since that's genuinely the correct,
+real-world name for those — only the *product name as prose/UI label*
+needed the capital. Ollama's own display strings were already correct
+before this pass; only opencode's were wrong.
+
 **Status-dot bug, caught by the user immediately after shipping
 (0.5.26)**: opencode's dot showed grey with the "Enable" field left
 empty, even though opencode was genuinely enabled and working in
