@@ -262,6 +262,51 @@ on LT. Test-connection now reports Ollama as `True, "Connected."`.
 correct as a generic fresh-install default; it just needs pulling before
 use, same as any Ollama model does.
 
+## Hip-Hop genre added (2026-09-06, 0.5.21)
+
+Tenth curated genre, following the exact pattern of every prior genre
+addition. `backend/app/stations.py` needed 5 spots, not the usual
+frontend-facing ones — this app's genre system is entirely
+backend-driven (labels come from `GENRE_LABELS` via `/api/stations/genres`,
+no frontend hardcoding or i18n keys per genre): `GENRES` tuple,
+`GENRE_LABELS` dict (`"Hip-Hop"`), `_GENRE_KEYWORDS["hiphop"]` (`hip hop`,
+`hip-hop`, `hiphop`, `rap`, `urban`, `jamz` — for auto-classifying
+user-added custom stream URLs via `genre_of()`), the 10 new
+`DEFAULT_STATIONS` entries, and two easy-to-miss hardcoded genre-list
+tuples that duplicate `GENRES` for historical reasons and needed the
+same addition: `genre_of()`'s classification-priority order and
+`genre_stations_for()`'s "does this genre pull from the curated catalogue
+too, or favorites-only" allow-list (only `"other"` is meant to stay
+favorites-only — a new real genre needs adding to both spots or it
+silently behaves like "other" even though it has curated stations).
+Only frontend change: `Genre` type in `api/types.ts` (type safety only,
+still no UI text hardcoded per genre).
+
+**Station selection method**: no single authoritative "best hip-hop
+stations" list exists, so sourced via Radio-Browser (same directory used
+for station-logo lookups, see [[station_logos]]) queried by tag, filtered
+out obvious click-farm/mistagged EDM "club charts" results that show up
+in raw tag searches, then verified every candidate's stream actually
+responds (`curl -A "VLC/3.0"` — a few needed a real player user-agent to
+avoid a 400/empty response, e.g. `stream.radiojar.com` and
+`radio.dominiserver.com`, both fine once curled properly) before adding
+any of them. Final 10: 181.FM - Old School HipHop/RnB, 181.FM - The Beat
+(HipHop/R&B), 90s90s HipHop & Rap, 100 Hip Hop and RNB FM, .977 Jamz, BBC
+Radio 1Xtra, All Underground Hip Hop Radio, WEFUNK, Hot 108 Jamz, Top
+Urbano — mixing 1.FM/181.FM-network entries (matching stations already
+curated elsewhere in this list), a national broadcaster (BBC 1Xtra, same
+non-UK HLS URL pattern already proven working for BBC Radio 3), and
+recognizable long-running independent stations (WEFUNK, Hot 108 Jamz),
+plus one Latin/reggaeton-adjacent pick (Top Urbano) for genre breadth.
+BBC 1Xtra reuses the exact `nonuk` HLS URL structure already validated
+by BBC Radio 3's entry — confirmed via `curl` that the equivalent
+1Xtra path resolves the same way. Verified live via Playwright: genre
+tab shows "Hip-Hop 10", all 10 stations list correctly with clean
+favorite-star/URL rows, and one (WEFUNK) actually streams end-to-end
+through this app's own proxy with real ICY metadata coming through
+("hit-boy feat. alchemist - slipping into darkness") — not just a UI
+listing check. Total curated station count: 104 (was 94).
+
 ## One-time default-favorites reset (2026-09-06, 0.5.19; Heart 70s genre bug fixed 2026-09-06, 0.5.20)
 
 User explicitly requested a one-time-only change: reset the default

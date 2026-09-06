@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.21] - 2026-09-06
+
+Added Hip-Hop as a tenth curated genre, with 10 vetted stations (181.FM
+- Old School HipHop/RnB, 181.FM - The Beat, 90s90s HipHop & Rap, 100 Hip
+Hop and RNB FM, .977 Jamz, BBC Radio 1Xtra, All Underground Hip Hop
+Radio, WEFUNK, Hot 108 Jamz, Top Urbano) — browsable under Genres like
+every other category.
+
 ## [0.5.20] - 2026-09-06
 
 Fixed Heart 70s (UK) in the default favorites lineup — it was set to
