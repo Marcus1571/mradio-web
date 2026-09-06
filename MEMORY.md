@@ -1009,6 +1009,30 @@ to browser heuristics. Verified via `curl -sI` against both a hashed
 asset and `index.html`/`/reset-password` directly, confirming the
 expected header on each.
 
+**Genuine miss, corrected 2026-09-06, 0.5.3**: the user's original
+0.5.0-era instruction was "replace the placeholder text `smtp.gmail.com`
+with `e.g. smtp.gmail.com`" — i.e. change the *wording*. 0.5.1 instead
+only changed the placeholder's *color* (`.settings-row input::placeholder
+{ color: var(--ink-3) }`), leaving the bare, unprefixed text unchanged.
+This looked plausible from a code-review distance (a real, measurable
+contrast difference genuinely exists — verified via pixel sampling
+in that entry) but missed the actual, specifically-requested fix,
+and wasted a full round of the user re-explaining and re-screenshotting
+before it was caught. The color fix alone was never going to be enough:
+`smtp.gmail.com` is not a hypothetical example for someone using
+Gmail, it's the literal, exact value they're supposed to type — no
+amount of color/contrast styling changes the fact that an empty field
+showing the real answer looks pre-filled. Fixed for real this time by
+changing the placeholder strings themselves to `"e.g. smtp.gmail.com"`
+and `"e.g. https://radio.example.com"` (`EmailSettingsPage.tsx`), plus
+`AISettingsPage.tsx`'s Ollama Server URL placeholder for the same
+reason even though its example IP is less likely to collide with a
+real value. **Lesson**: when a user gives a specific instruction
+("change X to Y"), verify the literal instruction was executed, not
+just that the underlying complaint (visual confusion) seems addressed
+by some plausible-sounding related change — these are not always the
+same fix, and only the actual diff proves which one happened.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

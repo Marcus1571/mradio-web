@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.5.3] - 2026-09-06
+
+Actually fixed the placeholder-text confusion this time — 0.5.1 only
+changed the placeholder's *color*, not its wording, so the Email
+settings page's Host field still showed a bare "smtp.gmail.com", which
+happens to be the literal real value a Gmail user needs to type, making
+an empty field look pre-filled no matter how it's colored. Placeholders
+that could be mistaken for a real value now read "e.g. ..." (Email
+settings' Host and Public URL fields, AI providers' Ollama Server URL
+field).
+
 ## [0.5.2] - 2026-09-06
 
 Fixed the previous release's placeholder-text fix appearing not to work
