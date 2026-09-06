@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.14] - 2026-09-06
+
+Added Norwegian Bokmål as a twelfth UI/AI-liner-notes language,
+alongside English, Spanish, Italian, Portuguese, French, Russian,
+German, Greek, Dutch, Danish, and Swedish — switch instantly from the
+top bar, same as the others.
+
 ## [0.5.13] - 2026-09-06
 
 Added Swedish as an eleventh UI/AI-liner-notes language, alongside
