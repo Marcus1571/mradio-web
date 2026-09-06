@@ -121,3 +121,51 @@ export function MoveIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/* ---------- AI provider marks ----------
+   Same monoline language as the icons above (16x16, 1.4 stroke,
+   currentColor) so they sit as quiet marks beside a heading rather
+   than as pasted-in brand assets — and so they inherit the page's ink
+   and adapt to dark mode for free. Suggestive of each provider's
+   identity, deliberately not reproductions of trademarked logos. */
+
+export function ChatGPTIcon({ className }: IconProps) {
+  // Interlocking hexagonal knot, echoing OpenAI's woven motif.
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M8 2.2 12.4 4.7v5L8 12.2 3.6 9.7v-5Z" />
+      <path d="M8 7.1 12.4 4.7M8 7.1v5.1M8 7.1 3.6 4.7" />
+    </svg>
+  )
+}
+
+export function OpenCodeIcon({ className }: IconProps) {
+  // Angle brackets around a caret — a terminal/code agent.
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M5.3 4.4 2.2 8l3.1 3.6M10.7 4.4 13.8 8l-3.1 3.6" />
+      <path d="M9.2 3.4 6.8 12.6" />
+    </svg>
+  )
+}
+
+export function OllamaIcon({ className }: IconProps) {
+  // A llama silhouette abstracted to two ears and a muzzle.
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M5.8 6.6V4l1.3 1.3M10.2 6.6V4L8.9 5.3" />
+      <path d="M5.8 6.6h4.4v3.2a2.2 2.2 0 0 1-4.4 0Z" />
+      <path d="M7.2 12v1.6M8.8 12v1.6" />
+    </svg>
+  )
+}
+
+export function NimIcon({ className }: IconProps) {
+  // Stylised chip/die — a GPU-served endpoint.
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <rect x="4.6" y="4.6" width="6.8" height="6.8" rx="1.4" />
+      <path d="M6.6 2.4v2.2M9.4 2.4v2.2M6.6 11.4v2.2M9.4 11.4v2.2M2.4 6.6h2.2M2.4 9.4h2.2M11.4 6.6h2.2M11.4 9.4h2.2" />
+    </svg>
+  )
+}

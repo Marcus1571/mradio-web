@@ -4,6 +4,7 @@ import { ApiError, api } from '../api/client'
 import type { AISettings, AITestResult, CodexConnectResponse } from '../api/types'
 import { IDLE_TEST, KbNote, TestBadge } from '../components/AdminSettingsShared'
 import type { TestState } from '../components/AdminSettingsShared'
+import { ChatGPTIcon, NimIcon, OllamaIcon, OpenCodeIcon } from '../components/Icons'
 import { useCodexStatus } from '../hooks/useCodexStatus'
 import { useProviders } from '../hooks/useProviders'
 import type { TFunction } from '../i18n'
@@ -132,6 +133,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
             <div className="settings-group">
               <div className="settings-group-head">
                 <h2>
+                  <ChatGPTIcon className="provider-mark" />
                   <span className={`provider-status-dot ${isEnabled('codex') ? 'on' : ''}`} aria-hidden="true" />
                   {t('aiSettings.codexGroup')}
                 </h2>
@@ -190,6 +192,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
             <div className="settings-group">
               <div className="settings-group-head">
                 <h2>
+                  <OpenCodeIcon className="provider-mark" />
                   <span className={`provider-status-dot ${isEnabled('opencode') ? 'on' : ''}`} aria-hidden="true" />
                   {t('aiSettings.opencodeGroup')}
                 </h2>
@@ -220,6 +223,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
             <div className="settings-group">
               <div className="settings-group-head">
                 <h2>
+                  <OllamaIcon className="provider-mark" />
                   <span className={`provider-status-dot ${isEnabled('ollama') ? 'on' : ''}`} aria-hidden="true" />
                   {t('aiSettings.ollamaGroup')}
                 </h2>
@@ -274,6 +278,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
             <div className="settings-group">
               <div className="settings-group-head">
                 <h2>
+                  <NimIcon className="provider-mark" />
                   <span className={`provider-status-dot ${isEnabled('openai') ? 'on' : ''}`} aria-hidden="true" />
                   {t('aiSettings.openaiGroup')}
                 </h2>

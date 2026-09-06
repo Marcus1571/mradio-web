@@ -255,6 +255,18 @@
   gap: var(--space-2xs);
 }
 
+/* Provider mark: a quiet monoline glyph before the name, drawn in
+   currentColor so it inherits the heading's ink and needs no separate
+   dark-mode treatment. Slightly recessive (--ink-2) so the provider's
+   name stays the thing you read first, and sized just above the cap
+   height so it reads as part of the heading rather than a button. */
+.provider-mark {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+  color: var(--ink-2);
+}
+
 .provider-status-dot {
   width: 8px;
   height: 8px;
