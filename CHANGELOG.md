@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.19] - 2026-09-06
+
+One-time default-favorites reset: new accounts now start with a
+refreshed 12-station lineup. Existing users' favorites were reset to
+the same lineup via a standalone one-off script, run once — not a
+recurring or automatic change.
+
 ## [0.5.18] - 2026-09-06
 
 Station logos: the now-playing panel now shows the station's logo (when

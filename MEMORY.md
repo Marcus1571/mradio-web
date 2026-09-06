@@ -262,6 +262,54 @@ on LT. Test-connection now reports Ollama as `True, "Connected."`.
 correct as a generic fresh-install default; it just needs pulling before
 use, same as any Ollama model does.
 
+## One-time default-favorites reset (2026-09-06, 0.5.19)
+
+User explicitly requested a one-time-only change: reset the default
+12-station favorites lineup to a new specific selection (screenshot
+provided), applied to **every existing user's actual favorites** as a
+single irreversible pass, AND make it the seed for all future new
+accounts — with an explicit instruction that after this one time,
+favorites are never touched by us again going forward.
+
+Two separate mechanisms, deliberately kept separate:
+
+1. **Future new users**: `backend/app/stations.py`'s `DEFAULT_STATIONS`
+   first 12 entries were reordered to the new lineup (VCR Auditorium, VCR
+   Classica+, Radio Swiss Classic, 181.FM Kickin' Country, 1.FM Absolute
+   Country Hits, Swiss Jazz, Radio Paradise, Jazz Radio Blues, Heart 70s
+   (UK), 181.FM True Blues, Jazz Lounge, Funkstar Radio) — this is the
+   exact list `userdata.py`'s `_load_favorites_sync()` already reads via
+   `DEFAULT_STATIONS[:MAX_FAV]` on a brand-new account's first load, so
+   this one edit is sufficient for all future accounts with zero other
+   code changes. The 6 displaced stations (Naim Classical, WQXR, Classic
+   FM, radio klassik Stephansdom, NPO Klassiek, France Musique) were kept
+   in the file, just moved further down — still fully browsable under
+   Genres, just no longer in the default favorites. Total station count
+   unchanged (94), confirmed no duplicate (name, url) pairs after the
+   reorder.
+2. **Existing users** (the one-time, non-repeating part): new standalone
+   script `backend/scripts/reset_favorites_once.py`, run once by hand
+   (`--dry-run` first, then for real), NOT part of app startup or any
+   migration path — it will not run again on future deploys. Overwrites
+   every existing user's `favorites` via the same `userdata.save_favorites()`
+   used everywhere else; explicitly does NOT touch `config.json`
+   (theme/volume/provider/language). Verified end-to-end against scratch
+   users with genuinely different pre-existing favorites and a custom
+   config — confirmed the script correctly rewrites favorites, leaves
+   config byte-for-byte untouched, and dry-run mode writes nothing.
+
+**"Heart 70s (UK)" is stored as genre `"other"`, not `"pop"`** — this is
+deliberate, not a bug: the user's screenshot showed it under "Other" in
+the UI (meaning their actual saved favorite already diverged from
+`stations.py`'s `"pop"` classification at some point), so the new
+default lineup matches the screenshot's genre exactly rather than
+"correcting" it to the current curated-list value — preserves what the
+user actually asked for over what the source-of-truth catalogue says.
+
+**No new code path was added that could ever re-push this (or any
+future) favorites change to existing users automatically** — per the
+user's explicit instruction that this is a one-time-only operation.
+
 ## Language support (added 2026-09-05, 0.2.0 + 0.2.1 + 0.3.1; Portuguese + pattern cleanup 2026-09-06, 0.3.5; French 2026-09-06, 0.3.10; Russian 2026-09-06, 0.5.8; German 2026-09-06, 0.5.9; Greek 2026-09-06, 0.5.10; Dutch 2026-09-06, 0.5.11; Danish 2026-09-06, 0.5.12; Swedish 2026-09-06, 0.5.13; Norwegian Bokmål 2026-09-06, 0.5.14; Japanese 2026-09-06, 0.5.15) — fully done
 
 UI language (English/Spanish/Italian/Portuguese/French/Russian/German/
