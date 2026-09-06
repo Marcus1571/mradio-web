@@ -30,8 +30,8 @@ This page is just the overview.
   [KB §6 — Configuring AI providers](KB.md#6-configuring-ai-providers).
   A "recently played" trivia history keeps the last 10 blurbs per
   account, re-readable while something else plays.
-- **English, Spanish, Italian, and Portuguese** UI and AI liner notes —
-  switch instantly from the top bar.
+- **English, Spanish, Italian, Portuguese, and French** UI and AI liner
+  notes — switch instantly from the top bar.
 - **Multiple accounts**, each with their own favorites and provider
   choice — admin-created, no public sign-up, matching a small
   self-hosted deployment for family/friends rather than a public service.
