@@ -471,6 +471,21 @@ real-world name for those — only the *product name as prose/UI label*
 needed the capital. Ollama's own display strings were already correct
 before this pass; only opencode's were wrong.
 
+**Missing-ChatGPT copy bug, caught by the user (0.5.28)**: the AI
+settings page's two description strings (`aiDescription` on the
+Settings hub, and `aiSettings.intro` on the page itself) were written
+before ChatGPT/Codex existed as a provider and were never revisited
+when it shipped in 0.5.23 — they still only listed OpenCode, Ollama,
+and OpenAI-compatible endpoints. Same root cause as most i18n misses in
+this project: a copy string lives in 13 files, and it's easy to add a
+whole new feature/provider without grepping for every place the
+provider list gets spelled out in prose (as opposed to the `PROVIDERS`
+tuple, which is structurally exhaustive by definition). **Lesson**:
+when adding a provider, explicitly grep `aiDescription\|aiSettings.*intro`
+(or similar "here's the full list of providers, in prose" strings) as
+its own checklist item, since these can't be caught by TypeScript,
+build, or lint — only by a human reading the sentence.
+
 **Status-dot bug, caught by the user immediately after shipping
 (0.5.26)**: opencode's dot showed grey with the "Enable" field left
 empty, even though opencode was genuinely enabled and working in

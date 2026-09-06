@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.28] - 2026-09-06
+
+Added ChatGPT to the AI providers settings page's description text —
+it listed OpenCode, Ollama, and OpenAI-compatible endpoints but had
+never been updated to mention ChatGPT since that provider shipped.
+Fixed in all 13 languages plus README.md.
+
 ## [0.5.27] - 2026-09-06
 
 Capitalized "OpenCode" consistently everywhere it's shown as a provider
