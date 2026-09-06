@@ -1152,6 +1152,74 @@ round-trip correctly through the existing API endpoints unchanged
 (no backend changes needed for this — pure frontend UI swap), and the
 modal renders correctly in both dark and light themes.
 
+## Station logos, cached (added 2026-09-06, 0.5.18)
+
+The now-playing panel's station row had visible empty space next to the
+station name — the user asked whether a logo could be shown there, and
+whether it should be cached.
+
+**No universal "radio station logo" API exists.** Scraping the stream
+URL's own domain doesn't generalize: tested live with VCR Classica+,
+whose curated stream URL (`uk2.streamingpulse.com`) is a third-party UK
+CDN entirely unrelated to the real broadcaster's branding
+(`veniceclassicradio.eu`). **Radio-Browser** (`api.radio-browser.info`, a
+free, open, community-maintained internet radio directory) is the right
+source — confirmed live it already indexes this exact stream URL via
+`/stations/byurl?url=...` and returns the real station's own favicon, not
+the CDN's. Confirmed this is best-effort, not guaranteed: WQXR's curated
+URL isn't indexed by exact match at all, but resolves via a name-search
+fallback (`/stations/search?name=...`); some stations return no favicon
+either way. Lookup order in `backend/app/radio_browser.py`: exact
+stream-URL match first, name search second, `None` if both miss —
+mirrors `wiki.py`'s existing best-effort posture (every failure mode
+degrades silently, never raises).
+
+**Caching (new `backend/app/station_logos.py`)**: user was asked whether
+this belongs in SQLite (their original suggestion) or as a JSON file
+mirroring the existing AI trivia cache (`cache.py`) — chose the JSON
+file, since station identity is global/stateless, matching this app's
+existing convention that SQLite is reserved for per-user/relational data
+(users, sessions, play history) while global lookup caches use
+`jsonstore.py`. **Cache misses are stored explicitly as `{"logo": None}`,
+not merely omitted** — this is the detail that actually matters: without
+it, a station with no findable logo would re-query Radio-Browser on every
+single play, defeating the point of caching. Confirmed live: repeat
+lookups for both a real hit and a confirmed miss both serve from cache in
+single-digit milliseconds vs. 300-650ms for the first (network) lookup.
+
+**Real-world data-quality bug caught during verification, not
+hypothetical**: VCR Classica+'s Radio-Browser-listed favicon
+(`veniceclassicradio.eu/player/new/image/l.png`) actually 404s today —
+the site reorganized its paths since Radio-Browser last indexed it. Community-maintained
+directories go stale; a naive "cache whatever favicon field is present"
+implementation would have permanently cached a dead image link for this
+station. Fixed by adding a `HEAD` request (`client.head(favicon,
+follow_redirects=True)`, checking for `200`) before accepting a favicon
+candidate, in `radio_browser.py`'s `_first_working_favicon()` — same
+verify-before-trust pattern `wiki.py` already uses for article URLs
+(`client.head(url)` before returning a Wikipedia link). This is a
+network-request cost paid once per station (amortized away by the
+success/miss cache either way), not per play. Frontend also has a
+belt-and-suspenders `onError` handler on the `<img>` (`NowPlayingPanel.tsx`)
+that hides a logo that still somehow fails to load client-side (e.g. a
+site that works for a HEAD probe but blocks hotlinked image loads) —
+degrades to "no logo shown," never a broken-image icon.
+
+Frontend: `frontend/src/hooks/useStationLogo.ts` (new hook, `useProviders.ts`/
+`useGenres.ts` shape) fetches `GET /api/stations/logo?url=...&name=...`
+keyed on the station's URL/name changing, not on every render.
+`NowPlayingPanel.tsx` renders the `<img class="station-logo">` as a
+sibling of `.station-strip` inside `.panel-head` (already `flex;
+justify-content: space-between`) — lands on the right side of the same
+row as the dot + name with zero other layout change, matching the user's
+explicit placement request. `.station-logo` is height-constrained (28px)
+with `max-width: 120px` and `object-fit: contain`, since real logos vary
+wildly in aspect ratio (square favicons vs. wide wordmarks — confirmed
+both shapes live: WNYC's square vs. VCR's wide wordmark before it was
+rejected as stale). Renders nothing (not a placeholder box) when no logo
+is found — most stations, especially user-added custom stream URLs,
+won't have one, and an empty row reads better than a broken-image icon.
+
 ## Pins mode kept the old size-by-count encoding after the heatmap split (fixed 2026-09-06, 0.5.17)
 
 Right after [[mradio_web_status]]'s 0.5.16 pins/heatmap split shipped, the

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.18] - 2026-09-06
+
+Station logos: the now-playing panel now shows the station's logo (when
+one can be found via Radio-Browser) next to the station name. Resolved
+logos are cached — including confirmed misses — so lookups only happen
+once per station, and candidate favicon URLs are verified reachable
+before being cached or shown.
+
 ## [0.5.17] - 2026-09-06
 
 Pins mode on the listener map no longer scales marker size by session
