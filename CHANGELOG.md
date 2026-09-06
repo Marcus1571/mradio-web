@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.34] - 2026-09-06
+
+Fixed an oversized gap above the playback metrics that 0.5.33
+introduced when a station logo is showing — the metrics row was being
+pushed down as a whole to make room for the logo. It now stays flush
+under the header like normal; only the space below it (before its own
+divider) grows to clear the logo, keeping equal padding on all three
+of the logo's open sides.
+
 ## [0.5.33] - 2026-09-06
 
 Fixed the station logo crashing into the playback-metrics divider

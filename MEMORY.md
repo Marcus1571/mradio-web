@@ -1509,7 +1509,7 @@ round-trip correctly through the existing API endpoints unchanged
 (no backend changes needed for this — pure frontend UI swap), and the
 modal renders correctly in both dark and light themes.
 
-## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30; bigger + divider redesign 0.5.31; layout bug fixed 0.5.32; equal padding fixed with real screenshots 0.5.33)
+## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30; bigger + divider redesign 0.5.31; layout bug fixed 0.5.32; equal padding fixed with real screenshots 0.5.33; margin-vs-padding bug fixed 0.5.34)
 
 The now-playing panel's station row had visible empty space next to the
 station name — the user asked whether a logo could be shown there, and
@@ -1727,6 +1727,37 @@ attempts at this exact feature shipped visible bugs from arithmetic
 that was individually correct but missed real interactions (padding
 consequences on `.np-body`, then a positioning-context mistake) that
 only became obvious once actually rendered.
+
+**Third bug in this same feature: margin vs. padding (0.5.34)**: even
+with the screenshot loop set up in 0.5.33, the very next fix still
+shipped visibly wrong — user's screenshot showed a much bigger gap
+above the metrics text than below it, with an explicit side-by-side
+"this one's wrong, this one (no-logo case) is right" comparison. Root
+cause: 0.5.33's fix added `margin-top: 27px` to `.np-metrics` when a
+logo is present, to push its divider down far enough to clear the
+logo — but `margin-top` moves the *entire box*, text included, not
+just the divider at its bottom. That shoved the "128 kbps..." text
+itself down by 27px, creating the exact oversized gap the user flagged,
+while the *bottom* gap (between the text and the divider) stayed
+unchanged at its normal small amount. Fixed by using `padding-bottom`
+instead of `margin-top`: this keeps `.np-metrics`'s top edge (and
+therefore its text) exactly where it always was, flush under the
+header like the no-logo case, and only grows the space *inside* the
+box between the text and its own bottom border/divider. Re-tuned the
+pixel value from 27px to 38px since padding-bottom compounds
+differently against the existing `padding: 0 0 var(--space-xs)` than
+margin-top did — confirmed via the same `boundingBox()` measurement
+loop from 0.5.33, this time re-verifying all three gaps (top/right/
+bottom around the logo, 25px each) AND the header-to-metrics-text gap
+specifically (16px, matching the no-logo case) since that was the
+exact dimension that broke last time. **Lesson stacked onto 0.5.33's**:
+having a screenshot loop available doesn't prevent every mistake by
+itself — CSS's margin/padding distinction (margin moves the box as a
+whole including its content start point; padding only grows space
+*inside* the box, after the content) is a classic, specific trap for
+"push this element's edge down without moving its content" style
+fixes, worth remembering by name next time similar spacing logic comes
+up in this codebase.
 
 Right after [[mradio_web_status]]'s 0.5.16 pins/heatmap split shipped, the
 user noticed Pins mode was *still* using `radius={6 + count}` — the split
