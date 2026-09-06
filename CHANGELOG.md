@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.11] - 2026-09-06
+
+Added Dutch as a ninth UI/AI-liner-notes language, alongside English,
+Spanish, Italian, Portuguese, French, Russian, German, and Greek —
+switch instantly from the top bar, same as the others.
+
 ## [0.5.10] - 2026-09-06
 
 Added Greek as an eighth UI/AI-liner-notes language, alongside
