@@ -1971,6 +1971,43 @@ Jazz's. If white boxes keep bothering the user, the better fix is
 ours — rounding the logo's corners or blending it into the panel —
 rather than narrowing what counts as a valid logo.
 
+**White backgrounds solved in CSS, not by hunting files (0.5.42)**:
+user flagged France Musique's logo as another white box and asked for
+an automatic detector plus a DuckDuckGo fallback. Findings:
+
+- **DuckDuckGo is not usable server-side.** Its image endpoint needs a
+  `vqd` token scraped from the HTML page; supplying a valid one still
+  returns 403 from a datacentre IP without session cookies. Same
+  category as Google. **Brave** (checked the round before) *is* real
+  but needs an API key with a credit card on file. So: no search engine
+  is a viable fallback without the user provisioning a paid key.
+- **A white-background detector is easy** — sampling the four corner
+  pixels correctly classified all four test logos (France Musique
+  opaque-light, 181.FM/1.FM transparent, TSF Jazz dark). But acting on
+  it server-side means adding Pillow, downloading and decoding every
+  image, re-hosting rewritten files, and owning a new cache. Large
+  feature for a cosmetic issue.
+- **`mix-blend-mode: multiply` does it for free**, because white
+  multiplied by the background *is* the background. Zero dependencies,
+  no per-station work, and it self-selects: transparent and dark logos
+  are unaffected.
+
+Two things only a real render revealed:
+- **Dark mode must be excluded.** multiply against a dark panel crushes
+  a light logo to near-black. Scoped to light mode using index.css's
+  own `[data-theme]` + `prefers-color-scheme` pair, so the manual theme
+  toggle is honoured too, not just the OS setting.
+- **multiply alone left a faint grey patch**, because France Musique's
+  background is 250,250,250 against a warmer panel — close to white
+  isn't white. `filter: brightness(1.06)` lifts it the last step so it
+  cancels exactly. Verified at 2x scale; the box disappears completely.
+
+**Lesson**: when a defect appears per-item (a white box on this
+station, then that one), check whether it's a *rendering* problem
+before treating it as a *data* problem — the CSS fix covers every
+station at once, including ones not yet reported, while the per-station
+hunt would never end.
+
 **A separate lesson about stale cache entries**: user reported
 "1.FM Hot Country" blank, which isn't in `stations.py` at all — it's
 the *ICY name* broadcast by `1.FM Absolute Country Hits`. Its cache

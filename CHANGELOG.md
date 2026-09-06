@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.42] - 2026-09-06
+
+Station logos that are only available flattened onto a white
+rectangle (France Musique, and others) no longer show that box — the
+white now blends into the panel so only the artwork shows. Applies in
+light mode only, where it works; dark mode is unchanged.
+
 ## [0.5.41] - 2026-09-06
 
 181.FM stations now use the broadcaster's own transparent logo instead
