@@ -79,17 +79,26 @@ on it.
 
 ## Before you install
 
-Three things worth knowing up front — all covered in depth in the KB,
+A few things worth knowing up front — all covered in depth in the KB,
 but they're the ones that catch people out:
 
 - **It needs HTTPS, so plan for a reverse proxy.** Session cookies are
   set `Secure`, so signing in over plain `http://server-ip:8000` won't
   work — you'll bounce back to the login screen with no obvious reason.
-  Any reverse proxy with a certificate is fine;
-  [KB §3](KB.md#3-reverse-proxy-nginx-proxy-manager) walks through
-  Nginx Proxy Manager and the two non-default settings the WebSocket
-  and audio stream need. (`http://localhost` during local development
-  is the one exception browsers allow.)
+  (`http://localhost` during local development is the one exception
+  browsers allow.)
+- **Your proxy needs two non-default settings**, or the app will look
+  broken in ways that don't point at the proxy:
+  - **WebSockets on** — otherwise now-playing updates silently never
+    arrive. In Nginx Proxy Manager this is the *Websockets Support*
+    toggle on the Details tab.
+  - **`proxy_buffering off;`** — otherwise nginx buffers the live audio
+    instead of passing it through, so playback stutters or never
+    starts. In Nginx Proxy Manager this goes in *Custom Nginx
+    Configuration*, under the gear/Advanced tab of the proxy host.
+
+  [KB §3](KB.md#3-reverse-proxy-nginx-proxy-manager) has the full
+  walkthrough.
 - **AI liner notes are optional, and one provider is unofficial.**
   OpenCode is bundled and works out of the box; Ollama and any
   OpenAI-compatible endpoint just need a URL or key. The ChatGPT option

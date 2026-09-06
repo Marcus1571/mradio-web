@@ -88,15 +88,20 @@ In NPM, add a proxy host:
   need to touch that setting for this. If you still see the socket dying
   periodically (visible as `mradio.ws INFO disconnected` in `docker
   logs`) behind an unusual proxy setup, raising `proxy_read_timeout`
-  there in the Advanced tab is the fallback.
+  in that same Custom Nginx Configuration box is the fallback.
 - **SSL**: a valid cert for that domain, force SSL on.
-- **Advanced tab**, add:
+- **Custom Nginx Configuration**, add:
   ```
   proxy_buffering off;
   ```
   This is the one non-default setting the stream proxy needs — without it,
   nginx buffers the live audio instead of streaming it through, so playback
   either stutters or never starts.
+
+  In current Nginx Proxy Manager versions this box lives behind the
+  **gear icon** at the right of the Edit Proxy Host tab strip (next to
+  Details / Custom Locations / SSL), under the heading *Custom Nginx
+  Configuration*. Older versions labelled the same tab **Advanced**.
 
 Sessions are cookie-based with `Secure` set, so the app **only works over
 HTTPS** (i.e. through NPM) — not over plain `http://<server-ip>:8000`
