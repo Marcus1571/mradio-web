@@ -1033,6 +1033,26 @@ just that the underlying complaint (visual confusion) seems addressed
 by some plausible-sounding related change — these are not always the
 same fix, and only the actual diff proves which one happened.
 
+## Brand text renamed: "mradio / dial room" → "mradio web / player" (2026-09-06, 0.5.4)
+
+User disliked the original "mradio — Dial Room" branding — wanted the
+top-bar brand mark to read "mradio web" (serif, unchanged styling) with
+"player" as the small subtitle (unchanged mono styling), and the
+browser tab/PWA name to be just "mradio web", not "mradio — Dial Room".
+Pure text swap, no CSS/component changes — `.brand-mark`/`.brand-sub`
+already used the right fonts (`--font-display` serif / `--font-mono`),
+this was never a styling complaint. Touched every occurrence: the
+`<span className="brand-mark">`/`<span className="brand-sub">` pair
+appears in 5 files (`TopBar.tsx`, `LoginScreen.tsx`,
+`ChangePasswordScreen.tsx`, `ForgotPasswordScreen.tsx`,
+`ResetPasswordScreen.tsx` — the last two new in 0.5.0's forgot-password
+work, easy to miss if not grepped for explicitly), plus
+`index.html`'s `<title>` and `apple-mobile-web-app-title` meta tag, plus
+`manifest.webmanifest`'s `name`/`short_name`. Grepped for the literal
+strings across the whole frontend before editing, specifically to avoid
+another repeat of the previous entry's lesson (partial fixes that miss
+some of the actual occurrences).
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

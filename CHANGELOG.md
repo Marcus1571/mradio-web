@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.4] - 2026-09-06
+
+Renamed the app's displayed brand text from "mradio" / "dial room" to
+"mradio web" / "player" everywhere it appears — top bar, sign-in and
+password screens, browser tab title, PWA/home-screen name. Styling
+(serif brand mark, small mono subtitle) is unchanged, only the wording.
+
 ## [0.5.3] - 2026-09-06
 
 Actually fixed the placeholder-text confusion this time — 0.5.1 only
