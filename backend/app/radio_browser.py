@@ -270,8 +270,16 @@ async def _searxng_logo(
     except (httpx.HTTPError, ValueError, AttributeError):
         return None
 
+    # Scan generously rather than just the head of the list: SearXNG
+    # interleaves engines, and the first slots are routinely filled by
+    # icon libraries that match nothing (confirmed live: a WSM search
+    # returned 921 results, of which the first 20 were mostly lucide
+    # and devicon icons, so a narrow window found no valid candidate
+    # even though a correct logo sat a few places further down). The
+    # filtering below is pure string work; only the handful that
+    # survive it are ever fetched.
     candidates: list[str] = []
-    for item in results[:20]:
+    for item in results[:120]:
         src = item.get("img_src") or ""
         if not src.startswith("http"):
             continue

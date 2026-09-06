@@ -136,7 +136,7 @@ DEFAULT_STATIONS = [
      "genre": "country"},
     {"name": "Big R Radio Country",
      "url": "http://bigrradio.cdnstream1.com/5195_128", "genre": "country"},
-    {"name": "Country Radio (CZ)", "url": "http://icecast2.play.cz:8000/country128aac",
+    {"name": "America's Country", "url": "https://ais-sa2.cdnstream1.com/1976_128.mp3",
      "genre": "country"},
     {"name": "Radio Caroline", "url": "http://78.129.202.200:8040/", "genre": "rock"},
     {"name": "Virgin Classic Rock (IT)",
