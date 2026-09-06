@@ -43,7 +43,7 @@ export interface Config {
   last_name?: string
   last_genre?: Genre
   provider?: string
-  language?: 'en' | 'es' | 'it' | 'pt' | 'fr' | 'ru'
+  language?: 'en' | 'es' | 'it' | 'pt' | 'fr' | 'ru' | 'de'
 }
 
 export interface ProviderInfo {
