@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.22] - 2026-09-06
+
+Fixed the listener map sometimes showing more dots than "Live now" —
+the map previously always mixed live sessions with recent play history,
+with no way to tell which was which. Added a second toggle (Live only /
+Live + recent history) next to the Pins/Heatmap toggle, defaulting to
+Live only so the map matches "Live now" out of the box. Also fixed the
+map's history view being tied to whichever page the history table below
+it happened to be scrolled to.
+
 ## [0.5.21] - 2026-09-06
 
 Added Hip-Hop as a tenth curated genre, with 10 vetted stations (181.FM

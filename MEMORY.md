@@ -1361,6 +1361,43 @@ distinct history rows, confirmed every rendered marker measures exactly
 8×8px regardless of underlying session count, and that the tooltip
 (location label) still works on hover.
 
+## Listener map showing a different count than "Live now" (fixed 2026-09-06, 0.5.22)
+
+User noticed (via screenshot) "Live now" showed 1 listener while the map
+showed 2 pins, and reasonably assumed this was a bug. It wasn't a data
+bug — `AnalyticsMap`'s `buildPins()` had always deliberately unioned live
+sessions AND the (paginated) recent-history table's current page into
+one pin set, while "Live now" is strictly real-time (`nowplaying.live_snapshot()`,
+only actual open WebSocket connections). Two legitimately different,
+both-correct signals that looked inconsistent side by side with no
+labeling to explain why. Also found a second, more subtle latent bug
+while fixing this: the map's "history" pins were literally whatever page
+of the *history table* happened to be loaded (`historyOffset` state),
+not a stable "recent N sessions" — paging the table at the bottom of the
+page would silently change what the map above it showed, with zero
+visual connection between the two.
+
+Fixed via a second, independent toggle (**Live only** / **Live + recent
+history**) next to the existing Pins/Heatmap toggle, separated by a
+`.map-picker-sep` divider so they read as two separate controls, not one
+row of four equal options. **Defaults to "Live only"**, so out of the
+box the map always matches "Live now" exactly — no more surprise
+mismatch for anyone who doesn't know to look for the toggle. Fixed the
+page-dependent-history bug simultaneously: the map's history fetch is
+now a dedicated `GET /api/analytics/history?limit=25&offset=0` call,
+triggered only when scope is `'live+history'`, entirely independent of
+the history table's own `historyOffset`-driven pagination fetch — same
+endpoint, deliberately separate state so one doesn't leak into the
+other. `buildPins(sessions, scope === 'live+history' ? mapHistory : [])`
+is the one-line mechanism switching between the two views. Verified live
+with a real local playback session (which correctly resolves to 0 map
+pins in "Live only" mode when tested from localhost — loopback IPs have
+no GeoLite2 location by design, see the geoip exclusion noted elsewhere
+in this file — production traffic through the real reverse proxy would
+resolve normally) plus 2 seeded historical rows that appeared exactly
+when switching to "Live + recent history" and disappeared switching
+back, confirmed via screenshot both ways.
+
 ## Listener map pins/heatmap toggle (added 2026-09-06, 0.5.16)
 
 The original listener map (`AnalyticsMap` in `AnalyticsPage.tsx`) drew one
