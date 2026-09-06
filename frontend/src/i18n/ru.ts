@@ -183,6 +183,8 @@ const ru: Dict = {
     liveTitle: 'В эфире сейчас',
     liveEmpty: 'Сейчас никто не слушает.',
     mapTitle: 'Карта слушателей',
+    mapPins: 'Метки',
+    mapHeatmap: 'Тепловая карта',
     statsTitle: 'Статистика',
     since7d: 'Последние 7 дней',
     since30d: 'Последние 30 дней',

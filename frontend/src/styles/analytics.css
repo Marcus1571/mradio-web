@@ -20,6 +20,12 @@
   padding: 0 var(--space-md) var(--space-md);
 }
 
+.map-mode-picker {
+  display: flex;
+  gap: var(--space-3xs);
+  margin-bottom: var(--space-sm);
+}
+
 .analytics-map {
   height: 320px;
   width: 100%;

@@ -183,6 +183,8 @@ const nl: Dict = {
     liveTitle: 'Nu live',
     liveEmpty: 'Er luistert nu niemand.',
     mapTitle: 'Luisterkaart',
+    mapPins: 'Spelden',
+    mapHeatmap: 'Heatmap',
     statsTitle: 'Statistieken',
     since7d: 'Laatste 7 dagen',
     since30d: 'Laatste 30 dagen',

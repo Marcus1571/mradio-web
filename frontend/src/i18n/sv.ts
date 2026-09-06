@@ -183,6 +183,8 @@ const sv: Dict = {
     liveTitle: 'Live nu',
     liveEmpty: 'Ingen lyssnar just nu.',
     mapTitle: 'Lyssnarkarta',
+    mapPins: 'Nålar',
+    mapHeatmap: 'Värmekarta',
     statsTitle: 'Statistik',
     since7d: 'Senaste 7 dagarna',
     since30d: 'Senaste 30 dagarna',

@@ -181,6 +181,8 @@ const en = {
     liveTitle: 'Live now',
     liveEmpty: 'Nobody is listening right now.',
     mapTitle: 'Listener map',
+    mapPins: 'Pins',
+    mapHeatmap: 'Heatmap',
     statsTitle: 'Stats',
     since7d: 'Last 7 days',
     since30d: 'Last 30 days',

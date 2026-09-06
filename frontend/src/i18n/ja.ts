@@ -183,6 +183,8 @@ const ja: Dict = {
     liveTitle: 'ライブ状況',
     liveEmpty: '現在リスナーはいません。',
     mapTitle: 'リスナーマップ',
+    mapPins: 'ピン',
+    mapHeatmap: 'ヒートマップ',
     statsTitle: '統計',
     since7d: '過去7日間',
     since30d: '過去30日間',

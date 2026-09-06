@@ -183,6 +183,8 @@ const nb: Dict = {
     liveTitle: 'Live nå',
     liveEmpty: 'Ingen lytter akkurat nå.',
     mapTitle: 'Lytterkart',
+    mapPins: 'Nåler',
+    mapHeatmap: 'Varmekart',
     statsTitle: 'Statistikk',
     since7d: 'Siste 7 dager',
     since30d: 'Siste 30 dager',

@@ -183,6 +183,8 @@ const fr: Dict = {
     liveTitle: 'En direct maintenant',
     liveEmpty: "Personne n'écoute en ce moment.",
     mapTitle: "Carte des auditeurs",
+    mapPins: 'Repères',
+    mapHeatmap: 'Carte de chaleur',
     statsTitle: 'Statistiques',
     since7d: '7 derniers jours',
     since30d: '30 derniers jours',

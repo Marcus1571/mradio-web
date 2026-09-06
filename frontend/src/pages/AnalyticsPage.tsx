@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet'
+import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet'
+import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import 'leaflet.heat'
 import { api } from '../api/client'
 import type { AnalyticsStats, HistoryEntry, LiveSession } from '../api/types'
 import type { TFunction } from '../i18n'
@@ -123,20 +125,72 @@ function buildPins(sessions: LiveSession[], history: HistoryEntry[]): Pin[] {
   return [...byKey.values()]
 }
 
-function AnalyticsMap({ sessions, history }: { sessions: LiveSession[]; history: HistoryEntry[] }) {
+type MapMode = 'pins' | 'heatmap'
+
+function HeatLayer({ pins }: { pins: Pin[] }) {
+  const map = useMap()
+  useEffect(() => {
+    const max = Math.max(1, ...pins.map((p) => p.count))
+    const layer = L.heatLayer(
+      pins.map((p) => [p.lat, p.lon, p.count / max]),
+      {
+        radius: 25,
+        blur: 20,
+        maxZoom: 6,
+        minOpacity: 0.4,
+        gradient: { 0.2: '#fde68a', 0.5: '#fb923c', 0.8: '#ea580c', 1: '#c2410c' },
+      },
+    )
+    layer.addTo(map)
+    return () => {
+      layer.remove()
+    }
+  }, [map, pins])
+  return null
+}
+
+function AnalyticsMap({
+  sessions,
+  history,
+  mode,
+  onModeChange,
+  t,
+}: {
+  sessions: LiveSession[]
+  history: HistoryEntry[]
+  mode: MapMode
+  onModeChange: (m: MapMode) => void
+  t: TFunction
+}) {
   const pins = buildPins(sessions, history)
   return (
     <div className="analytics-map-wrap">
+      <div className="map-mode-picker">
+        {(['pins', 'heatmap'] as MapMode[]).map((m) => (
+          <button
+            key={m}
+            type="button"
+            className={`since-btn ${mode === m ? 'active' : ''}`}
+            onClick={() => onModeChange(m)}
+          >
+            {t(m === 'pins' ? 'analytics.mapPins' : 'analytics.mapHeatmap')}
+          </button>
+        ))}
+      </div>
       <MapContainer center={[20, 0]} zoom={2} scrollWheelZoom={false} className="analytics-map">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {pins.map((p, i) => (
-          <CircleMarker key={i} center={[p.lat, p.lon]} radius={6 + p.count} pathOptions={{ color: 'var(--accent)' }}>
-            <Tooltip>{p.label}</Tooltip>
-          </CircleMarker>
-        ))}
+        {mode === 'pins' ? (
+          pins.map((p, i) => (
+            <CircleMarker key={i} center={[p.lat, p.lon]} radius={6 + p.count} pathOptions={{ color: 'var(--accent)' }}>
+              <Tooltip>{p.label}</Tooltip>
+            </CircleMarker>
+          ))
+        ) : (
+          <HeatLayer pins={pins} />
+        )}
       </MapContainer>
     </div>
   )
@@ -148,6 +202,7 @@ export function AnalyticsPage({ t }: { t: TFunction }) {
   const [stats, setStats] = useState<AnalyticsStats | null>(null)
   const [since, setSince] = useState<Since>('30d')
   const [historyOffset, setHistoryOffset] = useState(0)
+  const [mapMode, setMapMode] = useState<MapMode>('pins')
 
   useEffect(() => {
     let cancelled = false
@@ -187,7 +242,7 @@ export function AnalyticsPage({ t }: { t: TFunction }) {
 
       <div className="admin-panel">
         <h2 className="analytics-section-title">{t('analytics.mapTitle')}</h2>
-        <AnalyticsMap sessions={live} history={history} />
+        <AnalyticsMap sessions={live} history={history} mode={mapMode} onModeChange={setMapMode} t={t} />
       </div>
 
       <div className="admin-panel">
