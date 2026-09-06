@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.36] - 2026-09-06
+
+Shaved the station logo's size and surrounding padding further, all
+evenly, to fit more compactly on smaller/phone screens — the logo now
+also shrinks a bit more on narrow viewports so the station name has
+more room before truncating.
+
 ## [0.5.35] - 2026-09-06
 
 Reduced the gap below the metrics divider when a station logo is

@@ -1509,7 +1509,7 @@ round-trip correctly through the existing API endpoints unchanged
 (no backend changes needed for this — pure frontend UI swap), and the
 modal renders correctly in both dark and light themes.
 
-## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30; bigger + divider redesign 0.5.31; layout bug fixed 0.5.32; equal padding fixed with real screenshots 0.5.33; margin-vs-padding bug fixed 0.5.34; tokenized + rebalanced 0.5.35)
+## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30; bigger + divider redesign 0.5.31; layout bug fixed 0.5.32; equal padding fixed with real screenshots 0.5.33; margin-vs-padding bug fixed 0.5.34; tokenized + rebalanced 0.5.35; shaved smaller for mobile 0.5.36)
 
 The now-playing panel's station row had visible empty space next to the
 station name — the user asked whether a logo could be shown there, and
@@ -1794,7 +1794,30 @@ did, and the fix (a shared token) is also what makes any *future*
 resize of the logo automatically keep its own padding in proportion,
 which none of the previous three fixes would have done.
 
-Right after [[mradio_web_status]]'s 0.5.16 pins/heatmap split shipped, the
+**Shaved further for mobile fit (0.5.36)**: user was "almost happy" but
+wanted everything shaved down more, explicitly citing phones/small
+screens as the reason. Because 0.5.35's `--logo-size` token already
+drove both `.station-logo`'s height and `.np-metrics`'s calculated
+padding-bottom, shrinking the whole feature was mostly one number —
+`--logo-size` went from 4.5rem to 3rem, `.station-logo`'s `top`/`right`
+switched from `--space-md` to the smaller `--space-sm` token, and the
+divider-shortening rule (`.panel-head-with-logo::after`) was itself
+finally converted from a hardcoded `88px` to
+`calc(var(--space-sm) + var(--logo-size) + var(--space-sm))` — closing
+the one remaining magic-number gap from earlier passes. Re-tuning
+`--logo-offset` (2.5rem → 3rem, with the padding-bottom calc wrapped
+in `max(0px, ...)` since the new offset is now allowed to meet or
+exceed the logo size) brought top/right/bottom down to a tight, even
+~17-19px. **Added an actual mobile check this time** (390px viewport,
+via the same Playwright loop, not assumed): confirmed the fixed-size
+logo was eating too much of the header row's width at phone size,
+visibly truncating the station name more than necessary — added a
+`@media (max-width: 480px)` override dropping `--logo-size` to
+2.25rem specifically for narrow screens, which (because everything
+else derives from that one variable) automatically shrunk the
+divider-shortening and padding-bottom to match with no further
+manual tuning — the clearest payoff yet of 0.5.35's tokenization work
+paying for itself on the very next request.
 user noticed Pins mode was *still* using `radius={6 + count}` — the split
 correctly gave heat-intensity its own dedicated view, but nobody had
 actually removed the same encoding from the pins view it was split out of,
