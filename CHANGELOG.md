@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.45] - 2026-09-06
+
+Fixed .977 Jamz showing the logo of 97.9 JAMZ, an unrelated US FM
+station — similar enough digits to fool the name check, so it's now
+pinned to the correct one.
+
 ## [0.5.44] - 2026-09-06
 
 Replaced Country Radio (CZ) with America's Country, a mainstream US
