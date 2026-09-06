@@ -17,3 +17,7 @@ export function formatKHz(sampleRate: string | null): string | null {
 export function formatCache(seconds: number): string {
   return `cache ${seconds.toFixed(1)}s`
 }
+
+export function displayName(u: { username: string; full_name?: string | null }): string {
+  return u.full_name?.trim() ? u.full_name : u.username
+}

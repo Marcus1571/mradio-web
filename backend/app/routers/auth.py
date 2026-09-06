@@ -7,7 +7,7 @@ from ..models import ChangePasswordRequest, LoginRequest, UserOut
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
-_USER_OUT_FIELDS = ("id", "username", "email", "is_admin", "disabled",
+_USER_OUT_FIELDS = ("id", "username", "email", "full_name", "is_admin", "disabled",
                     "must_change_password", "created_at")
 
 

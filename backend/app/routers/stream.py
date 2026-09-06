@@ -101,7 +101,8 @@ async def stream(request: Request,
             nowplaying.session_started(
                 sid, user["id"], user["username"], station_name, resolved_genre,
                 (loc or {}).get("city"), (loc or {}).get("country"),
-                (loc or {}).get("lat"), (loc or {}).get("lon"))
+                (loc or {}).get("lat"), (loc or {}).get("lon"),
+                full_name=user["full_name"])
 
     async def cleanup():
         logger.info("disconnected sid=%s station=%r", sid, station_name)

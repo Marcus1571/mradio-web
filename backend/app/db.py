@@ -64,6 +64,24 @@ CREATE INDEX IF NOT EXISTS idx_trivia_history_user ON trivia_history(user_id, id
 _db: aiosqlite.Connection | None = None
 
 
+async def _ensure_column(db: aiosqlite.Connection, table: str, column: str,
+                         coltype: str) -> None:
+    """SQLite has no `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` — check via
+    PRAGMA first. Idempotent, safe to call on every startup against a
+    pre-existing DB that already has real rows. Table/column/type are always
+    hardcoded call-site literals, never user input, so the f-string is safe
+    despite not being parameterized (SQLite doesn't allow parameterizing
+    identifiers anyway). This is the reusable pattern for any future column
+    added to a table that may already exist in production — every past
+    schema change here was either a brand-new table or a column present
+    since the very first commit, so there was no precedent for this until
+    now."""
+    cur = await db.execute(f"PRAGMA table_info({table})")
+    cols = {row["name"] for row in await cur.fetchall()}
+    if column not in cols:
+        await db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {coltype}")
+
+
 async def init_db():
     global _db
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -71,6 +89,7 @@ async def init_db():
     _db.row_factory = aiosqlite.Row
     await _db.execute("PRAGMA foreign_keys = ON")
     await _db.executescript(SCHEMA)
+    await _ensure_column(_db, "users", "full_name", "TEXT")
     await _db.commit()
 
 

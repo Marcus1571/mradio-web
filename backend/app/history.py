@@ -43,7 +43,7 @@ async def end_session(row_id: int) -> None:
 async def recent_history(limit: int = 50, offset: int = 0) -> list[dict]:
     db = get_db()
     cur = await db.execute(
-        "SELECT h.*, u.username FROM play_history h "
+        "SELECT h.*, u.username, u.full_name FROM play_history h "
         "JOIN users u ON u.id = h.user_id "
         "ORDER BY h.started_at DESC LIMIT ? OFFSET ?",
         (limit, offset),
@@ -82,9 +82,9 @@ async def stats(since: str = "30d") -> dict:
     top_genres = [dict(r) for r in await cur.fetchall()]
 
     cur = await db.execute(
-        f"SELECT u.username, COUNT(*) AS plays, {duration_expr()} AS seconds "
+        f"SELECT u.username, u.full_name, COUNT(*) AS plays, {duration_expr()} AS seconds "
         f"FROM play_history h JOIN users u ON u.id = h.user_id WHERE {where} "
-        "GROUP BY u.username ORDER BY seconds DESC LIMIT 5"
+        "GROUP BY u.username, u.full_name ORDER BY seconds DESC LIMIT 5"
     )
     top_users = [dict(r) for r in await cur.fetchall()]
 

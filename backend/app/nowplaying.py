@@ -40,10 +40,12 @@ _live_sessions: dict[str, dict] = {}
 
 def session_started(sid: str, user_id: int, username: str, station: str,
                     genre: str, city: str | None, country: str | None,
-                    lat: float | None = None, lon: float | None = None) -> None:
+                    lat: float | None = None, lon: float | None = None,
+                    full_name: str | None = None) -> None:
     _live_sessions[sid] = {
         "user_id": user_id,
         "username": username,
+        "full_name": full_name,
         "station": station,
         "genre": genre,
         "city": city,

@@ -15,6 +15,7 @@ def _row_to_user(row) -> dict:
         "id": row["id"],
         "username": row["username"],
         "email": row["email"],
+        "full_name": row["full_name"],
         "is_admin": bool(row["is_admin"]),
         "disabled": bool(row["disabled"]),
         "must_change_password": bool(row["must_change_password"]),
@@ -36,6 +37,13 @@ async def get_by_username(username: str) -> dict | None:
     return dict(row) if row else None
 
 
+async def get_by_email(email: str) -> dict | None:
+    db = get_db()
+    cur = await db.execute("SELECT * FROM users WHERE email = ?", (email,))
+    row = await cur.fetchone()
+    return dict(row) if row else None
+
+
 async def get_by_id(user_id: int) -> dict | None:
     db = get_db()
     cur = await db.execute("SELECT * FROM users WHERE id = ?", (user_id,))
@@ -52,17 +60,18 @@ async def list_users() -> list[dict]:
 
 async def create_user(username: str, password: str, email: str | None = None,
                        is_admin: bool = False,
-                       must_change_password: bool = True) -> dict:
+                       must_change_password: bool = True,
+                       full_name: str | None = None) -> dict:
     """New accounts (bootstrap admin included) start with a forced password
     change on first login — the caller picks the initial password, not the
     person who'll actually use the account."""
     now = datetime.now(timezone.utc).isoformat()
     async with tx() as db:
         cur = await db.execute(
-            "INSERT INTO users (username, email, password_hash, is_admin, "
-            "disabled, must_change_password, created_at) "
-            "VALUES (?, ?, ?, ?, 0, ?, ?)",
-            (username, email, hash_password(password), int(is_admin),
+            "INSERT INTO users (username, email, full_name, password_hash, "
+            "is_admin, disabled, must_change_password, created_at) "
+            "VALUES (?, ?, ?, ?, ?, 0, ?, ?)",
+            (username, email, full_name, hash_password(password), int(is_admin),
              int(must_change_password), now),
         )
         user_id = cur.lastrowid
@@ -100,6 +109,19 @@ async def set_admin(user_id: int, is_admin: bool) -> None:
     async with tx() as db:
         await db.execute("UPDATE users SET is_admin = ? WHERE id = ?",
                          (int(is_admin), user_id))
+
+
+async def update_profile(user_id: int, **fields) -> None:
+    """Admin-driven edit of full_name/email — only updates keys actually
+    passed (the router forwards `model_dump(exclude_unset=True)`, so an
+    omitted field is left untouched rather than cleared)."""
+    cols = {k: v for k, v in fields.items() if k in ("full_name", "email")}
+    if not cols:
+        return
+    set_clause = ", ".join(f"{k} = ?" for k in cols)
+    async with tx() as db:
+        await db.execute(f"UPDATE users SET {set_clause} WHERE id = ?",
+                         (*cols.values(), user_id))
 
 
 async def delete_user(user_id: int) -> None:

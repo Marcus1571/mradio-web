@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import { api } from '../api/client'
 import type { AnalyticsStats, HistoryEntry, LiveSession } from '../api/types'
 import type { TFunction } from '../i18n'
+import { displayName } from '../utils/format'
 import '../styles/admin.css'
 import '../styles/analytics.css'
 
@@ -44,7 +45,7 @@ function LiveTable({ sessions, t }: { sessions: LiveSession[]; t: TFunction }) {
             <td>
               <span className="live-dot" />
             </td>
-            <td>{s.username}</td>
+            <td>{displayName(s)}</td>
             <td>{s.station}</td>
             <td>{s.genre}</td>
             <td>{s.city ? `${s.city}, ${s.country}` : s.country || t('analytics.locationLocal')}</td>
@@ -227,7 +228,7 @@ export function AnalyticsPage({ t }: { t: TFunction }) {
               <h3>{t('analytics.topUsers')}</h3>
               <BarList
                 labelKey="users"
-                rows={stats.top_users.map((r) => ({ label: r.username, plays: r.plays, seconds: r.seconds }))}
+                rows={stats.top_users.map((r) => ({ label: displayName(r), plays: r.plays, seconds: r.seconds }))}
                 t={t}
               />
             </div>
@@ -257,7 +258,7 @@ export function AnalyticsPage({ t }: { t: TFunction }) {
             <tbody>
               {history.map((h) => (
                 <tr key={h.id}>
-                  <td>{h.username}</td>
+                  <td>{displayName(h)}</td>
                   <td>{h.station_name}</td>
                   <td>{h.genre}</td>
                   <td>{new Date(h.started_at).toLocaleString()}</td>

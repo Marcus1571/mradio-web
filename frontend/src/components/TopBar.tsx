@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { LANGUAGES } from '../i18n'
 import type { Language, TFunction } from '../i18n'
+import { displayName } from '../utils/format'
 import { ChevronDownIcon, MoonIcon, SunIcon } from './Icons'
 
 export type Page = 'dashboard' | 'users' | 'ai-settings' | 'analytics' | 'change-password'
@@ -47,7 +48,8 @@ export function TopBar({
     return () => document.removeEventListener('mousedown', onClick)
   }, [langOpen])
 
-  const initials = (user?.username ?? '?').slice(0, 2).toUpperCase()
+  const name = user ? displayName(user) : '?'
+  const initials = name.slice(0, 2).toUpperCase()
   const currentLanguage = LANGUAGES.find((l) => l.code === language) ?? LANGUAGES[0]
 
   return (
@@ -103,7 +105,7 @@ export function TopBar({
         <div className="user-menu" ref={menuRef}>
           <button className="user-chip" type="button" onClick={() => setMenuOpen((v) => !v)}>
             <span className="avatar">{initials}</span>
-            <span className="user-name">{user?.username}</span>
+            <span className="user-name">{name}</span>
             <ChevronDownIcon />
           </button>
           {menuOpen && (

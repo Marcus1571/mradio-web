@@ -16,7 +16,8 @@ async def list_users(admin: dict = Depends(require_admin)):
 async def create_user(body: UserCreateRequest, admin: dict = Depends(require_admin)):
     if await users.get_by_username(body.username) is not None:
         raise HTTPException(status.HTTP_409_CONFLICT, "username already taken")
-    user = await users.create_user(body.username, body.password, body.email, body.is_admin)
+    user = await users.create_user(body.username, body.password, body.email,
+                                   body.is_admin, full_name=body.full_name)
     return user
 
 
@@ -35,6 +36,9 @@ async def update_user(user_id: int, body: UserUpdateRequest,
         await users.set_admin(user_id, body.is_admin)
     if body.password:
         await users.set_password(user_id, body.password)
+    profile_fields = body.model_dump(exclude_unset=True, include={"full_name", "email"})
+    if profile_fields:
+        await users.update_profile(user_id, **profile_fields)
     return await users.get_by_id(user_id)
 
 

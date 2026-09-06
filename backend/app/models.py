@@ -10,6 +10,7 @@ class UserOut(BaseModel):
     id: int
     username: str
     email: str | None
+    full_name: str | None
     is_admin: bool
     disabled: bool
     must_change_password: bool
@@ -20,6 +21,7 @@ class UserCreateRequest(BaseModel):
     username: str = Field(min_length=1, max_length=64)
     password: str = Field(min_length=8)
     email: str | None = None
+    full_name: str | None = None
     is_admin: bool = False
 
 
@@ -27,6 +29,8 @@ class UserUpdateRequest(BaseModel):
     disabled: bool | None = None
     is_admin: bool | None = None
     password: str | None = Field(default=None, min_length=8)
+    full_name: str | None = None
+    email: str | None = None
 
 
 class ChangePasswordRequest(BaseModel):
@@ -59,6 +63,7 @@ class AITestResult(BaseModel):
 class LiveSession(BaseModel):
     user_id: int
     username: str
+    full_name: str | None = None
     station: str
     genre: str
     city: str | None
@@ -71,6 +76,7 @@ class LiveSession(BaseModel):
 class HistoryEntry(BaseModel):
     id: int
     username: str
+    full_name: str | None = None
     station_name: str
     genre: str
     started_at: str
@@ -95,6 +101,7 @@ class GenreCount(BaseModel):
 
 class UserCount(BaseModel):
     username: str
+    full_name: str | None = None
     plays: int
     seconds: float | None
 

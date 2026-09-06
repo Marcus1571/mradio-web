@@ -4,6 +4,7 @@ import { ApiError, api } from '../api/client'
 import type { User } from '../api/types'
 import { useAuth } from '../hooks/useAuth'
 import type { TFunction } from '../i18n'
+import { displayName } from '../utils/format'
 import '../styles/admin.css'
 
 export function UsersPage({ t }: { t: TFunction }) {
@@ -14,6 +15,8 @@ export function UsersPage({ t }: { t: TFunction }) {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
   const [busy, setBusy] = useState(false)
 
@@ -31,9 +34,17 @@ export function UsersPage({ t }: { t: TFunction }) {
     setError('')
     setBusy(true)
     try {
-      await api.post('/api/users', { username, password, is_admin: isAdmin })
+      await api.post('/api/users', {
+        username,
+        password,
+        is_admin: isAdmin,
+        full_name: fullName || undefined,
+        email: email || undefined,
+      })
       setUsername('')
       setPassword('')
+      setFullName('')
+      setEmail('')
       setIsAdmin(false)
       await refresh()
     } catch (err) {
@@ -70,6 +81,20 @@ export function UsersPage({ t }: { t: TFunction }) {
     await refresh()
   }
 
+  async function editProfile(u: User) {
+    const nextFullName = window.prompt(
+      t('users.editFullNamePrompt', { username: u.username }), u.full_name ?? ''
+    )
+    if (nextFullName === null) return
+    const nextEmail = window.prompt(
+      t('users.editEmailPrompt', { username: u.username }), u.email ?? ''
+    )
+    if (nextEmail === null) return
+    await api.patch(`/api/users/${u.id}`, { full_name: nextFullName, email: nextEmail })
+    await refresh()
+    window.alert(t('users.editProfileDone'))
+  }
+
   return (
     <div className="admin-page">
       <div className="admin-header">
@@ -91,7 +116,10 @@ export function UsersPage({ t }: { t: TFunction }) {
             <tbody>
               {users.map((u) => (
                 <tr key={u.id}>
-                  <td>{u.username}</td>
+                  <td>
+                    {displayName(u)}
+                    {u.full_name && <span className="user-name-sub">{u.username}</span>}
+                  </td>
                   <td>
                     {u.is_admin && <span className="pill admin">{t('users.pillAdmin')}</span>}{' '}
                     {u.disabled && <span className="pill disabled">{t('users.pillDisabled')}</span>}
@@ -105,6 +133,9 @@ export function UsersPage({ t }: { t: TFunction }) {
                       </button>
                       <button type="button" onClick={() => void toggleDisabled(u)} disabled={u.id === me?.id}>
                         {u.disabled ? t('users.enable') : t('users.disable')}
+                      </button>
+                      <button type="button" onClick={() => void editProfile(u)}>
+                        {t('users.editProfile')}
                       </button>
                       <button type="button" onClick={() => void resetPassword(u)}>
                         {t('users.resetPassword')}
@@ -129,6 +160,14 @@ export function UsersPage({ t }: { t: TFunction }) {
           <label className="field">
             <span>{t('users.fieldUsername')}</span>
             <input value={username} onChange={(e) => setUsername(e.target.value)} required />
+          </label>
+          <label className="field">
+            <span>{t('users.fieldFullName')}</span>
+            <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </label>
+          <label className="field">
+            <span>{t('users.fieldEmail')}</span>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
           <label className="field">
             <span>{t('users.fieldTempPassword')}</span>

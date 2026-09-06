@@ -22,6 +22,7 @@ export interface User {
   id: number
   username: string
   email: string | null
+  full_name: string | null
   is_admin: boolean
   disabled: boolean
   must_change_password: boolean
@@ -84,6 +85,7 @@ export interface EnrichmentItem {
 export interface LiveSession {
   user_id: number
   username: string
+  full_name: string | null
   station: string
   genre: Genre
   city: string | null
@@ -96,6 +98,7 @@ export interface LiveSession {
 export interface HistoryEntry {
   id: number
   username: string
+  full_name: string | null
   station_name: string
   genre: Genre
   started_at: string
@@ -120,6 +123,7 @@ export interface GenreCount {
 
 export interface UserCount {
   username: string
+  full_name: string | null
   plays: number
   seconds: number | null
 }

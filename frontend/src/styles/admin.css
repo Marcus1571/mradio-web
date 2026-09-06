@@ -147,6 +147,12 @@
   color: var(--ink-3);
 }
 
+.user-name-sub {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+}
+
 .admin-note a {
   color: var(--accent-ink);
   text-decoration: underline;
