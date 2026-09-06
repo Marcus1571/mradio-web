@@ -262,7 +262,7 @@ on LT. Test-connection now reports Ollama as `True, "Connected."`.
 correct as a generic fresh-install default; it just needs pulling before
 use, same as any Ollama model does.
 
-## One-time default-favorites reset (2026-09-06, 0.5.19)
+## One-time default-favorites reset (2026-09-06, 0.5.19; Heart 70s genre bug fixed 2026-09-06, 0.5.20)
 
 User explicitly requested a one-time-only change: reset the default
 12-station favorites lineup to a new specific selection (screenshot
@@ -298,13 +298,31 @@ Two separate mechanisms, deliberately kept separate:
    config — confirmed the script correctly rewrites favorites, leaves
    config byte-for-byte untouched, and dry-run mode writes nothing.
 
-**"Heart 70s (UK)" is stored as genre `"other"`, not `"pop"`** — this is
+**Correction (2026-09-06, 0.5.20)**: originally assumed "Heart 70s (UK)"
+showing genre "other" in the user's screenshot was itself the deliberate,
+correct value to preserve (see the reasoning this replaces, kept below
+struck through for the lesson). It was not — the user confirmed it "used
+to be" `pop` and called this a bug introduced during the 0.5.19 reset.
+**Lesson**: a screenshot showing a value doesn't mean that value is
+intentional or correct — it can just as easily be evidence the thing
+you're about to copy is already wrong. When a migration's source data
+(a live screenshot, an existing DB row, etc.) conflicts with what the
+codebase's own classification logic says, that conflict is worth
+surfacing as a question before baking it into a "this is deliberate"
+migration decision, not resolving it silently in either direction.
+Fixed in `stations.py` (`Heart 70s (UK)` → `"pop"`) and corrected live
+for all 6 already-migrated accounts via a surgical one-field patch
+(only that one entry's `genre`, not a full favorites re-write) — see
+[[mradio_web_status]] for the exact verification steps.
+
+~~"Heart 70s (UK)" is stored as genre `"other"`, not `"pop"` — this is
 deliberate, not a bug: the user's screenshot showed it under "Other" in
 the UI (meaning their actual saved favorite already diverged from
-`stations.py`'s `"pop"` classification at some point), so the new
-default lineup matches the screenshot's genre exactly rather than
-"correcting" it to the current curated-list value — preserves what the
-user actually asked for over what the source-of-truth catalogue says.
+stations.py's "pop" classification at some point), so the new default
+lineup matches the screenshot's genre exactly rather than "correcting"
+it to the current curated-list value — preserves what the user actually
+asked for over what the source-of-truth catalogue says.~~ (superseded
+above — this reasoning was wrong.)
 
 **No new code path was added that could ever re-push this (or any
 future) favorites change to existing users automatically** — per the

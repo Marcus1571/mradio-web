@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.20] - 2026-09-06
+
+Fixed Heart 70s (UK) in the default favorites lineup — it was set to
+genre "other" instead of its correct "pop" (a mistake introduced in the
+0.5.19 favorites reset). Fixed in the code (so future new accounts get
+it right) and corrected live for the 6 accounts already migrated in
+0.5.19, touching only that one field.
+
 ## [0.5.19] - 2026-09-06
 
 One-time default-favorites reset: new accounts now start with a
