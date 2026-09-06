@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.4.0] - 2026-09-06
+
+Added a `full_name` field to user accounts — a proper, emoji-capable
+display name (e.g. "Marco 🎧") shown everywhere the raw login username
+used to appear: the top-bar chip, and every identity column across
+Analytics (Live now, Top listeners, Recent history). Falls back to the
+username automatically when unset, so existing accounts are unaffected.
+Also surfaced the existing-but-previously-unused `email` field in the
+admin Users page. Both are admin-set for now, via the Users page's
+create-user form and a new "Edit profile" action on each row.
+
+Adding this field to `users` required extending this app's SQLite setup
+for the first time to safely add a column to an already-shipped table
+with real production rows — every prior schema change was either a
+brand-new table or present since the very first commit. Verified
+against a simulated pre-existing database (old schema, real rows) that
+the migration applies cleanly, is idempotent on repeat runs, and
+existing accounts/logins are undisturbed.
+
 ## [0.3.10] - 2026-09-06
 
 Added French as a fifth UI/AI-liner-notes language, following the same

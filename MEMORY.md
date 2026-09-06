@@ -738,6 +738,82 @@ and all). The `apple-touch-icon.png` already shipped in 0.3.8 was
 already the correct 180×180 size Apple expects — confirmed via `file`/
 `sips`, no new icon needed, only the three meta tags in `index.html`.
 
+## User display names + email in admin UI (added 2026-09-06, 0.4.0)
+
+First half of a two-part user-account request (second part — SMTP/
+self-service forgot-password — not built yet, see Next steps). The
+admin dashboard showed raw `username` as the only identity everywhere;
+user wanted a proper, emoji-capable display name (screenshot reference:
+Tracearr's leaderboard, names + flag emoji per person) shown instead.
+
+**The one genuinely novel piece**: adding a `full_name TEXT` column to
+`users`, a table that already has real rows in production. Every prior
+schema change in this codebase (`play_history`, `trivia_history`, the
+`must_change_password` column) was either a brand-new table or a column
+present since the very first commit — there was no working precedent
+for "add a column to an already-shipped table with live data." SQLite
+has no `ALTER TABLE ADD COLUMN IF NOT EXISTS`, so `db.py` gained a
+small idempotent helper, `_ensure_column(db, table, column, coltype)` —
+checks `PRAGMA table_info()` first, only runs `ALTER TABLE` if the
+column is actually missing — called from `init_db()` right after
+`executescript(SCHEMA)`. Written generically so it's the reusable
+pattern for the *next* additive column too, not a one-off. No default
+value: `NULL` for pre-existing rows is exactly the "unset, fall back to
+username" state the UI already needed.
+
+Verified this specifically and rigorously (not just "it worked on a
+fresh DB"): built a throwaway `mradio.db` by hand with the *old* schema
+(no `full_name` column) plus two real user rows, ran the new `init_db()`
+against it directly — confirmed the column gets added, existing rows
+survive untouched (`full_name = NULL`), and running `init_db()` a
+second time against the now-migrated file doesn't error (no duplicate-
+column crash). Also confirmed a from-scratch DB still gets the column
+via the same code path — deliberately kept as one path, not two that
+could drift (the column is *not* added directly to `SCHEMA`'s `CREATE
+TABLE users`, precisely so every DB, fresh or existing, goes through
+`_ensure_column`).
+
+`full_name` threads through every place `username` was previously shown
+as identity: TopBar chip/initials, and all three Analytics identity
+columns (Live now, Top listeners bar list, Recent history table) — via
+`backend/app/history.py`'s SQL joins gaining `u.full_name` alongside
+`u.username`, and a new shared frontend helper,
+`frontend/src/utils/format.ts`'s `displayName(u)`, which is the single
+source of the "show full_name if set and non-blank, else username"
+fallback rule (avoids 5+ inline `?? .trim() ||` repetitions). `username`
+itself is *never* removed from any model/type — it stays as the
+fallback key and the login credential, exactly as before.
+
+**Decision: admin-only for now, not self-service.** Set via the Users
+page's create-user form (gained Full name + Email inputs) and a new
+"Edit profile" row action (two sequential `window.prompt`s, matching
+the page's existing no-modal-library pattern already used by
+`resetPassword`) — no new "my profile" page for users to self-edit.
+Matches this account model's existing philosophy (admin-managed, no
+public signup) and avoids inventing new self-service infrastructure for
+a first version of a cosmetic field; easy to add later without
+touching `update_profile()` at all if ever wanted.
+
+Verified live end-to-end via Playwright: created a user with an actual
+emoji in `full_name` ("Marco 🎧"), confirmed it round-trips with zero
+mangling through create → SQLite → GET → TopBar chip → all three
+Analytics tables; then cleared `full_name` via "Edit profile" and
+confirmed the Users table and TopBar correctly fall back to showing the
+bare username again.
+
+**Not yet done**: self-service "forgot password" via emailed reset
+link, and admin-configurable SMTP settings (the second half of the
+original request) — deliberately shipped separately since it's a much
+higher-risk change (new unauthenticated endpoints, anti-enumeration
+correctness, an outbound network dependency). Also found and *not yet
+fixed* while investigating: this SPA has no client-side router at all
+(`App.tsx` picks screens by auth-state `useState` only), so a future
+`/reset-password?token=...` emailed link would 404 against the current
+`StaticFiles(html=True)` mount — confirmed via Starlette's own source,
+which only serves `index.html` for the root path, not arbitrary
+unmatched paths. Needs one small explicit backend route before that
+mount when the forgot-password feature is built.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
