@@ -15,6 +15,7 @@
   display: flex;
   align-items: baseline;
   gap: var(--space-2xs);
+  min-width: 0;
 }
 
 .brand-mark {
@@ -22,6 +23,9 @@
   font-size: var(--text-xl);
   font-weight: 600;
   letter-spacing: -0.01em;
+  /* Without this the two words wrap the moment the row gets tight,
+     silently making the whole bar two lines tall. */
+  white-space: nowrap;
 }
 
 .brand-sub {
@@ -42,6 +46,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
+  /* The controls are the functional half of the bar — let the brand
+     give way first rather than the navigation. */
+  flex-shrink: 0;
 }
 
 .icon-btn {
@@ -153,6 +160,64 @@
   border: none;
   border-top: 1px solid var(--line);
   margin: var(--space-3xs) 0;
+}
+
+/* The top bar is one non-wrapping flex row, so on a phone its contents
+   simply ran off the right edge — taking the user menu, and therefore
+   Settings and Sign out, out of reach entirely (measured: the menu's
+   right edge sat 316px beyond a 390px viewport).
+
+   Rather than wrap onto a second row and eat vertical space on the
+   smallest screens, shed the optional chrome and keep what you can't
+   navigate without. The language picker keeps its flag but drops the
+   label, the version number goes, and the brand loses its "player"
+   sub-label. The user menu and theme toggle always survive. */
+@media (max-width: 720px) {
+  .topbar {
+    padding: var(--space-xs) var(--space-sm);
+    gap: var(--space-xs);
+  }
+
+  .topbar-right {
+    gap: var(--space-xs);
+  }
+
+  .brand-mark {
+    font-size: var(--text-lg);
+    white-space: nowrap;
+  }
+
+  .brand-sub,
+  .app-version {
+    display: none;
+  }
+
+  /* Keep the flag as the affordance; the label is what costs width. */
+  .dropdown-picker .dropdown-chip {
+    gap: 0;
+    padding: var(--space-3xs) var(--space-2xs);
+  }
+
+  .lang-label,
+  .dropdown-picker .dropdown-chip svg {
+    display: none;
+  }
+
+  .user-chip {
+    padding: var(--space-3xs);
+  }
+
+  .user-name {
+    display: none;
+  }
+}
+
+/* Narrower still: the avatar alone identifies the account, and the
+   admin Dashboard link is reachable from Settings inside the menu. */
+@media (max-width: 420px) {
+  .topbar-right > .dropdown-chip {
+    display: none;
+  }
 }
 
 /* ---------- layout ---------- */

@@ -68,7 +68,8 @@ export function TopBar({
       <div className="topbar-right">
         <div className="dropdown-picker" ref={langRef}>
           <button className="dropdown-chip" type="button" onClick={() => setLangOpen((v) => !v)}>
-            {currentLanguage.flag} {currentLanguage.label}
+            <span aria-hidden="true">{currentLanguage.flag}</span>
+            <span className="lang-label">{currentLanguage.label}</span>
             <ChevronDownIcon />
           </button>
           {langOpen && (
