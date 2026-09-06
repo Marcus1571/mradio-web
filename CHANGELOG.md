@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.29] - 2026-09-06
+
+Fixed several curated stations showing no logo icon even though a real
+one exists — Radio-Browser's name search is exact-ish, so display
+names like "VCR Auditorium | Venice Classic Radio Italia" or "Heart
+70s (UK)" (built for readability, not for search) were missing real
+indexed entries. The lookup now retries with the name progressively
+simplified, with a safeguard against a short/generic word (like "VCR")
+accidentally matching an unrelated station.
+
 ## [0.5.28] - 2026-09-06
 
 Added ChatGPT to the AI providers settings page's description text —

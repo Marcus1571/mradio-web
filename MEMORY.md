@@ -1577,6 +1577,50 @@ rejected as stale). Renders nothing (not a placeholder box) when no logo
 is found — most stations, especially user-added custom stream URLs,
 won't have one, and an empty row reads better than a broken-image icon.
 
+**Name-search retry + false-positive guard (0.5.29)**: user noticed most
+curated stations had no logo and pushed back on "that's just missing
+data" — right call. Root cause: Radio-Browser's `/stations/search` is
+exact-ish, not fuzzy — confirmed live `name=VCR Auditorium` returns
+nothing even though `"VCR | Venice Classic Radio Auditorium"` is a real
+indexed entry with a working favicon. This app's own curated display
+names regularly don't match verbatim, because they're written for
+human readability (`" | subtitle"`, trailing `"(region)"` qualifiers)
+not for a literal directory search. Fixed with a retry chain in
+`_name_variants()`: strip `" | ..."`, strip a trailing `"(...)"`, then
+try the bare first word — each tried in order until one search returns
+a real, HEAD-verified favicon.
+
+**The bare-first-word tier is genuinely dangerous and was caught before
+shipping, not after**: confirmed live that searching `"VCR"` alone (the
+first word of "VCR Auditorium") surfaces two entirely unrelated
+stations sharing that same 3-letter token — one Congolese, one an
+unrelated "VCR - 90.6 FM Stereo" — both with their own live, working
+favicons, ranked *ahead* of the real Venice Classic Radio match in the
+result list. A naive "first result with a working favicon" rule would
+have confidently attached a wrong station's logo, which is worse than
+showing no logo at all. Fixed two ways, stacked: (1) the bare-first-word
+tier only fires when that word is longer than 4 characters or contains
+a digit — filters out short call-sign-shaped acronyms (`VCR`, `WQXR`,
+`KIX`, `BBC`...) while still allowing distinctive numeric brands
+(`181.FM`, `.977`, `1.FM`); (2) even then, the candidate's own indexed
+name must still share a real word with the *original* curated name
+(`_distinguishing_words()`) before its favicon is trusted. Net result,
+confirmed live against the real API for every previously-broken
+station: Heart 70s and 181.FM Kickin'/True Blues now resolve to real
+favicons; VCR Auditorium correctly still resolves to `None` (its only
+path to a match is the disqualified bare-acronym tier) rather than a
+wrong station's logo — no logo is the right outcome there until a
+better signal exists, not a bug to keep chasing.
+
+**One-time cache purge required after deploying**: `station_logos.json`
+permanently caches a miss as `{"logo": None}` specifically so a
+no-logo station never gets re-queried on every play — which means
+every station this fix improves needs its stale `None` entry manually
+cleared on LT once after deploying, or it'll keep serving the old
+(wrong) answer from cache forever. This is a one-time data fix, not a
+recurring task — same category as the Heart 70s genre fix and the
+favorites reset, not a precedent for routinely editing production data.
+
 ## Pins mode kept the old size-by-count encoding after the heatmap split (fixed 2026-09-06, 0.5.17)
 
 Right after [[mradio_web_status]]'s 0.5.16 pins/heatmap split shipped, the
