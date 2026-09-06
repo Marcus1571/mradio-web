@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.30] - 2026-09-06
+
+Fixed both Venice Classic Radio stations (VCR Auditorium, VCR
+Classica+) still showing no logo — the previous fix's fallback search
+didn't try the part after the " | " separator, which is where the
+real broadcaster name actually lives ("Venice Classic Radio", not the
+"VCR Auditorium"/"VCR Classica+" prefix that only exists to tell the
+two stations apart).
+
 ## [0.5.29] - 2026-09-06
 
 Fixed several curated stations showing no logo icon even though a real

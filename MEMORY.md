@@ -1509,7 +1509,7 @@ round-trip correctly through the existing API endpoints unchanged
 (no backend changes needed for this — pure frontend UI swap), and the
 modal renders correctly in both dark and light themes.
 
-## Station logos, cached (added 2026-09-06, 0.5.18)
+## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30)
 
 The now-playing panel's station row had visible empty space next to the
 station name — the user asked whether a logo could be shown there, and
@@ -1621,7 +1621,23 @@ cleared on LT once after deploying, or it'll keep serving the old
 recurring task — same category as the Heart 70s genre fix and the
 favorites reset, not a precedent for routinely editing production data.
 
-## Pins mode kept the old size-by-count encoding after the heatmap split (fixed 2026-09-06, 0.5.17)
+**Both VCR stations still had no logo after 0.5.29 — user correctly
+diagnosed why (0.5.30)**: user's own read was exactly right — "VCR
+Auditorium"/"VCR Classica+" only exist to distinguish this app's own
+two sibling stations from each other, while the real broadcaster name
+lives after the pipe ("Venice Classic Radio Italia"). The 0.5.29 fix's
+variant chain never tried the pipe *suffix* on its own, only the
+pipe-stripped *prefix* — so it never got anywhere near the actual
+broadcaster name. Fixed by adding the text after " | " as its own
+variant, confirmed live it still doesn't match verbatim (Radio-Browser
+doesn't index the trailing "Italia"), so it also retries with that
+suffix's own last word dropped ("Venice Classic Radio Italia" →
+"Venice Classic Radio") — one word shorter finds the real station with
+a live, correctly-branded logo (`cropped-logo_VCR-MAIN...png`, the
+actual current site logo, not a stale/dead one this time). Confirmed
+live this resolves BOTH VCR stations at once, since they share the
+identical pipe-suffix — same one-time cache-purge requirement as
+0.5.29 applies again for these two entries specifically.
 
 Right after [[mradio_web_status]]'s 0.5.16 pins/heatmap split shipped, the
 user noticed Pins mode was *still* using `radius={6 + count}` — the split
