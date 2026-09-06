@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.47] - 2026-09-07
+
+Fixed the top bar overflowing on phones, which pushed the account menu
+— and with it Settings and Sign out — off the right edge where it
+couldn't be reached at all. On narrow screens the bar now sheds the
+optional chrome (version number, language label, the "player"
+sub-title) and keeps the account menu and theme toggle. Verified down
+to 320px.
+
 ## [0.5.46] - 2026-09-06
 
 Each AI provider on the settings page now has its own small mark
