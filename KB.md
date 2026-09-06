@@ -158,12 +158,12 @@ which of these they want active, but nobody enters their own key. Matches
 how mradio itself was configured (env vars / a single settings file), just
 editable from the app instead of only at container start.
 
-### opencode
+### OpenCode
 
 **Bundled in the image already — nothing to configure.** The Dockerfile
 fetches the `opencode` CLI (a self-contained native binary, no separate
 Node.js runtime needed at runtime) and bakes it in, so it's detected
-automatically the same way mradio itself auto-enables opencode when the
+automatically the same way mradio itself auto-enables OpenCode when the
 binary happens to be on `PATH`. It'll just show up as "enabled" in the AI
 providers list.
 

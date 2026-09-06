@@ -26,7 +26,7 @@ const da: Dict = {
     usersTitle: 'Brugere',
     usersDescription: 'Konti, roller og visningsnavne.',
     aiTitle: 'AI-udbydere',
-    aiDescription: 'opencode, Ollama og OpenAI-kompatible endpoints.',
+    aiDescription: 'OpenCode, Ollama og OpenAI-kompatible endpoints.',
     emailTitle: 'E-mail (SMTP)',
     emailDescription: 'Afsendelse af adgangskodenulstilling.',
   },
@@ -77,7 +77,7 @@ const da: Dict = {
   aiSettings: {
     title: 'AI-udbydere',
     intro:
-      'Fælles legitimationsoplysninger til opencode, Ollama og ethvert OpenAI-kompatibelt endpoint (f.eks. NVIDIA ' +
+      'Fælles legitimationsoplysninger til OpenCode, Ollama og ethvert OpenAI-kompatibelt endpoint (f.eks. NVIDIA ' +
       'NIM). Hver person vælger selv fra afspilleren, hvilken de bruger — ingen behøver deres egen nøgle.',
     ollamaGroup: 'Ollama',
     ollamaNotePrefix: 'Ny til Ollama? Se',
@@ -92,7 +92,7 @@ const da: Dict = {
     apiBaseUrl: 'API-basis-URL',
     apiKey: 'API-nøgle',
     apiKeyNotSet: 'ikke angivet',
-    opencodeGroup: 'opencode',
+    opencodeGroup: 'OpenCode',
     opencodeEnable: 'Aktivér (port, eller "1" for standard)',
     codexGroup: 'ChatGPT-/Codex-abonnement',
     codexIntro:

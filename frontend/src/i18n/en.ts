@@ -24,7 +24,7 @@ const en = {
     usersTitle: 'Users',
     usersDescription: 'Accounts, roles, and display names.',
     aiTitle: 'AI providers',
-    aiDescription: 'opencode, Ollama, and OpenAI-compatible endpoints.',
+    aiDescription: 'OpenCode, Ollama, and OpenAI-compatible endpoints.',
     emailTitle: 'Email (SMTP)',
     emailDescription: 'Forgot-password delivery.',
   },
@@ -75,7 +75,7 @@ const en = {
   aiSettings: {
     title: 'AI providers',
     intro:
-      'Shared credentials for opencode, Ollama, and any OpenAI-compatible endpoint (e.g. NVIDIA NIM). Each ' +
+      'Shared credentials for OpenCode, Ollama, and any OpenAI-compatible endpoint (e.g. NVIDIA NIM). Each ' +
       'person picks which of these they use from the player — nobody needs their own key.',
     ollamaGroup: 'Ollama',
     ollamaNotePrefix: 'New to Ollama? See',
@@ -90,7 +90,7 @@ const en = {
     apiBaseUrl: 'API base URL',
     apiKey: 'API key',
     apiKeyNotSet: 'not set',
-    opencodeGroup: 'opencode',
+    opencodeGroup: 'OpenCode',
     opencodeEnable: 'Enable (port, or "1" for default)',
     codexGroup: 'ChatGPT / Codex subscription',
     codexIntro:

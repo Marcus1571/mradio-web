@@ -26,7 +26,7 @@ const nl: Dict = {
     usersTitle: 'Gebruikers',
     usersDescription: 'Accounts, rollen en weergavenamen.',
     aiTitle: 'AI-providers',
-    aiDescription: 'opencode, Ollama en OpenAI-compatibele endpoints.',
+    aiDescription: 'OpenCode, Ollama en OpenAI-compatibele endpoints.',
     emailTitle: 'E-mail (SMTP)',
     emailDescription: 'Verzending van wachtwoordherstel.',
   },
@@ -77,7 +77,7 @@ const nl: Dict = {
   aiSettings: {
     title: 'AI-providers',
     intro:
-      'Gedeelde inloggegevens voor opencode, Ollama en elk OpenAI-compatibel endpoint (bijv. NVIDIA NIM). Iedereen ' +
+      'Gedeelde inloggegevens voor OpenCode, Ollama en elk OpenAI-compatibel endpoint (bijv. NVIDIA NIM). Iedereen ' +
       'kiest vanuit de speler welke hij gebruikt — niemand heeft een eigen sleutel nodig.',
     ollamaGroup: 'Ollama',
     ollamaNotePrefix: 'Nieuw met Ollama? Zie',
@@ -92,7 +92,7 @@ const nl: Dict = {
     apiBaseUrl: 'API-basis-URL',
     apiKey: 'API-sleutel',
     apiKeyNotSet: 'niet ingesteld',
-    opencodeGroup: 'opencode',
+    opencodeGroup: 'OpenCode',
     opencodeEnable: 'Inschakelen (poort, of "1" voor standaard)',
     codexGroup: 'ChatGPT-/Codex-abonnement',
     codexIntro:

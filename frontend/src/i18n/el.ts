@@ -26,7 +26,7 @@ const el: Dict = {
     usersTitle: 'Χρήστες',
     usersDescription: 'Λογαριασμοί, ρόλοι και ονόματα εμφάνισης.',
     aiTitle: 'Πάροχοι AI',
-    aiDescription: 'opencode, Ollama και συμβατά με OpenAI endpoints.',
+    aiDescription: 'OpenCode, Ollama και συμβατά με OpenAI endpoints.',
     emailTitle: 'Email (SMTP)',
     emailDescription: 'Αποστολή email επαναφοράς κωδικού.',
   },
@@ -77,7 +77,7 @@ const el: Dict = {
   aiSettings: {
     title: 'Πάροχοι AI',
     intro:
-      'Κοινά διαπιστευτήρια για opencode, Ollama και οποιοδήποτε endpoint συμβατό με OpenAI (π.χ. NVIDIA NIM). ' +
+      'Κοινά διαπιστευτήρια για OpenCode, Ollama και οποιοδήποτε endpoint συμβατό με OpenAI (π.χ. NVIDIA NIM). ' +
       'Κάθε άτομο επιλέγει ποιο από αυτά θα χρησιμοποιήσει από τον player — κανείς δεν χρειάζεται δικό του κλειδί.',
     ollamaGroup: 'Ollama',
     ollamaNotePrefix: 'Νέος/α στο Ollama; Δείτε',
@@ -92,7 +92,7 @@ const el: Dict = {
     apiBaseUrl: 'Βασικό URL API',
     apiKey: 'Κλειδί API',
     apiKeyNotSet: 'δεν έχει οριστεί',
-    opencodeGroup: 'opencode',
+    opencodeGroup: 'OpenCode',
     opencodeEnable: 'Ενεργοποίηση (θύρα ή «1» για προεπιλογή)',
     codexGroup: 'Συνδρομή ChatGPT / Codex',
     codexIntro:

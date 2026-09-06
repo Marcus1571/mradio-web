@@ -18,8 +18,8 @@ import {
 } from './Icons'
 
 const _PROVIDER_LABEL: Record<string, string> = {
-  opencode: 'opencode',
-  ollama: 'ollama',
+  opencode: 'OpenCode',
+  ollama: 'Ollama',
   openai: 'NIM',
   codex: 'ChatGPT',
 }

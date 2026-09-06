@@ -26,7 +26,7 @@ const ja: Dict = {
     usersTitle: 'ユーザー',
     usersDescription: 'アカウント、権限、表示名。',
     aiTitle: 'AIプロバイダー',
-    aiDescription: 'opencode、Ollama、OpenAI互換エンドポイント。',
+    aiDescription: 'OpenCode、Ollama、OpenAI互換エンドポイント。',
     emailTitle: 'メール（SMTP）',
     emailDescription: 'パスワード再設定メールの送信。',
   },
@@ -77,7 +77,7 @@ const ja: Dict = {
   aiSettings: {
     title: 'AIプロバイダー',
     intro:
-      'opencode、Ollama、および任意のOpenAI互換エンドポイント（例：NVIDIA NIM）の共有認証情報です。' +
+      'OpenCode、Ollama、および任意のOpenAI互換エンドポイント（例：NVIDIA NIM）の共有認証情報です。' +
       '各ユーザーはプレーヤー内でどれを使うか選べます — 各自のキーは不要です。',
     ollamaGroup: 'Ollama',
     ollamaNotePrefix: 'Ollamaが初めてですか？',
@@ -92,7 +92,7 @@ const ja: Dict = {
     apiBaseUrl: 'APIベースURL',
     apiKey: 'APIキー',
     apiKeyNotSet: '未設定',
-    opencodeGroup: 'opencode',
+    opencodeGroup: 'OpenCode',
     opencodeEnable: '有効化（ポート番号、または標準の場合は「1」）',
     codexGroup: 'ChatGPT / Codex サブスクリプション',
     codexIntro:
