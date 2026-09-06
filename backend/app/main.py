@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 # Uvicorn configures its own `uvicorn`/`uvicorn.access`/`uvicorn.error`
@@ -23,6 +24,7 @@ from .routers import config as config_router
 from .routers import enrich as enrich_router
 from .routers import favorites as favorites_router
 from .routers import settings as settings_router
+from .routers import smtp as smtp_router
 from .routers import stations as stations_router
 from .routers import stream as stream_router
 from .routers import users as users_router
@@ -45,6 +47,7 @@ app.include_router(auth_router.router)
 app.include_router(users_router.router)
 app.include_router(stream_router.router)
 app.include_router(settings_router.router)
+app.include_router(smtp_router.router)
 app.include_router(enrich_router.router)
 app.include_router(favorites_router.router)
 app.include_router(stations_router.router)
@@ -54,4 +57,12 @@ app.include_router(analytics_router.router)
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 if STATIC_DIR.is_dir():
+    # A reset-password link clicked from an email is a real GET to this
+    # exact path with no matching file — StaticFiles(html=True) only
+    # serves index.html for the root path, so without this it 404s.
+    # Registered before the "/" mount so it takes priority.
+    @app.get("/reset-password", include_in_schema=False)
+    async def reset_password_page():
+        return FileResponse(STATIC_DIR / "index.html")
+
     app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")

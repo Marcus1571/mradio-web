@@ -12,6 +12,7 @@ import type { Language } from '../i18n'
 import { ChangePasswordScreen } from './ChangePasswordScreen'
 import { AISettingsPage } from './AISettingsPage'
 import { AnalyticsPage } from './AnalyticsPage'
+import { EmailSettingsPage } from './EmailSettingsPage'
 import { SettingsPage } from './SettingsPage'
 import { UsersPage } from './UsersPage'
 import '../styles/dashboard.css'
@@ -99,6 +100,7 @@ export function Dashboard() {
       {page === 'settings' && <SettingsPage onNavigate={setPage} t={t} />}
       {page === 'users' && <UsersPage onBack={() => setPage('settings')} t={t} />}
       {page === 'ai-settings' && <AISettingsPage onBack={() => setPage('settings')} t={t} />}
+      {page === 'email-settings' && <EmailSettingsPage onBack={() => setPage('settings')} t={t} />}
       {page === 'analytics' && <AnalyticsPage t={t} />}
     </div>
   )

@@ -74,6 +74,16 @@ export interface AITestResult {
   message: string
 }
 
+export interface SmtpSettings {
+  host: string
+  port: number
+  username: string
+  password: string
+  from_address: string
+  use_tls: boolean
+  public_url: string
+}
+
 export interface EnrichmentItem {
   work: string
   trivia: string

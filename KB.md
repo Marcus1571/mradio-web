@@ -106,8 +106,14 @@ gets a same-origin exception.
 The app trusts `X-Forwarded-For`/`X-Forwarded-Proto` from its reverse
 proxy (`uvicorn --proxy-headers`) so it sees each listener's real IP
 instead of the proxy's own — this matters for the Analytics page's map
-(§9). NPM sends these headers by default; no extra configuration needed
+(§10). NPM sends these headers by default; no extra configuration needed
 on the NPM side.
+
+It also reads `X-Forwarded-Host` (falling back to the plain `Host`
+header) to build the link in password-reset emails (§7) — so if you run
+this app behind more than one domain pointing at the same instance, each
+reset link correctly points back at whichever domain the listener
+actually used. Also sent by NPM by default; nothing to configure.
 
 ## 4. First login
 
@@ -119,26 +125,38 @@ accounts exist yet; changing them afterward does nothing).
 You'll be forced to set your own password immediately — the account cannot
 be used with the default password beyond that one screen.
 
+**Forgot your password?** From the sign-in screen, click **Forgot
+password?**, enter your account's email, and follow the link mradio-web
+emails you (expires in 1 hour, single-use). Only works if the admin has
+configured outgoing email (§7) and your account has an email address set
+(§5) — if either is missing, ask your admin to reset it for you instead
+(same "Reset password" action they'd use for anyone).
+
 ## 5. Managing accounts
 
-No public sign-up. From the user menu (top right) → **Users** (admin only):
+No public sign-up. From the user menu (top right) → **Settings** → **Users**
+(admin only):
 
 - **Add user** — pick a username and a temporary password; they're forced
-  to change it on their first sign-in, same as the bootstrap account.
-- **Make admin / Remove admin**, **Disable / Enable**, **Reset password**,
-  **Delete** — self-explanatory; you can't demote, disable, or delete your
-  own account from here (avoids locking yourself out).
+  to change it on their first sign-in, same as the bootstrap account. A
+  full name (shown instead of the username everywhere in the UI — top
+  bar, Analytics — once set; supports emoji) and email address (needed
+  for the self-service "forgot password" flow above) are optional.
+- **Make admin / Remove admin**, **Disable / Enable**, **Edit profile**
+  (full name/email), **Reset password**, **Delete** — self-explanatory;
+  you can't demote, disable, or delete your own account from here (avoids
+  locking yourself out).
 
 Each account gets its own favorites (12 slots) and its own active AI
 provider choice — but see below, credentials are shared, not per-account.
 
 ## 6. Configuring AI providers
 
-From the user menu → **AI providers** (admin only). This is one shared set
-of credentials for the whole app — every account picks which of these
-they want active, but nobody enters their own key. Matches how mradio
-itself was configured (env vars / a single settings file), just editable
-from the app instead of only at container start.
+From the user menu → **Settings** → **AI providers** (admin only). This is
+one shared set of credentials for the whole app — every account picks
+which of these they want active, but nobody enters their own key. Matches
+how mradio itself was configured (env vars / a single settings file), just
+editable from the app instead of only at container start.
 
 ### opencode
 
@@ -170,8 +188,9 @@ auto-merges or pushes a new image anywhere by itself.
 3. Go to
    [build.nvidia.com/settings/api-keys](https://build.nvidia.com/settings/api-keys),
    click **Generate Key**, and copy the `nvapi-...` value.
-4. Paste it into mradio-web's **AI providers** page (user menu → AI
-   providers, admin only) in the API key field, then **Save**.
+4. Paste it into mradio-web's **AI providers** page (user menu →
+   Settings → AI providers, admin only) in the API key field, then
+   **Save**.
 
 **Fields:**
 
@@ -201,7 +220,7 @@ auto-merges or pushes a new image anywhere by itself.
    accepts connections from the network (not just `localhost`) and that
    any firewall allows the port.
 5. Paste the server URL and model name into mradio-web's **AI providers**
-   page (user menu → AI providers, admin only), then **Save**.
+   page (user menu → Settings → AI providers, admin only), then **Save**.
 
 **Fields:**
 
@@ -216,12 +235,65 @@ other things, or a dedicated instance just for this app, is entirely up
 to what you type in these two provider sections — nothing in the code
 assumes either way.
 
-## 7. Data and backups
+## 7. Configuring email (SMTP)
+
+From the user menu → **Settings** → **Email (SMTP)** (admin only). This is
+one shared outgoing-mail configuration for the whole app, used only to
+send self-service "forgot password" reset links (§4) — nobody's inbox is
+read, and there's no other use for it yet.
+
+### Using Gmail
+
+1. Turn on **2-Step Verification** on the Google account you want to send
+   from (Google Account → Security) — this is required before Google
+   will issue an app password, and is separate from your normal Gmail
+   password.
+2. Go to
+   [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords),
+   generate a new app password, and copy the 16-character value it
+   shows you (only shown once).
+3. On mradio-web's Email settings page: **Host** `smtp.gmail.com`,
+   **Port** `587` (both already the defaults), **Username** your Gmail
+   address, **Password** the app password from step 2 (not your real
+   Gmail password), **From address** your Gmail address again, **Use
+   STARTTLS** on (default). Save, then use the **Test** button to
+   confirm — it sends a real test email to the currently signed-in
+   admin's own account email (§5), so make sure that's set first.
+
+This deliberately uses a plain SMTP app password rather than a "Sign in
+with Google" OAuth flow — sending mail via Gmail's API needs a Google
+"restricted scope" that requires a formal security review once an app
+leaves testing mode, which is disproportionate for a self-hosted app
+with a handful of accounts. An app password is Google's own recommended
+path for exactly this situation, and avoids that review entirely.
+
+Any other SMTP provider (a self-hosted mail server, another mailbox
+provider, a transactional-email service's SMTP endpoint, etc.) works the
+same way — just fill in that provider's own host/port/username/password.
+
+**Fields:**
+
+- **Host** / **Port** / **Username** / **Password**: your SMTP provider's
+  connection details. Password is stored server side; the settings page
+  only ever shows it redacted after saving.
+- **From address**: the address reset emails appear to come from.
+- **Use STARTTLS**: on by default — nearly every modern SMTP provider
+  (including Gmail) expects this on port `587`.
+- **Public URL** (optional): almost never needed. The link inside a reset
+  email is normally built automatically from whichever domain the
+  listener used to reach the app (§3) — correct even if you run more than
+  one domain pointing at this instance. Only set this if that
+  auto-detection is ever visibly wrong (e.g. an unusual proxy setup that
+  doesn't forward the host header).
+
+## 8. Data and backups
 
 Everything persistent lives under the `/data` volume:
 
-- `mradio.db` — SQLite: accounts, sessions, and play history (§9).
+- `mradio.db` — SQLite: accounts, sessions, password-reset tokens, and
+  play history (§10).
 - `settings.json` — the AI provider credentials above.
+- `smtp_settings.json` — the outgoing-email credentials above.
 - `cache.json` — the shared AI liner-notes cache (author/track → trivia),
   shared across all accounts on purpose.
 - `users/<id>/stations.json`, `config.json` — each account's favorites and
@@ -231,7 +303,7 @@ Back up the whole `/data` directory (or the equivalent appdata folder on
 your platform, same as any other container) — it's the entire state of
 the app.
 
-## 8. Updating
+## 9. Updating
 
 ```bash
 git pull
@@ -240,12 +312,14 @@ docker compose up -d
 ```
 
 Rebuilds the image with the latest code and restarts the container. No
-database migration step exists yet — the schema is additive so far.
+separate database migration step to run — schema changes (including
+adding a column to an existing table) apply themselves automatically the
+first time the new code starts up.
 Rebuilding also refreshes the geolocation database used by Analytics
-(§9) — there's no separate scheduled update for it, since it's just a
+(§10) — there's no separate scheduled update for it, since it's just a
 downloaded data file, not a version pin to review.
 
-## 9. Analytics
+## 10. Analytics
 
 Admin-only page (user menu → Analytics) — live sessions, a world map of
 listeners, top stations/genres/listeners, and full play history. Nothing

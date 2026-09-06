@@ -5,7 +5,14 @@ import type { Language, TFunction } from '../i18n'
 import { displayName } from '../utils/format'
 import { ChevronDownIcon, MoonIcon, SunIcon } from './Icons'
 
-export type Page = 'dashboard' | 'settings' | 'users' | 'ai-settings' | 'analytics' | 'change-password'
+export type Page =
+  | 'dashboard'
+  | 'settings'
+  | 'users'
+  | 'ai-settings'
+  | 'email-settings'
+  | 'analytics'
+  | 'change-password'
 
 export function TopBar({
   theme,

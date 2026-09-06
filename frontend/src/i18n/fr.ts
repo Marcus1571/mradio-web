@@ -27,6 +27,8 @@ const fr: Dict = {
     usersDescription: 'Comptes, rôles et noms affichés.',
     aiTitle: "Fournisseurs d'IA",
     aiDescription: 'opencode, Ollama et points de terminaison compatibles OpenAI.',
+    emailTitle: 'E-mail (SMTP)',
+    emailDescription: 'Envoi des liens de réinitialisation de mot de passe.',
   },
   changePassword: {
     title: 'Changer le mot de passe',
@@ -98,6 +100,33 @@ const fr: Dict = {
     testSuccess: 'Fonctionne',
     testFailure: 'Échec',
     testError: "Impossible de contacter le serveur pour exécuter le test.",
+  },
+  emailSettings: {
+    title: 'E-mail (SMTP)',
+    intro:
+      "Identifiants pour l'envoi des e-mails de réinitialisation de mot de passe. Une configuration partagée pour " +
+      "toute l'application — définie une fois, utilisée automatiquement à chaque demande de lien de réinitialisation.",
+    kbNotePrefix: 'Voir',
+    kbNoteLink: '« Configuring email » dans le KB.md',
+    kbNoteSuffix: 'pour en savoir plus sur cette configuration.',
+    gmailGroup: 'Vous utilisez Gmail ?',
+    gmailStep1: "Activez la validation en deux étapes sur le compte Google depuis lequel vous voulez envoyer.",
+    gmailStep2: 'Ouvrez',
+    gmailStep3: "Collez le mot de passe d'application généré (16 caractères) dans le champ Mot de passe ci-dessous — pas votre mot de passe Gmail habituel. L'hôte/port sont smtp.gmail.com / 587, déjà les valeurs par défaut ici.",
+    gmailAppPasswordLink: "Mots de passe d'application Google",
+    genericGroup: 'Serveur SMTP',
+    fieldHost: 'Hôte',
+    fieldPort: 'Port',
+    fieldUsername: "Nom d'utilisateur",
+    fieldPassword: 'Mot de passe',
+    fieldFromAddress: 'Adresse d\'expédition',
+    fieldUseTls: 'Utiliser STARTTLS',
+    fieldPublicUrl: 'URL publique (optionnel)',
+    publicUrlHint:
+      "Généralement inutile — le lien dans les e-mails de réinitialisation est construit à partir du domaine " +
+      "utilisé par la personne pour accéder à l'application. Ne renseignez ceci que si cette détection venait à échouer.",
+    passwordNotSet: 'non défini',
+    errorFallback: "Impossible d'enregistrer les paramètres.",
   },
   stationBrowser: {
     title: 'Vos stations',

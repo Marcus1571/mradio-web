@@ -2,41 +2,12 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError, api } from '../api/client'
 import type { AISettings, AITestResult } from '../api/types'
+import { IDLE_TEST, KbNote, TestBadge } from '../components/AdminSettingsShared'
+import type { TestState } from '../components/AdminSettingsShared'
 import type { TFunction } from '../i18n'
 import '../styles/admin.css'
 
 type Provider = 'ollama' | 'openai' | 'opencode'
-
-const KB_URL = 'https://github.com/Marcus1571/mradio-web/blob/main/KB.md'
-
-function KbNote({ prefix, linkLabel, anchor, suffix }: { prefix: string; linkLabel: string; anchor: string; suffix: string }) {
-  return (
-    <p className="admin-note">
-      {prefix}{' '}
-      <a href={`${KB_URL}#${anchor}`} target="_blank" rel="noopener noreferrer">
-        {linkLabel}
-      </a>{' '}
-      {suffix}
-    </p>
-  )
-}
-
-type TestState = { status: 'idle' | 'testing' | 'success' | 'failure'; message?: string }
-
-const IDLE: TestState = { status: 'idle' }
-
-function TestBadge({ state, t }: { state: TestState; t: TFunction }) {
-  if (state.status === 'idle') return null
-  const pillClass =
-    state.status === 'success' ? 'pill admin' : state.status === 'failure' ? 'pill disabled' : 'pill'
-  const label =
-    state.status === 'testing'
-      ? t('aiSettings.testing')
-      : state.status === 'success'
-        ? t('aiSettings.testSuccess')
-        : state.message || t('aiSettings.testFailure')
-  return <span className={pillClass}>{label}</span>
-}
 
 export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunction }) {
   const [settings, setSettings] = useState<AISettings | null>(null)
@@ -44,9 +15,9 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
-  const [ollamaTest, setOllamaTest] = useState<TestState>(IDLE)
-  const [openaiTest, setOpenaiTest] = useState<TestState>(IDLE)
-  const [opencodeTest, setOpencodeTest] = useState<TestState>(IDLE)
+  const [ollamaTest, setOllamaTest] = useState<TestState>(IDLE_TEST)
+  const [openaiTest, setOpenaiTest] = useState<TestState>(IDLE_TEST)
+  const [opencodeTest, setOpencodeTest] = useState<TestState>(IDLE_TEST)
 
   useEffect(() => {
     api.get<AISettings>('/api/settings/ai').then(setSettings)

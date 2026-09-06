@@ -55,6 +55,25 @@ class ProviderSwitchRequest(BaseModel):
     name: str
 
 
+class SmtpSettingsUpdate(BaseModel):
+    host: str | None = None
+    port: int | None = None
+    username: str | None = None
+    password: str | None = None
+    from_address: str | None = None
+    use_tls: bool | None = None
+    public_url: str | None = None
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8)
+
+
 class AITestResult(BaseModel):
     ok: bool
     message: str

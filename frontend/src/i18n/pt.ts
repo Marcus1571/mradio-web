@@ -27,6 +27,8 @@ const pt: Dict = {
     usersDescription: 'Contas, funções e nomes de exibição.',
     aiTitle: 'Fornecedores de IA',
     aiDescription: 'opencode, Ollama e endpoints compatíveis com OpenAI.',
+    emailTitle: 'Email (SMTP)',
+    emailDescription: 'Envio de links de redefinição de palavra-passe.',
   },
   changePassword: {
     title: 'Alterar palavra-passe',
@@ -98,6 +100,33 @@ const pt: Dict = {
     testSuccess: 'A funcionar',
     testFailure: 'Falhou',
     testError: 'Não foi possível contactar o servidor para executar o teste.',
+  },
+  emailSettings: {
+    title: 'Email (SMTP)',
+    intro:
+      'Credenciais para o envio de emails de redefinição de palavra-passe. Uma configuração partilhada para toda ' +
+      'a aplicação — definida uma vez e usada automaticamente sempre que alguém pede um link de redefinição.',
+    kbNotePrefix: 'Consulte',
+    kbNoteLink: '"Configuring email" no KB.md',
+    kbNoteSuffix: 'para mais informações sobre esta configuração.',
+    gmailGroup: 'A usar o Gmail?',
+    gmailStep1: 'Ative a verificação em dois passos na conta Google a partir da qual quer enviar.',
+    gmailStep2: 'Abra',
+    gmailStep3: 'Cole a palavra-passe de aplicação gerada (16 caracteres) no campo Palavra-passe abaixo — não a sua palavra-passe normal do Gmail. O servidor/porta são smtp.gmail.com / 587, já os valores predefinidos aqui.',
+    gmailAppPasswordLink: 'Palavras-passe de aplicações Google',
+    genericGroup: 'Servidor SMTP',
+    fieldHost: 'Servidor',
+    fieldPort: 'Porta',
+    fieldUsername: 'Nome de utilizador',
+    fieldPassword: 'Palavra-passe',
+    fieldFromAddress: 'Endereço de remetente',
+    fieldUseTls: 'Usar STARTTLS',
+    fieldPublicUrl: 'URL pública (opcional)',
+    publicUrlHint:
+      'Geralmente não é necessário — o link nos emails de redefinição é construído a partir do domínio que cada ' +
+      'pessoa usou para aceder à aplicação. Defina isto apenas se essa deteção falhar alguma vez.',
+    passwordNotSet: 'não definida',
+    errorFallback: 'Não foi possível guardar as definições.',
   },
   stationBrowser: {
     title: 'As tuas estações',

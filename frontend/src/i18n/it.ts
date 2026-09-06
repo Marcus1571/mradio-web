@@ -27,6 +27,8 @@ const it: Dict = {
     usersDescription: 'Account, ruoli e nomi visualizzati.',
     aiTitle: 'Provider IA',
     aiDescription: 'opencode, Ollama ed endpoint compatibili con OpenAI.',
+    emailTitle: 'Email (SMTP)',
+    emailDescription: 'Invio dei link per reimpostare la password.',
   },
   changePassword: {
     title: 'Cambia password',
@@ -98,6 +100,33 @@ const it: Dict = {
     testSuccess: 'Funziona',
     testFailure: 'Fallito',
     testError: 'Impossibile contattare il server per eseguire la prova.',
+  },
+  emailSettings: {
+    title: 'Email (SMTP)',
+    intro:
+      "Credenziali per l'invio delle email di reimpostazione password. Una configurazione condivisa per tutta " +
+      "l'app — impostata una volta e usata automaticamente ogni volta che qualcuno richiede un link di reimpostazione.",
+    kbNotePrefix: 'Vedi',
+    kbNoteLink: '"Configuring email" nel KB.md',
+    kbNoteSuffix: 'per maggiori dettagli sulla configurazione.',
+    gmailGroup: 'Usi Gmail?',
+    gmailStep1: "Attiva la verifica in due passaggi sull'account Google da cui vuoi inviare.",
+    gmailStep2: 'Apri',
+    gmailStep3: "Incolla la password per le app generata (16 caratteri) nel campo Password qui sotto — non la tua normale password Gmail. Host/porta sono smtp.gmail.com / 587, già i valori predefiniti qui.",
+    gmailAppPasswordLink: 'Password per le app di Google',
+    genericGroup: 'Server SMTP',
+    fieldHost: 'Host',
+    fieldPort: 'Porta',
+    fieldUsername: 'Nome utente',
+    fieldPassword: 'Password',
+    fieldFromAddress: 'Indirizzo mittente',
+    fieldUseTls: 'Usa STARTTLS',
+    fieldPublicUrl: 'URL pubblico (opzionale)',
+    publicUrlHint:
+      "Di solito non serve — il link nelle email di reimpostazione è costruito dal dominio usato da chi ascolta " +
+      "per raggiungere l'app. Imposta questo solo se quel rilevamento dovesse mai sbagliare.",
+    passwordNotSet: 'non impostata',
+    errorFallback: 'Impossibile salvare le impostazioni.',
   },
   stationBrowser: {
     title: 'Le tue stazioni',

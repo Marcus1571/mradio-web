@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError } from '../api/client'
 import { useAuth } from '../hooks/useAuth'
+import { ForgotPasswordScreen } from './ForgotPasswordScreen'
 import '../styles/auth.css'
 
 export function LoginScreen() {
@@ -10,6 +11,7 @@ export function LoginScreen() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [mode, setMode] = useState<'login' | 'forgot'>('login')
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -22,6 +24,10 @@ export function LoginScreen() {
     } finally {
       setBusy(false)
     }
+  }
+
+  if (mode === 'forgot') {
+    return <ForgotPasswordScreen onBack={() => setMode('login')} />
   }
 
   return (
@@ -55,6 +61,9 @@ export function LoginScreen() {
         {error && <p className="auth-error">{error}</p>}
         <button className="auth-submit" type="submit" disabled={busy}>
           {busy ? 'Signing in…' : 'Sign in'}
+        </button>
+        <button className="auth-secondary" type="button" onClick={() => setMode('forgot')}>
+          Forgot password?
         </button>
       </form>
     </div>

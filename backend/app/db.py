@@ -59,6 +59,14 @@ CREATE TABLE IF NOT EXISTS trivia_history (
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_trivia_history_user ON trivia_history(user_id, id);
+CREATE TABLE IF NOT EXISTS password_resets (
+    token_hash TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
 """
 
 _db: aiosqlite.Connection | None = None

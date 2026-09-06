@@ -32,14 +32,17 @@ This page is just the overview.
   account, re-readable while something else plays.
 - **English, Spanish, Italian, Portuguese, and French** UI and AI liner
   notes — switch instantly from the top bar.
-- **Multiple accounts**, each with their own favorites and provider
-  choice — admin-created, no public sign-up, matching a small
-  self-hosted deployment for family/friends rather than a public service.
-  See [KB §5 — Managing accounts](KB.md#5-managing-accounts).
+- **Multiple accounts**, each with their own favorites, provider choice,
+  and an optional emoji-capable display name — admin-created, no public
+  sign-up, matching a small self-hosted deployment for family/friends
+  rather than a public service. Self-service "forgot password" email
+  reset is available once the admin sets up outgoing email. See
+  [KB §5 — Managing accounts](KB.md#5-managing-accounts) and
+  [KB §7 — Configuring email](KB.md#7-configuring-email-smtp).
 - **Admin analytics dashboard** — who's listening right now and from
   where (a live world map), plus full play history and stats on the most
   popular stations, genres, and listeners. See
-  [KB §9 — Analytics](KB.md#9-analytics).
+  [KB §10 — Analytics](KB.md#10-analytics).
 
 ## Stack
 
@@ -84,9 +87,10 @@ See [`KB.md`](KB.md) for the full deployment reference:
 - [KB §4 — First login](KB.md#4-first-login)
 - [KB §5 — Managing accounts](KB.md#5-managing-accounts)
 - [KB §6 — Configuring AI providers](KB.md#6-configuring-ai-providers)
-- [KB §7 — Data and backups](KB.md#7-data-and-backups)
-- [KB §8 — Updating](KB.md#8-updating)
-- [KB §9 — Analytics](KB.md#9-analytics)
+- [KB §7 — Configuring email (SMTP)](KB.md#7-configuring-email-smtp)
+- [KB §8 — Data and backups](KB.md#8-data-and-backups)
+- [KB §9 — Updating](KB.md#9-updating)
+- [KB §10 — Analytics](KB.md#10-analytics)
 
 ---
 

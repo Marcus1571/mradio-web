@@ -27,6 +27,8 @@ const es: Dict = {
     usersDescription: 'Cuentas, roles y nombres para mostrar.',
     aiTitle: 'Proveedores de IA',
     aiDescription: 'opencode, Ollama y endpoints compatibles con OpenAI.',
+    emailTitle: 'Correo (SMTP)',
+    emailDescription: 'Envío de enlaces para restablecer la contraseña.',
   },
   changePassword: {
     title: 'Cambiar contraseña',
@@ -98,6 +100,33 @@ const es: Dict = {
     testSuccess: 'Funciona',
     testFailure: 'Error',
     testError: 'No se pudo contactar con el servidor para ejecutar la prueba.',
+  },
+  emailSettings: {
+    title: 'Correo (SMTP)',
+    intro:
+      'Credenciales para enviar correos de restablecimiento de contraseña. Una configuración compartida para toda la ' +
+      'app — se define una vez y se usa automáticamente cuando alguien solicita un enlace de restablecimiento.',
+    kbNotePrefix: 'Consulte',
+    kbNoteLink: '"Configuring email" en KB.md',
+    kbNoteSuffix: 'para más información sobre la configuración.',
+    gmailGroup: '¿Usas Gmail?',
+    gmailStep1: 'Activa la verificación en dos pasos en la cuenta de Google desde la que quieras enviar.',
+    gmailStep2: 'Abre',
+    gmailStep3: 'Pega la contraseña de aplicación generada (16 caracteres) en el campo Contraseña de abajo — no tu contraseña normal de Gmail. El host/puerto son smtp.gmail.com / 587, ya son los valores predeterminados aquí.',
+    gmailAppPasswordLink: 'Contraseñas de aplicación de Google',
+    genericGroup: 'Servidor SMTP',
+    fieldHost: 'Host',
+    fieldPort: 'Puerto',
+    fieldUsername: 'Usuario',
+    fieldPassword: 'Contraseña',
+    fieldFromAddress: 'Dirección de origen',
+    fieldUseTls: 'Usar STARTTLS',
+    fieldPublicUrl: 'URL pública (opcional)',
+    publicUrlHint:
+      'Normalmente no hace falta — el enlace de los correos de restablecimiento se genera a partir del dominio que ' +
+      'usó cada persona para acceder a la app. Defina esto solo si esa detección falla alguna vez.',
+    passwordNotSet: 'no definida',
+    errorFallback: 'No se pudieron guardar los ajustes.',
   },
   stationBrowser: {
     title: 'Tus emisoras',

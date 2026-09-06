@@ -25,6 +25,8 @@ const en = {
     usersDescription: 'Accounts, roles, and display names.',
     aiTitle: 'AI providers',
     aiDescription: 'opencode, Ollama, and OpenAI-compatible endpoints.',
+    emailTitle: 'Email (SMTP)',
+    emailDescription: 'Forgot-password delivery.',
   },
   changePassword: {
     title: 'Change password',
@@ -96,6 +98,33 @@ const en = {
     testSuccess: 'Working',
     testFailure: 'Failed',
     testError: 'Could not reach the server to run the test.',
+  },
+  emailSettings: {
+    title: 'Email (SMTP)',
+    intro:
+      'Credentials for sending password-reset emails. One shared configuration for the whole app — ' +
+      'set once, used automatically whenever someone requests a reset link.',
+    kbNotePrefix: 'See',
+    kbNoteLink: '"Configuring email" in KB.md',
+    kbNoteSuffix: 'for more on setting this up.',
+    gmailGroup: 'Using Gmail?',
+    gmailStep1: 'Turn on 2-Step Verification on the Google account you want to send from.',
+    gmailStep2: 'Open',
+    gmailStep3: 'Paste the generated 16-character app password into the Password field below — not your normal Gmail password. Host/port are smtp.gmail.com / 587, already the defaults here.',
+    gmailAppPasswordLink: 'Google App Passwords',
+    genericGroup: 'SMTP server',
+    fieldHost: 'Host',
+    fieldPort: 'Port',
+    fieldUsername: 'Username',
+    fieldPassword: 'Password',
+    fieldFromAddress: 'From address',
+    fieldUseTls: 'Use STARTTLS',
+    fieldPublicUrl: 'Public URL (optional)',
+    publicUrlHint:
+      "Usually not needed — the link in reset emails is built from whichever domain a listener used to reach the app. " +
+      'Only set this if that detection ever gets it wrong.',
+    passwordNotSet: 'not set',
+    errorFallback: 'Could not save settings.',
   },
   stationBrowser: {
     title: 'Your stations',

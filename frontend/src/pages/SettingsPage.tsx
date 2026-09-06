@@ -6,6 +6,7 @@ export function SettingsPage({ onNavigate, t }: { onNavigate: (page: Page) => vo
   const sections: { page: Page; title: string; description: string }[] = [
     { page: 'users', title: t('settings.usersTitle'), description: t('settings.usersDescription') },
     { page: 'ai-settings', title: t('settings.aiTitle'), description: t('settings.aiDescription') },
+    { page: 'email-settings', title: t('settings.emailTitle'), description: t('settings.emailDescription') },
   ]
 
   return (
