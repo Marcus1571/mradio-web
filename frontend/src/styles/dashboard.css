@@ -280,11 +280,15 @@
   text-overflow: ellipsis;
 }
 
+.panel {
+  --logo-size: 4.5rem;
+}
+
 .station-logo {
   position: absolute;
   top: var(--space-md);
   right: var(--space-md);
-  height: 72px;
+  height: var(--logo-size);
   width: auto;
   max-width: 180px;
   object-fit: contain;
@@ -342,11 +346,18 @@
    flush with the header like the no-logo case — using margin-top here
    instead pushed the whole row down and left a visibly oversized gap
    above the metrics text, caught live) so the logo gets the same
-   padding below it as it has above/beside it. Confirmed against a
-   real rendered screenshot with boundingBox() measurements, not
-   computed by hand. */
+   padding below it as it has above/beside it. Derived from the same
+   --logo-size custom property .station-logo itself uses (defined on
+   .panel, shared by both) via calc(), not an unrelated standalone
+   pixel number, so the two stay in sync if the logo size ever changes
+   — the --logo-offset constant below is the one number calibrated
+   empirically (against a real rendered screenshot with boundingBox()
+   measurements, twice, since a first attempt over- then undershot),
+   representing "how much shorter .np-metrics's own vertical rhythm is
+   than the logo's footprint," not the padding itself. */
 .panel:has(.station-logo) .np-metrics {
-  padding-bottom: 38px;
+  --logo-offset: 2.5rem;
+  padding-bottom: calc(var(--logo-size) - var(--logo-offset));
 }
 
 .np-metric {
