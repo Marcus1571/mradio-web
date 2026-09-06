@@ -97,7 +97,13 @@ _OG_IMAGE_RE = re.compile(
 # search rather than serving a broken image. Deliberately small and
 # hand-checked — a last resort for well-known stations the directory
 # gets wrong, not a general substitute for it.
-_LOGO_OVERRIDES_BY_HOST: dict[str, str] = {}
+_LOGO_OVERRIDES_BY_HOST = {
+    # The site's own transparent logo, which nothing advertises: its
+    # og:image is the same wordmark flattened onto white, and the only
+    # pointer to this file is inside the site's JS bundle. Covers every
+    # 181.FM channel, which all share this hostname.
+    "listen.181fm.com": "https://www.181.fm/images/181_logo_300.webp",
+}
 
 _LOGO_OVERRIDES_BY_NAME = {
     "KUSC": "https://www.kusc.org/icons/cc/apple-touch-icon.png",
@@ -163,14 +169,47 @@ async def _is_usable_image(client: httpx.AsyncClient, url: str) -> bool:
     "https://radioparadise.com" homepage, and 181.FM's indexed logo
     .jpg is really a 404 page — both answer 200 to a HEAD request and
     would otherwise be cached and served as an <img> src that renders
-    as nothing at all."""
+    as nothing at all.
+
+    A missing content-type is not proof of a non-image, though:
+    181.FM's own logo is served with no content-type header at all, so
+    a header-only rule would reject a perfectly good file. When the
+    header is absent (but never when it says something non-image), fall
+    back to sniffing the first bytes for a known image signature."""
     try:
         head = await client.head(url, follow_redirects=True)
     except httpx.HTTPError:
         return False
     if head.status_code != 200:
         return False
-    return head.headers.get("content-type", "").lower().startswith("image/")
+
+    content_type = head.headers.get("content-type", "").strip().lower()
+    if content_type:
+        return content_type.startswith("image/")
+
+    try:
+        r = await client.get(
+            url, follow_redirects=True, headers={"Range": "bytes=0-31"}
+        )
+    except httpx.HTTPError:
+        return False
+    if r.status_code not in (200, 206):
+        return False
+    return _looks_like_image(r.content)
+
+
+def _looks_like_image(head_bytes: bytes) -> bool:
+    """Magic-number sniff for the formats a browser will render."""
+    return (
+        head_bytes.startswith(b"\x89PNG\r\n\x1a\n")          # PNG
+        or head_bytes.startswith(b"\xff\xd8\xff")             # JPEG
+        or head_bytes.startswith(b"GIF87a")                   # GIF
+        or head_bytes.startswith(b"GIF89a")
+        or head_bytes.startswith(b"\x00\x00\x01\x00")         # ICO
+        or head_bytes[:4] == b"RIFF" and head_bytes[8:12] == b"WEBP"
+        or head_bytes.lstrip()[:5].lower() == b"<svg "        # SVG
+        or b"<svg" in head_bytes[:200].lower()
+    )
 
 
 def _is_site_icon(url: str) -> bool:
