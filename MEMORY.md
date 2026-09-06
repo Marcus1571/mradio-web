@@ -2045,6 +2045,31 @@ Also sorts PNG/WebP/SVG ahead of JPEG, since only the former can carry
 transparency. Placed *after* Wikipedia but *before* falling back to a
 blurry favicon — a real logo beats a 16x16 icon.
 
+**Scan depth matters more than result count (0.5.44)**: WSM 650 AM
+still had no logo despite the SearXNG tier. Not a matching bug — the
+guard was fine. SearXNG returned **921 results** for that query and the
+code only examined `results[:20]`, which were almost entirely lucide/
+devicon icon-library entries; the correct logo sat just past that
+window. Widened to `[:120]`. Safe because the filtering (noise hosts,
+specific-word match) is pure string work — only the few survivors are
+ever fetched, so lookup time was unchanged (29s for the full
+catalogue). Coverage 102 → **103/104**.
+
+Worth remembering: when an aggregating search backend returns
+hundreds of results, "take the first N" is the wrong instinct — the
+head of the list is where the generic filler lives, and the useful
+result is often ranked below it.
+
+**Station curation**: user asked to replace "Country Radio (CZ)", the
+one Czech station among nine American ones in the country genre.
+Picked **America's Country** (`ais-sa2.cdnstream1.com/1976_128.mp3`)
+via Radio-Browser sorted by clickcount — deliberately not another
+181.FM/1.FM channel, since four and two of those respectively already
+sit in that genre. Verified before committing: 200, 128k, `icy-metaint`
+present, and a real `StreamTitle` observed on the wire ("Tim McGraw -
+7500 OBO") — **checking a stream plays is not enough; confirm it sends
+track titles, or liner notes silently never appear**.
+
 **A separate lesson about stale cache entries**: user reported
 "1.FM Hot Country" blank, which isn't in `stations.py` at all — it's
 the *ICY name* broadcast by `1.FM Absolute Country Hits`. Its cache

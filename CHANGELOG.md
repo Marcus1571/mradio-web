@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.5.44] - 2026-09-06
+
+Replaced Country Radio (CZ) with America's Country, a mainstream US
+country station — the country genre had one Czech outlier among nine
+American ones.
+
+Fixed WSM 650 AM showing no logo: the image-search results were being
+scanned too shallowly, and the first slots are routinely filled by
+icon-library noise, so a valid logo further down was never reached.
+103 of 104 stations now have a logo.
+
 ## [0.5.43] - 2026-09-06
 
 Station logos can now fall back to a self-hosted SearXNG instance,
