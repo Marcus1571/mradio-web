@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.1] - 2026-09-06
+
+Two UX fixes to the new Email settings page, found via real use: (1)
+clicking "Test" before "Save" now actually tests whatever is currently
+typed into the form, matching how the AI providers page's test buttons
+already work, instead of testing the last-saved (often empty)
+configuration and giving a misleading "SMTP is not configured" error;
+a genuinely-empty host now says "Enter a host and click Save before
+testing" instead. (2) Placeholder text (e.g. the suggested
+`smtp.gmail.com`) is now visibly greyed out and clearly distinguishable
+from real typed values, instead of rendering close enough to normal
+input text to look pre-filled.
+
 ## [0.5.0] - 2026-09-06
 
 Added self-service "forgot password": from the sign-in screen, request

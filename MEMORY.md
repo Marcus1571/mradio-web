@@ -946,6 +946,38 @@ new `ResetPasswordScreen`.
 Ships as the third card on the Settings hub (see entry above) — exactly
 where that feature was designed to accommodate it.
 
+**Follow-up UX fixes from real use (fixed 2026-09-06, 0.5.1):**
+- **"Test" before "Save" gave a misleading error.** `POST /api/settings/
+  smtp/test` originally only ever read the *persisted* settings
+  (`smtp_settings.load()`), so clicking Test right after filling the
+  form but before Save tested the old/empty saved config, not what was
+  visibly typed — producing "SMTP is not configured" even though the
+  form looked filled in. Root cause was an inconsistency with
+  `AISettingsPage.tsx`'s own test buttons, which already test
+  in-progress form values via an `overrides` param — the SMTP test
+  endpoint just hadn't been given the same capability. Fixed by
+  threading `overrides: SmtpSettingsUpdate` through `POST .../test` and
+  `email_sender.send_email()` (merged onto the saved config, same
+  `{**saved, **overrides}` pattern the AI test endpoint already uses),
+  and having `EmailSettingsPage.tsx`'s `sendTest()` pass the current
+  form state — same care as the AI page's password-field handling: only
+  include `password` in the override if `passwordInput` is non-empty,
+  so testing doesn't accidentally overwrite/blank out an already-saved
+  password for the test call. Also reworded the genuinely-empty-host
+  case from "SMTP is not configured." to "Enter a host and click Save
+  before testing." — actionable, not just descriptive.
+- **Placeholder text looked pre-filled.** No `::placeholder` style
+  existed anywhere in `admin.css` — placeholders (e.g. Host's suggested
+  `smtp.gmail.com`) rendered close enough to real input text to read as
+  already configured at a glance, which is exactly what confused this
+  into thinking Save wasn't needed. Fixed with an explicit
+  `.settings-row input::placeholder { color: var(--ink-3) }` (paired
+  with `color: var(--ink)` on real values) — reuses the same ink-scale
+  tokens already used everywhere else in this app for primary vs. muted
+  text, so it's consistent, not a one-off color. Benefits the AI
+  Providers page's fields too, not just Email settings, since they share
+  the same CSS rule.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
