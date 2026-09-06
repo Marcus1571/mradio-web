@@ -1509,7 +1509,7 @@ round-trip correctly through the existing API endpoints unchanged
 (no backend changes needed for this — pure frontend UI swap), and the
 modal renders correctly in both dark and light themes.
 
-## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30; bigger + divider redesign 0.5.31; layout bug fixed 0.5.32)
+## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30; bigger + divider redesign 0.5.31; layout bug fixed 0.5.32; equal padding fixed with real screenshots 0.5.33)
 
 The now-playing panel's station row had visible empty space next to the
 station name — the user asked whether a logo could be shown there, and
@@ -1683,6 +1683,50 @@ lines could theoretically run under the logo's corner on a narrow
 panel — a rare cosmetic edge case, not treated as worth adding
 complexity (e.g. shape-avoidance CSS) to prevent, consistent with this
 project's "don't engineer for hypotheticals" convention.
+
+**Still crashing into the metrics divider — switched to real Playwright
+screenshots instead of more hand arithmetic (0.5.33)**: user's own
+screenshot (two more red arrows) showed the logo's bottom edge still
+overlapping `.np-metrics`'s divider line, and the right-side padding
+visibly tighter than the top. Two straight rounds of "compute the pixel
+math by hand, ship it, it's wrong" was the signal to stop guessing.
+This session had no MCP screenshot tool, but **Chrome + `npx playwright`
+were both available locally** — used them directly: built a tiny
+static HTML fixture referencing the real `index.css`/`dashboard.css`
+source files with realistic content, screenshotted it with a headless
+Playwright script, and iterated against the actual rendered image
+instead of arithmetic. Immediately visible: the logo (a child of
+`.panel-head`) was still being positioned relative to `.panel-head`
+despite `.panel` also being `position: relative` — CSS always resolves
+to the *nearest* positioned ancestor, not just any ancestor up the
+tree, so giving `.panel` its own `position: relative` had no effect on
+an element still nested inside a *different* positioned box.
+
+**Fix, done properly this time**: moved the `<img class="station-logo">`
+out of `.panel-head` in the JSX to be a direct sibling of it, both
+still inside `section.panel` (which is now the actual positioning
+context) — this makes the logo's `top`/`right` genuinely independent
+of `.panel-head`'s own height, so `.panel-head` never needs any special
+sizing at all regardless of the logo's size. Added a `showLogo` boolean
+and a `panel-head-with-logo` class (via `.panel:has(.station-logo)` in
+CSS, or the JSX conditional class directly) purely to shorten the
+divider above the logo's column. Used Playwright's `boundingBox()` to
+read exact pixel gaps (not eyeballed): confirmed top=25px, right=25px
+before touching `.np-metrics` at all — then added `margin-top: 27px`
+to `.panel:has(.station-logo) .np-metrics` (pushing its divider down,
+rather than shrinking the logo back to fit an artificially tight gap)
+until bottom=26px too, all three within a rounding pixel of each
+other. Re-screenshotted the no-logo case and a very-long-station-name
+case afterward to confirm no regressions (compact header stays
+unchanged without a logo; a long name still truncates via the
+existing `text-overflow: ellipsis` and never runs under the logo's
+column). **Lesson for this project generally**: when a local browser +
+`npx playwright` are available, prefer an actual rendered screenshot
+loop over computing CSS box-model interactions by hand — two prior
+attempts at this exact feature shipped visible bugs from arithmetic
+that was individually correct but missed real interactions (padding
+consequences on `.np-body`, then a positioning-context mistake) that
+only became obvious once actually rendered.
 
 Right after [[mradio_web_status]]'s 0.5.16 pins/heatmap split shipped, the
 user noticed Pins mode was *still* using `radius={6 + count}` — the split
