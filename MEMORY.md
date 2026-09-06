@@ -455,6 +455,28 @@ claiming a visual check that didn't happen, consistent with
 [[feedback_verify_ui_visually]]'s spirit even when the ideal tool isn't
 on hand.
 
+**Status-dot bug, caught by the user immediately after shipping
+(0.5.26)**: opencode's dot showed grey with the "Enable" field left
+empty, even though opencode was genuinely enabled and working in
+production. Root cause: `oc_port()` in `providers.py` treats an empty
+`opencode` field as "enabled" too, as long as the `opencode` binary is
+present on the host (`oc_binary_present()`) — true in this Docker image
+since it's bundled, so opencode is enabled *by default* with no field
+set at all. The frontend dot didn't know this and used the raw
+`settings.opencode` text field as its proxy for "configured," which is
+wrong specifically for opencode (right for the other three, where the
+field really is the source of truth). Fixed by using the same
+already-existing `useProviders()` hook (`/api/enrich/providers`) the
+player's dropdown itself relies on, instead of re-deriving "configured"
+client-side from raw settings fields — one source of truth instead of
+two independent guesses at the same fact. **Lesson**: when a status
+indicator needs to answer "is this the same as elsewhere in the app,"
+prefer reusing the endpoint/hook that other UI already trusts for that
+exact fact, rather than re-implementing the derivation logic a second
+time from raw fields — the raw fields don't always tell the whole
+story (as here, where a binary-present fallback exists that no field
+value reveals).
+
 ## Hip-Hop genre added (2026-09-06, 0.5.21)
 
 Tenth curated genre, following the exact pattern of every prior genre

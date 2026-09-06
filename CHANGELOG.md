@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.26] - 2026-09-06
+
+Fixed the AI settings page's status dots: opencode showed grey even
+though it was actually enabled and working, because the dot was
+derived from the (often-empty) text field instead of the real
+configured state. All four dots now read from the same "enabled" data
+the player's dropdown uses.
+
 ## [0.5.25] - 2026-09-06
 
 Redesigned the AI providers settings page: each provider (ChatGPT,
