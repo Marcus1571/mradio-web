@@ -175,6 +175,7 @@
 }
 
 .panel {
+  position: relative;
   background: var(--paper-2);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -199,16 +200,16 @@
   border-bottom: 1px solid var(--line);
 }
 
-/* The logo is taller than the header row's text. Rather than growing
-   .panel-head to fit it (which would push .np-body down too, leaving
-   dead empty space between the divider and the actual now-playing
-   content below it — tried this first, confirmed wrong live), the
-   header's own box stays exactly as compact as before; only the
-   divider is shortened above the logo's column, and the logo is
-   absolutely positioned so it overhangs past .panel-head's bottom
-   edge into .np-body's space, overlapping content that sits below it
-   rather than pushing that content down. */
-.panel-head:has(.station-logo)::after {
+/* The logo is taller than the header row's text and needs equal
+   padding on its top/right/bottom sides against the panel edge and
+   the metrics divider below it — rather than growing .panel-head to
+   fit it (which pushes .np-body down too, leaving dead space between
+   the divider and the actual now-playing content — confirmed wrong
+   live), the logo is a sibling of .panel-head, positioned absolute
+   against .panel itself (see .station-logo), so its size is fully
+   independent of .panel-head's own compact height. Only the divider
+   is shortened above the logo's column. */
+.panel-head-with-logo::after {
   right: calc(var(--space-md) + 88px);
 }
 
@@ -281,9 +282,9 @@
 
 .station-logo {
   position: absolute;
-  top: var(--space-xs);
+  top: var(--space-md);
   right: var(--space-md);
-  height: 80px;
+  height: 72px;
   width: auto;
   max-width: 180px;
   object-fit: contain;
@@ -333,6 +334,16 @@
   padding: 0 0 var(--space-xs);
   border-bottom: 1px solid var(--line);
   margin-bottom: var(--space-sm);
+}
+
+/* A station logo overhangs from .panel-head into this space (see
+   .station-logo) — push the metrics row's own divider down so the
+   logo gets the same padding below it as it has above/beside it,
+   confirmed against a real rendered screenshot, not computed by hand
+   (an earlier attempt at this exact spacing, done by arithmetic alone,
+   shipped with the logo crashing into this very divider). */
+.panel:has(.station-logo) .np-metrics {
+  margin-top: 27px;
 }
 
 .np-metric {

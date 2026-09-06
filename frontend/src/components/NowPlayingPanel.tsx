@@ -128,16 +128,16 @@ export function NowPlayingPanel({
     setLogoFailed(false)
   }, [logo])
 
+  const showLogo = hasStation && !!logo && !logoFailed
+
   return (
     <section className="panel now-playing" aria-label={t('nowPlaying.ariaLabel')}>
-      <div className="panel-head">
+      {showLogo && <img className="station-logo" src={logo} alt="" onError={() => setLogoFailed(true)} />}
+      <div className={showLogo ? 'panel-head panel-head-with-logo' : 'panel-head'}>
         <div className="station-strip">
           {hasStation && <span className="live-dot" aria-hidden="true" />}
           <span className="station-name-strong">{hasStation ? state.stationName : t('nowPlaying.nothingPlaying')}</span>
         </div>
-        {hasStation && logo && !logoFailed && (
-          <img className="station-logo" src={logo} alt="" onError={() => setLogoFailed(true)} />
-        )}
       </div>
 
       <div className="np-body">
