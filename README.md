@@ -77,6 +77,31 @@ on it.
 - `frontend/` — Vite + React + TypeScript app
 - `Dockerfile` — multi-stage build producing one image/one port
 
+## Before you install
+
+Three things worth knowing up front — all covered in depth in the KB,
+but they're the ones that catch people out:
+
+- **It needs HTTPS, so plan for a reverse proxy.** Session cookies are
+  set `Secure`, so signing in over plain `http://server-ip:8000` won't
+  work — you'll bounce back to the login screen with no obvious reason.
+  Any reverse proxy with a certificate is fine;
+  [KB §3](KB.md#3-reverse-proxy-nginx-proxy-manager) walks through
+  Nginx Proxy Manager and the two non-default settings the WebSocket
+  and audio stream need. (`http://localhost` during local development
+  is the one exception browsers allow.)
+- **AI liner notes are optional, and one provider is unofficial.**
+  OpenCode is bundled and works out of the box; Ollama and any
+  OpenAI-compatible endpoint just need a URL or key. The ChatGPT option
+  signs in through the Codex CLI's device flow, which is not a
+  documented API and could stop working if OpenAI changes it — see
+  [KB §6](KB.md#6-configuring-ai-providers) before enabling that one.
+  The app works fine with no AI provider at all.
+- **It's built for a household, not the public internet.** Accounts are
+  admin-created (no sign-up), AI credentials are shared across everyone
+  on the instance, and storage is SQLite plus JSON files. That suits a
+  homelab serving family and friends; it isn't a multi-tenant service.
+
 ## Getting started
 
 See [`KB.md`](KB.md) for the full deployment reference:
