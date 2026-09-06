@@ -978,6 +978,37 @@ where that feature was designed to accommodate it.
   Providers page's fields too, not just Email settings, since they share
   the same CSS rule.
 
+**Real follow-up (fixed 2026-09-06, 0.5.2)**: the placeholder fix above
+appeared "not to work" for the user even after the 0.5.1 deploy —
+investigated thoroughly rather than assuming user error: confirmed via
+direct `curl` against the live LT container that the deployed CSS bundle
+genuinely contained the fix, and via a fresh Playwright render + pixel
+sampling (darkest pixel in the placeholder text vs. real text: `rgb(118,
+123, 130)` vs `rgb(24, 29, 38)` — a large, real, correctly-applied
+contrast gap) that the fix works correctly when actually loaded. Root
+cause was somewhere else entirely: `backend/app/main.py`'s static file
+serving set **no `Cache-Control` header at all** on any file, including
+`index.html` — the one unhashed file that tells the browser which
+hashed `/assets/*.js`/`*.css` filenames to load. A browser that had
+already loaded the app before a deploy could keep serving `index.html`
+from its own heuristic cache indefinitely, silently pinning that browser
+to whichever old JS/CSS bundle `index.html` referenced at load time —
+explaining exactly this "the fix isn't visible even though it's
+deployed" symptom, and explaining why a full test suite passing
+end-to-end (this session verified the actual 0.5.1 fix worked, correctly)
+still didn't catch it: the bug was in cache *policy*, not in the fixed
+code itself. Fixed with a small `_CacheAwareStaticFiles(StaticFiles)`
+subclass overriding `file_response()`: `index.html` (and the `/reset-
+password` route, which also serves it) gets `Cache-Control: no-cache`
+(always revalidated), while genuinely content-hashed asset files get
+`public, max-age=31536000, immutable` (safe to cache forever, since any
+content change produces a new filename) — the standard, correct caching
+strategy for Vite-style hashed-asset builds, and one this app should
+have had from its very first release rather than leaving cache behavior
+to browser heuristics. Verified via `curl -sI` against both a hashed
+asset and `index.html`/`/reset-password` directly, confirming the
+expected header on each.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

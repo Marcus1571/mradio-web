@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.2] - 2026-09-06
+
+Fixed the previous release's placeholder-text fix appearing not to work
+for some users — it genuinely was deployed correctly (verified directly
+on the server), but `index.html` had no cache-control header, so a
+browser that had already loaded the page before the update could keep
+serving it from cache indefinitely, along with whatever CSS/JS it
+referenced at the time. `index.html` now always revalidates
+(`Cache-Control: no-cache`), while the actual hashed asset files
+(`/assets/*.js`, `*.css`) — which get a new filename on every content
+change — are now cached aggressively (`immutable, max-age=31536000`),
+so future deploys are both guaranteed-fresh and faster to load.
+
 ## [0.5.1] - 2026-09-06
 
 Two UX fixes to the new Email settings page, found via real use: (1)
