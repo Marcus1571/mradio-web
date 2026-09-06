@@ -94,6 +94,10 @@
   vertical-align: middle;
 }
 
+.admin-table td:first-child {
+  min-width: 12rem;
+}
+
 .admin-table tr:last-child td {
   border-bottom: none;
 }
