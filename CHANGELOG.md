@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.9] - 2026-09-06
+
+Follow-up to 0.3.8: the manifest covered Android/Chrome install, but
+iOS Safari's "Add to Home Screen" doesn't fully honor the web app
+manifest — it needs its own meta tags to launch as a standalone app
+(instead of just opening Safari) and to show a clean name under the
+icon. Added `apple-mobile-web-app-capable`,
+`apple-mobile-web-app-status-bar-style`, and
+`apple-mobile-web-app-title` to `index.html`. The 180×180
+`apple-touch-icon.png` added in 0.3.8 was already the correct size for
+this — no new icon assets needed.
+
 ## [0.3.8] - 2026-09-06
 
 Fixed "Install as web app" (Edge/Chrome) using a generic icon instead

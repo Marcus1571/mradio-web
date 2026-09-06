@@ -723,6 +723,19 @@ Edge/Chrome's actual install flow uses — confirming `errors: []` and
 correct resolution of all three icon sizes/purposes, `display:
 standalone`, and both colors.
 
+**Follow-up, iOS (fixed 2026-09-06, 0.3.9)**: 0.3.8's manifest fixed
+Android/Chrome install, but the user specifically asked to confirm
+iOS was covered too — it wasn't, fully. iOS Safari doesn't rely on the
+manifest the way Chrome does: it needs its own
+`apple-mobile-web-app-capable` meta tag to launch standalone (without
+it, "Add to Home Screen" creates an icon that just opens Safari
+instead of running full-screen), `apple-mobile-web-app-status-bar-style`
+for the status bar, and `apple-mobile-web-app-title` for a clean name
+under the icon (otherwise iOS uses the `<title>` tag verbatim, em-dash
+and all). The `apple-touch-icon.png` already shipped in 0.3.8 was
+already the correct 180×180 size Apple expects — confirmed via `file`/
+`sips`, no new icon needed, only the three meta tags in `index.html`.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
