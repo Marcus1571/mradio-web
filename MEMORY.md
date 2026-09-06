@@ -1152,6 +1152,36 @@ round-trip correctly through the existing API endpoints unchanged
 (no backend changes needed for this — pure frontend UI swap), and the
 modal renders correctly in both dark and light themes.
 
+## Pins mode kept the old size-by-count encoding after the heatmap split (fixed 2026-09-06, 0.5.17)
+
+Right after [[mradio_web_status]]'s 0.5.16 pins/heatmap split shipped, the
+user noticed Pins mode was *still* using `radius={6 + count}` — the split
+correctly gave heat-intensity its own dedicated view, but nobody had
+actually removed the same encoding from the pins view it was split out of,
+so pins were still silently double-jobbing. Fixed by switching from
+`CircleMarker` (a Leaflet vector shape with a numeric radius prop) to a
+plain `Marker` using a custom `L.divIcon` — the icon's `html` is literally
+`<span class="live-dot" />`, i.e. it reuses the *exact* pulsing green dot
+markup/CSS/keyframe animation from the player's live-listener indicator
+(`.live-dot` + `.live-dot::after` + `@keyframes pulse-ring` in
+`dashboard.css`), per the user's own suggestion ("why don't you use that
+strange blinking green dot"), rather than inventing a new fixed-size
+marker style from scratch. Required explicitly importing `dashboard.css`
+into `AnalyticsPage.tsx` too (previously only `admin.css`/`analytics.css`)
+— technically already present in the single Vite bundle by the time this
+page is reachable (only navigable from within `Dashboard.tsx`'s own tree),
+but importing it directly here documents the actual dependency instead of
+relying on incidental load order from an unrelated page. New
+`.map-live-dot-icon { background: none; border: none }` rule strips
+Leaflet's default `.leaflet-div-icon` white-box-with-border styling, which
+would otherwise show behind the transparent dot. `count` is no longer used
+for anything in Pins mode — it still exists on the `Pin` type and still
+drives Heatmap mode's intensity normalization, which is exactly where that
+signal belongs now. Verified live via Playwright: seeded 5 geographically
+distinct history rows, confirmed every rendered marker measures exactly
+8×8px regardless of underlying session count, and that the tooltip
+(location label) still works on hover.
+
 ## Listener map pins/heatmap toggle (added 2026-09-06, 0.5.16)
 
 The original listener map (`AnalyticsMap` in `AnalyticsPage.tsx`) drew one

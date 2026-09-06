@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.17] - 2026-09-06
+
+Pins mode on the listener map no longer scales marker size by session
+count — it now uses a fixed-size marker matching the pulsing green dot
+from the player's live-listener indicator. Size-based intensity now
+lives only in Heatmap mode, where it belongs.
+
 ## [0.5.16] - 2026-09-06
 
 Split the Analytics listener map's dual pin-size/heat-intensity encoding
