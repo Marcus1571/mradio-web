@@ -1509,7 +1509,7 @@ round-trip correctly through the existing API endpoints unchanged
 (no backend changes needed for this — pure frontend UI swap), and the
 modal renders correctly in both dark and light themes.
 
-## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30; bigger + divider redesign 0.5.31; layout bug fixed 0.5.32; equal padding fixed with real screenshots 0.5.33; margin-vs-padding bug fixed 0.5.34)
+## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30; bigger + divider redesign 0.5.31; layout bug fixed 0.5.32; equal padding fixed with real screenshots 0.5.33; margin-vs-padding bug fixed 0.5.34; tokenized + rebalanced 0.5.35)
 
 The now-playing panel's station row had visible empty space next to the
 station name — the user asked whether a logo could be shown there, and
@@ -1758,6 +1758,41 @@ whole including its content start point; padding only grows space
 "push this element's edge down without moving its content" style
 fixes, worth remembering by name next time similar spacing logic comes
 up in this codebase.
+
+**User caught the actual root cause behind all this drift: hardcoded
+pixels instead of relative tokens (0.5.35)**: after 0.5.34, the bottom
+gap around the logo was still visibly bigger than the top/right gaps —
+but this time the user didn't just report the symptom, they correctly
+diagnosed the mechanism: "adapt the padding... I say this in case you
+coded the padding in absolute pixels instead of relative sizes." Right
+call — `.station-logo`'s `height: 72px` and `.np-metrics`'s
+`padding-bottom: 38px` were both bare pixel numbers with no declared
+relationship to each other or to this app's `--space-*` token scale,
+which is exactly why three straight tuning passes needed a fresh
+guess-and-recheck cycle each time rather than one value driving the
+other. Fixed properly: `--logo-size: 4.5rem` is now a single custom
+property defined once on `.panel` (visible to descendants), consumed
+directly by `.station-logo`'s `height` AND by `.np-metrics`'s
+`padding-bottom` via `calc(var(--logo-size) - var(--logo-offset))` — a
+genuine shared source of truth instead of two independently-guessed
+numbers that happened to work together by luck. `--logo-offset`
+(2.5rem) is the one number still calibrated by eye/measurement rather
+than derived — that's fine and expected, since it encodes "how much
+tighter this row's natural rhythm is than the logo's footprint," not
+an arbitrary duplicate of the logo's own size. Re-verified the actual
+gap numbers via the same Playwright `boundingBox()` loop, this time
+deliberately undershooting the "technically equal" 25px from 0.5.34 in
+favor of a visibly tighter ~19px, since the user's ask was explicitly
+"reduce," not "make it exactly symmetrical again" — a case where the
+measured-equal answer and the visually-good answer aren't quite the
+same thing, and the user's eye is the actual spec here, not the
+numbers. **Lesson, stacked on 0.5.33/0.5.34's**: three consecutive
+tuning misses on the same feature is a strong signal to ask "is there
+an underlying reason this keeps needing correction," not just "what's
+the next number to try" — in this case the user spotted it before I
+did, and the fix (a shared token) is also what makes any *future*
+resize of the logo automatically keep its own padding in proportion,
+which none of the previous three fixes would have done.
 
 Right after [[mradio_web_status]]'s 0.5.16 pins/heatmap split shipped, the
 user noticed Pins mode was *still* using `radius={6 + count}` — the split

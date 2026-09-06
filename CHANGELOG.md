@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.35] - 2026-09-06
+
+Reduced the gap below the metrics divider when a station logo is
+showing — it was noticeably bigger than the top/right padding around
+the logo. Also switched the logo's size and this spacing from
+hardcoded pixel values to a single shared, relatively-sized token, so
+they can't drift out of sync with each other again.
+
 ## [0.5.34] - 2026-09-06
 
 Fixed an oversized gap above the playback metrics that 0.5.33
