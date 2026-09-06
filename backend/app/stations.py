@@ -49,7 +49,7 @@ DEFAULT_STATIONS = [
     {"name": "Swiss Jazz", "url": "http://stream.srg-ssr.ch/m/rsj/mp3_128",
      "genre": "jazz"},
     {"name": "Radio Paradise",
-     "url": "https://stream-uk1.radioparadise.com/mp3-128", "genre": "other"},
+     "url": "https://stream.radioparadise.com/mp3-320", "genre": "other"},
     {"name": "Jazz Radio Blues",
      "url": "http://jazzblues.ice.infomaniak.ch/jazzblues-high.mp3",
      "genre": "blues"},

@@ -49,6 +49,7 @@ coincidental collisions. A station that fails all of this ends up with
 no logo rather than risk a wrong one."""
 
 import re
+import urllib.parse
 
 import httpx
 
@@ -59,6 +60,26 @@ _TIMEOUT = 5
 _PIPE_SUFFIX_RE = re.compile(r"\s*\|.*$")
 _TRAILING_PAREN_RE = re.compile(r"\s*\([^)]*\)\s*$")
 _WORD_RE = re.compile(r"[a-z0-9]{3,}")
+
+# Stations whose real logo Radio-Browser simply doesn't have. Keyed by
+# the stream URL's host where that identifies the broadcaster (1.FM
+# runs dozens of channels off one hostname, so a single entry covers
+# them all), and by curated station name where the host is a shared
+# CDN that says nothing about who's broadcasting (KUSC streams from
+# streamtheworld, as do many unrelated stations).
+#
+# Checked before the Radio-Browser lookup but still HEAD-verified like
+# any other candidate, so a rotted URL here degrades to the normal
+# search rather than serving a broken image. Deliberately small and
+# hand-checked — a last resort for well-known stations the directory
+# gets wrong, not a general substitute for it.
+_LOGO_OVERRIDES_BY_HOST = {
+    "strm112.1.fm": "https://i.imgur.com/i2EdxRl.png",
+}
+
+_LOGO_OVERRIDES_BY_NAME = {
+    "KUSC": "https://www.kusc.org/icons/cc/apple-touch-icon.png",
+}
 
 
 def _name_variants(name: str) -> list[tuple[str, bool]]:
@@ -110,32 +131,65 @@ def _distinguishing_words(name: str) -> set[str]:
     return set(_WORD_RE.findall(name.lower()))
 
 
+async def _is_usable_image(client: httpx.AsyncClient, url: str) -> bool:
+    """Radio-Browser is community-maintained and can hold stale or
+    outright wrong favicon URLs, so verify before trusting one — the
+    same verify-before-return pattern wiki.py uses for article URLs.
+
+    The content-type check matters as much as the status code:
+    confirmed live that Radio Paradise's indexed "favicon" is a bare
+    "https://radioparadise.com" homepage, and 181.FM's indexed logo
+    .jpg is really a 404 page — both answer 200 to a HEAD request and
+    would otherwise be cached and served as an <img> src that renders
+    as nothing at all."""
+    try:
+        head = await client.head(url, follow_redirects=True)
+    except httpx.HTTPError:
+        return False
+    if head.status_code != 200:
+        return False
+    return head.headers.get("content-type", "").lower().startswith("image/")
+
+
+def _is_favicon(url: str) -> bool:
+    """A 16x16-ish site icon rather than a real station logo. These do
+    render, but upscaled into the now-playing panel they look visibly
+    blurry, so they're only worth using when nothing better exists."""
+    return url.rsplit("?", 1)[0].lower().endswith((".ico", "favicon.png"))
+
+
 async def _first_working_favicon(
     client: httpx.AsyncClient, results: list[dict], require_words: set[str] | None = None,
 ) -> str | None:
+    """Best usable image across the results, preferring a real logo
+    over a tiny favicon — several stations (181.FM, KJazz) are indexed
+    with both, and taking whichever came first meant serving the
+    blurry one."""
+    fallback: str | None = None
     for r in results:
         favicon = r.get("favicon")
         if not favicon:
             continue
         if require_words and not (_distinguishing_words(r.get("name", "")) & require_words):
             continue
-        # Radio-Browser is community-maintained and can hold stale
-        # favicon URLs (confirmed live: a station's own site had
-        # reorganized its paths since being indexed) — a HEAD check
-        # before caching stops a permanently-broken image from being
-        # served on every future play, same verification wiki.py already
-        # does for article URLs before returning one.
-        try:
-            head = await client.head(favicon, follow_redirects=True)
-            if head.status_code == 200:
-                return favicon
-        except httpx.HTTPError:
+        if not await _is_usable_image(client, favicon):
             continue
-    return None
+        if not _is_favicon(favicon):
+            return favicon
+        if fallback is None:
+            fallback = favicon
+    return fallback
 
 
 async def find_logo(stream_url: str, station_name: str) -> str | None:
     async with httpx.AsyncClient(timeout=_TIMEOUT, headers=_HEADERS) as client:
+        override = _LOGO_OVERRIDES_BY_NAME.get(station_name)
+        if override is None:
+            host = urllib.parse.urlparse(stream_url).hostname or ""
+            override = _LOGO_OVERRIDES_BY_HOST.get(host.lower())
+        if override and await _is_usable_image(client, override):
+            return override
+
         try:
             r = await client.get(f"{_API_BASE}/stations/byurl", params={"url": stream_url})
             if r.status_code == 200:
