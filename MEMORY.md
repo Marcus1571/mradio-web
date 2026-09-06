@@ -801,6 +801,28 @@ Analytics tables; then cleared `full_name` via "Edit profile" and
 confirmed the Users table and TopBar correctly fall back to showing the
 bare username again.
 
+**Follow-up bug, found by user testing a real longer name (fixed
+2026-09-06, 0.4.2)**: "Marco 🎧" alone didn't surface it, but a longer
+name with two flag emoji ("Marco Dal Moro 🇮🇹🇺🇸") broke two layouts —
+(1) the Users table's first column had no `min-width`, so the name
+wrapped token-by-token across 3-4 lines, crushing the row; (2) the
+TopBar's `.user-chip` is a fully-round pill (`border-radius: 999px`,
+sized off its own content height) with no size cap on `.user-name` and
+no explicit size on the adjacent `ChevronDownIcon` `<svg>` (which had
+no default size rule anywhere, previously "getting away with it" only
+because flexbox was silently shrinking it) — a taller line-height from
+some browsers' flag-emoji rendering made the chevron balloon to fill
+available space, and the whole round chip ballooned into a giant circle
+to match. Fixed with `.admin-table td:first-child { min-width: 12rem }`
+(table cell), and on the chip: `.user-name` gained a plain `max-width`
++ `white-space: nowrap` + `text-overflow: ellipsis` (not `flex: 1 1
+auto`, which was tried first and made it worse — a growable flex-basis
+inside a shape-locked round pill has nothing to constrain it against),
+and `.user-chip svg` gained an explicit `14px` size. Verified against
+the exact reported case plus a synthetic worse one (very long name, 3
+flags) to confirm the ellipsis path actually engages, not just the
+common case.
+
 **Not yet done**: self-service "forgot password" via emailed reset
 link, and admin-configurable SMTP settings (the second half of the
 original request) — deliberately shipped separately since it's a much

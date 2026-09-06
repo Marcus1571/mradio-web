@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.2] - 2026-09-06
+
+Fixed two layout bugs surfaced by longer display names with multiple
+flag emoji (e.g. "Marco Dal Moro 🇮🇹🇺🇸"): the Users table's name column
+had no minimum width and wrapped token-by-token; the top-bar user chip
+had no size limit on the name and no explicit size on its chevron icon,
+so a name that pushed the chip's line-height taller made the fully-round
+pill balloon into a giant circle. Both now cap the name (ellipsis
+overflow in the chip, natural wrap with a sane minimum width in the
+table) and pin the chevron icon to a fixed size.
+
 ## [0.4.1] - 2026-09-06
 
 Replaced the growing flat list of admin dropdown entries ("Users", "AI
