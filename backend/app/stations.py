@@ -53,7 +53,7 @@ DEFAULT_STATIONS = [
      "url": "http://jazzblues.ice.infomaniak.ch/jazzblues-high.mp3",
      "genre": "blues"},
     {"name": "Heart 70s (UK)", "url": "https://media-ssl.musicradio.com/Heart70sMP3",
-     "genre": "other"},
+     "genre": "pop"},
     {"name": "181.FM True Blues",
      "url": "http://listen.181fm.com/181-blues_128k.mp3", "genre": "blues"},
     {"name": "Jazz Lounge", "url": "http://eu8.fastcast4u.com:5068/", "genre": "chill"},
