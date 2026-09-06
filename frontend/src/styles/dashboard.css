@@ -210,7 +210,7 @@
    independent of .panel-head's own compact height. Only the divider
    is shortened above the logo's column. */
 .panel-head-with-logo::after {
-  right: calc(var(--space-sm) + var(--logo-size) + var(--space-sm));
+  right: calc(var(--logo-inset) + var(--logo-size) + var(--space-sm));
 }
 
 .panel-title {
@@ -281,19 +281,27 @@
 }
 
 .panel {
-  --logo-size: 3rem;
+  --logo-size: 4.4rem;
+  --logo-inset: var(--space-xs);
 }
 
+/* On narrow screens the metrics text wraps to two lines, so that band
+   grows taller than the logo and the "even margins all round" target
+   stops being achievable — the logo would need to be huge to reach the
+   lower divider, which is the opposite of what small screens want.
+   Shrink it instead: it costs the station name less header width
+   (which truncates early at this size), and the extra band height
+   below it reads as ordinary breathing room rather than a gap. */
 @media (max-width: 480px) {
   .panel {
-    --logo-size: 2.25rem;
+    --logo-size: 2.75rem;
   }
 }
 
 .station-logo {
   position: absolute;
-  top: var(--space-sm);
-  right: var(--space-sm);
+  top: var(--logo-inset);
+  right: var(--logo-inset);
   height: var(--logo-size);
   width: auto;
   max-width: 140px;
@@ -346,24 +354,17 @@
   margin-bottom: var(--space-sm);
 }
 
-/* A station logo overhangs from .panel-head into this space (see
-   .station-logo) — extend the gap between the metrics text and its
-   own divider (not the metrics row's position itself, which must stay
-   flush with the header like the no-logo case — using margin-top here
-   instead pushed the whole row down and left a visibly oversized gap
-   above the metrics text, caught live) so the logo gets the same
-   padding below it as it has above/beside it. Derived from the same
-   --logo-size custom property .station-logo itself uses (defined on
-   .panel, shared by both) via calc(), not an unrelated standalone
-   pixel number, so the two stay in sync if the logo size ever changes
-   — the --logo-offset constant below is the one number calibrated
-   empirically (against a real rendered screenshot with boundingBox()
-   measurements, twice, since a first attempt over- then undershot),
-   representing "how much shorter .np-metrics's own vertical rhythm is
-   than the logo's footprint," not the padding itself. */
+/* A station logo overhangs .panel-head into this band (see
+   .station-logo). Earlier passes made room by piling padding-bottom
+   onto .np-metrics, which cleared the logo but left the metrics text
+   stuck at the top of the band with all the slack below it — visibly
+   off-centre between the two dividers. The band now keeps its natural
+   height and simply centres its text, so the metadata sits halfway
+   between the header underline and its own; the logo's bottom margin
+   is set by --logo-size instead (sized so the logo lands --logo-inset
+   above this band's underline, matching its top/right insets). */
 .panel:has(.station-logo) .np-metrics {
-  --logo-offset: 3rem;
-  padding-bottom: max(0px, calc(var(--logo-size) - var(--logo-offset)));
+  align-content: center;
 }
 
 .np-metric {
