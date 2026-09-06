@@ -1152,6 +1152,45 @@ round-trip correctly through the existing API endpoints unchanged
 (no backend changes needed for this — pure frontend UI swap), and the
 modal renders correctly in both dark and light themes.
 
+## Listener map pins/heatmap toggle (added 2026-09-06, 0.5.16)
+
+The original listener map (`AnalyticsMap` in `AnalyticsPage.tsx`) drew one
+`CircleMarker` per unique city with `radius={6 + count}` — the user pointed
+out (via a Tracearr screenshot comparison) this was quietly doing two jobs
+at once: a location pin map AND a crude heat-intensity encoding (bigger
+circle = more sessions), which muddies both readings compared to having
+each as its own dedicated view. Fixed by adding a `MapMode = 'pins' |
+'heatmap'` toggle (two buttons reusing the existing `.since-btn` style
+already used by the stats since-picker — kept UI patterns consistent
+rather than inventing a new switch component) plus a real heat layer via
+the `leaflet.heat` plugin (new dependency + `@types/leaflet.heat`, the
+only addition to this app's near-zero-dependency stance besides
+`leaflet`/`react-leaflet` themselves — no reasonable hand-rolled
+substitute for either). `HeatLayer` is a small function component that
+calls `useMap()` (from `react-leaflet`) and imperatively adds/removes an
+`L.heatLayer(...)` in a `useEffect`, since `leaflet.heat` has no React
+wrapper of its own — this is the standard integration pattern for
+non-React Leaflet plugins inside react-leaflet. Heat point intensity is
+`count / max(counts)`, i.e. normalized against the busiest location in
+the current pin set, not an absolute scale — matches how `CircleMarker`
+radius already worked. **`minOpacity: 0.4`** was necessary — without it,
+low-count outlier locations (e.g. a single session from Tokyo, against a
+6-session European cluster) rendered essentially invisible at default
+opacity, defeating the point of a map showing *where* listeners are, not
+just *where the most* are. Gradient customized away from the plugin's
+default blue→cyan→lime→yellow→red to a warm amber→orange→red-orange scale
+(`{0.2: '#fde68a', 0.5: '#fb923c', 0.8: '#ea580c', 1: '#c2410c'}`) to
+visually match the Tracearr reference screenshot's heat-map look, which is
+what the user was pointing to as the desired outcome. Pins mode is the
+default on page load (unchanged from before this feature — no surprise
+behavior change for existing users). Verified live via Playwright with
+seeded `play_history` rows (a 6-point European cluster + 3 geographically
+isolated points in New York/Sydney/Tokyo) to produce a visually
+meaningful heat blob and confirm outlier visibility — confirmed clean
+layer teardown when switching modes back and forth (no stale canvas or
+duplicate markers), toggle active-state styling, and i18n keys
+(`analytics.mapPins`/`analytics.mapHeatmap`) across all 13 languages.
+
 ## Analytics live table's status-dot column crowding the rest (fixed 2026-09-06, 0.5.7)
 
 Direct fallout from the earlier "long display name" table fix (0.4.2's

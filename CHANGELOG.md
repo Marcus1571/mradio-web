@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.16] - 2026-09-06
+
+Split the Analytics listener map's dual pin-size/heat-intensity encoding
+into two dedicated views: a Pins mode (unchanged individual markers) and
+a new Heatmap mode (via `leaflet.heat`), switchable with an instant
+top-of-map toggle.
+
 ## [0.5.15] - 2026-09-06
 
 Added Japanese as a thirteenth UI/AI-liner-notes language, alongside
