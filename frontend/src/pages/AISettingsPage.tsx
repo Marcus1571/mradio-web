@@ -38,7 +38,7 @@ function TestBadge({ state, t }: { state: TestState; t: TFunction }) {
   return <span className={pillClass}>{label}</span>
 }
 
-export function AISettingsPage({ t }: { t: TFunction }) {
+export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunction }) {
   const [settings, setSettings] = useState<AISettings | null>(null)
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [busy, setBusy] = useState(false)
@@ -95,6 +95,11 @@ export function AISettingsPage({ t }: { t: TFunction }) {
 
   return (
     <div className="admin-page">
+      {onBack && (
+        <button className="admin-breadcrumb" type="button" onClick={onBack}>
+          {t('settings.backToSettings')}
+        </button>
+      )}
       <div className="admin-header">
         <h1>{t('aiSettings.title')}</h1>
         <p>{t('aiSettings.intro')}</p>

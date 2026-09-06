@@ -12,13 +12,21 @@ const fr: Dict = {
   },
   topbar: {
     backToPlayer: 'Retour au lecteur',
-    users: 'Utilisateurs',
-    aiProviders: "Fournisseurs d'IA",
+    settings: 'Paramètres',
     dashboard: 'Tableau de bord',
     changePassword: 'Changer le mot de passe',
     signOut: 'Se déconnecter',
     switchToLight: 'Passer au thème clair',
     switchToDark: 'Passer au thème sombre',
+  },
+  settings: {
+    title: 'Paramètres',
+    subtitle: 'Configuration administrateur, regroupée par section.',
+    backToSettings: '← Paramètres',
+    usersTitle: 'Utilisateurs',
+    usersDescription: 'Comptes, rôles et noms affichés.',
+    aiTitle: "Fournisseurs d'IA",
+    aiDescription: 'opencode, Ollama et points de terminaison compatibles OpenAI.',
   },
   changePassword: {
     title: 'Changer le mot de passe',

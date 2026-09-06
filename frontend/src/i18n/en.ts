@@ -10,13 +10,21 @@ const en = {
   },
   topbar: {
     backToPlayer: 'Back to player',
-    users: 'Users',
-    aiProviders: 'AI providers',
+    settings: 'Settings',
     dashboard: 'Dashboard',
     changePassword: 'Change password',
     signOut: 'Sign out',
     switchToLight: 'Switch to light theme',
     switchToDark: 'Switch to dark theme',
+  },
+  settings: {
+    title: 'Settings',
+    subtitle: 'Admin configuration, grouped by section.',
+    backToSettings: '← Settings',
+    usersTitle: 'Users',
+    usersDescription: 'Accounts, roles, and display names.',
+    aiTitle: 'AI providers',
+    aiDescription: 'opencode, Ollama, and OpenAI-compatible endpoints.',
   },
   changePassword: {
     title: 'Change password',

@@ -12,6 +12,7 @@ import type { Language } from '../i18n'
 import { ChangePasswordScreen } from './ChangePasswordScreen'
 import { AISettingsPage } from './AISettingsPage'
 import { AnalyticsPage } from './AnalyticsPage'
+import { SettingsPage } from './SettingsPage'
 import { UsersPage } from './UsersPage'
 import '../styles/dashboard.css'
 
@@ -95,8 +96,9 @@ export function Dashboard() {
         </div>
       )}
       {page === 'change-password' && <ChangePasswordScreen onDone={() => setPage('dashboard')} t={t} />}
-      {page === 'users' && <UsersPage t={t} />}
-      {page === 'ai-settings' && <AISettingsPage t={t} />}
+      {page === 'settings' && <SettingsPage onNavigate={setPage} t={t} />}
+      {page === 'users' && <UsersPage onBack={() => setPage('settings')} t={t} />}
+      {page === 'ai-settings' && <AISettingsPage onBack={() => setPage('settings')} t={t} />}
       {page === 'analytics' && <AnalyticsPage t={t} />}
     </div>
   )

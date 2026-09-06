@@ -7,7 +7,7 @@ import type { TFunction } from '../i18n'
 import { displayName } from '../utils/format'
 import '../styles/admin.css'
 
-export function UsersPage({ t }: { t: TFunction }) {
+export function UsersPage({ onBack, t }: { onBack?: () => void; t: TFunction }) {
   const { user: me } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -97,6 +97,11 @@ export function UsersPage({ t }: { t: TFunction }) {
 
   return (
     <div className="admin-page">
+      {onBack && (
+        <button className="admin-breadcrumb" type="button" onClick={onBack}>
+          {t('settings.backToSettings')}
+        </button>
+      )}
       <div className="admin-header">
         <h1>{t('users.title')}</h1>
         <p>{t('users.subtitle')}</p>

@@ -5,7 +5,7 @@ import type { Language, TFunction } from '../i18n'
 import { displayName } from '../utils/format'
 import { ChevronDownIcon, MoonIcon, SunIcon } from './Icons'
 
-export type Page = 'dashboard' | 'users' | 'ai-settings' | 'analytics' | 'change-password'
+export type Page = 'dashboard' | 'settings' | 'users' | 'ai-settings' | 'analytics' | 'change-password'
 
 export function TopBar({
   theme,
@@ -112,11 +112,8 @@ export function TopBar({
             <div className="user-dropdown">
               {user?.is_admin && (
                 <>
-                  <button type="button" onClick={() => { onNavigate('users'); setMenuOpen(false) }}>
-                    {t('topbar.users')}
-                  </button>
-                  <button type="button" onClick={() => { onNavigate('ai-settings'); setMenuOpen(false) }}>
-                    {t('topbar.aiProviders')}
+                  <button type="button" onClick={() => { onNavigate('settings'); setMenuOpen(false) }}>
+                    {t('topbar.settings')}
                   </button>
                   <hr />
                 </>
