@@ -92,6 +92,11 @@ _LANGUAGE_INSTRUCTIONS = {
         '"wiki" exactly as specified above regardless of language — '
         '"wiki" MUST remain the English Wikipedia article title.\n'
     ),
+    "el": (
+        '- Write the "trivia" field in Greek (Ελληνικά). Keep "work" and '
+        '"wiki" exactly as specified above regardless of language — '
+        '"wiki" MUST remain the English Wikipedia article title.\n'
+    ),
 }
 
 _FAIL_ITEM = {"work": "", "trivia": "", "wiki": "", "movement": 0, "fail": True}
