@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.31] - 2026-09-06
+
+Made the station logo in the now-playing header much bigger (28px →
+64px), and shortened the divider line under the header so it stops
+before the logo's column instead of running behind it — the logo now
+visibly overlaps into its own space below the line.
+
 ## [0.5.30] - 2026-09-06
 
 Fixed both Venice Classic Radio stations (VCR Auditorium, VCR

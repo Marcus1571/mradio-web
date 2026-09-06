@@ -1509,7 +1509,7 @@ round-trip correctly through the existing API endpoints unchanged
 (no backend changes needed for this — pure frontend UI swap), and the
 modal renders correctly in both dark and light themes.
 
-## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30)
+## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30; bigger + divider redesign 0.5.31)
 
 The now-playing panel's station row had visible empty space next to the
 station name — the user asked whether a logo could be shown there, and
@@ -1638,6 +1638,36 @@ actual current site logo, not a stale/dead one this time). Confirmed
 live this resolves BOTH VCR stations at once, since they share the
 identical pipe-suffix — same one-time cache-purge requirement as
 0.5.29 applies again for these two entries specifically.
+
+**Logo made bigger + divider redesign (0.5.31)**: once logos actually
+started showing up, user wanted them much bigger (28px → 64px) with
+the header's divider line stopping short of the logo's column instead
+of running behind it — a "double space" effect, sketched as a red
+box in a screenshot with the explicit note the box itself wasn't to be
+drawn, only the layout it marked. Implementation: `.panel-head`
+previously had `border-bottom` directly on the flex row, which sizes
+to its tallest child — simply enlarging `.station-logo` would have
+stretched the whole header and dragged the divider down with it,
+producing a taller header with the logo still flush inside it, not the
+requested overlap. Fixed by moving the divider to a `::after`
+pseudo-element positioned by explicit `top` (at the bottom of the
+*text* row specifically, not the flex box), giving `.panel-head` extra
+`padding-bottom` sized to the logo's overhang, and switching
+`.station-logo` from a normal flex child to `position: absolute`
+(centered via `top: 50%; transform: translateY(-50%)` across the now-
+taller head box) so it doesn't participate in flex sizing at all and
+can freely straddle the shortened divider. Used `.panel-head:has(.station-logo)`
+to scope the extra padding/shortened-divider rules to only the "logo
+present" case — when there's no logo, the header stays exactly as
+compact as before. Verified the geometry by hand (space tokens: this
+app's `--space-xs` = 12px) since no screenshot/browser tool was
+available in that session: text row ~24px + 12px top padding = divider
+at 44px from the head's top; with the added 52px bottom padding the
+head is ~88px tall, so the logo's `top: 50%` center (44px) exactly
+lines up with the divider, and its 64px height (32px above/below
+center) spans symmetrically across it — confirmed by arithmetic, not
+by eye, and flagged that limitation to the user rather than claiming a
+visual check that didn't happen.
 
 Right after [[mradio_web_status]]'s 0.5.16 pins/heatmap split shipped, the
 user noticed Pins mode was *still* using `radius={6 + count}` — the split
