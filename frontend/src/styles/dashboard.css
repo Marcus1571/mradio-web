@@ -210,7 +210,7 @@
    independent of .panel-head's own compact height. Only the divider
    is shortened above the logo's column. */
 .panel-head-with-logo::after {
-  right: calc(var(--space-md) + 88px);
+  right: calc(var(--space-sm) + var(--logo-size) + var(--space-sm));
 }
 
 .panel-title {
@@ -281,16 +281,22 @@
 }
 
 .panel {
-  --logo-size: 4.5rem;
+  --logo-size: 3rem;
+}
+
+@media (max-width: 480px) {
+  .panel {
+    --logo-size: 2.25rem;
+  }
 }
 
 .station-logo {
   position: absolute;
-  top: var(--space-md);
-  right: var(--space-md);
+  top: var(--space-sm);
+  right: var(--space-sm);
   height: var(--logo-size);
   width: auto;
-  max-width: 180px;
+  max-width: 140px;
   object-fit: contain;
   border-radius: var(--radius-sm);
   z-index: 1;
@@ -356,8 +362,8 @@
    representing "how much shorter .np-metrics's own vertical rhythm is
    than the logo's footprint," not the padding itself. */
 .panel:has(.station-logo) .np-metrics {
-  --logo-offset: 2.5rem;
-  padding-bottom: calc(var(--logo-size) - var(--logo-offset));
+  --logo-offset: 3rem;
+  padding-bottom: max(0px, calc(var(--logo-size) - var(--logo-offset)));
 }
 
 .np-metric {
