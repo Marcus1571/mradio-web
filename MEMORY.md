@@ -2008,6 +2008,43 @@ before treating it as a *data* problem — the CSS fix covers every
 station at once, including ones not yet reported, while the per-station
 hunt would never end.
 
+**Self-hosted SearXNG closes the search-engine gap (0.5.43)**: after
+Google/DDG/Brave were each ruled out, user pointed out they *run
+SearXNG on LT* — which invalidates every objection at once: no API
+key, no CAPTCHA, no third-party terms, and it aggregates Bing/Brave/
+DDG results anyway. Correct call, and a reminder to ask what's already
+on the box before concluding a capability is unavailable.
+
+Setup: its JSON API is **off by default**. Added to
+`/mnt/user/appdata/searxng/settings.yml` (backed up first, asked before
+touching another service):
+```yaml
+search:
+  formats: [html, json]
+```
+then `docker restart SearXNG` (container is named `SearXNG`, not
+`searxng`). Verified `?format=json` went 403 → 200.
+
+Wired in as `MRADIO_SEARXNG_URL`, **optional and unset by default** —
+nobody else running this app has a SearXNG, and the tier is simply
+skipped when empty (verified). On LT it lives in the untracked
+`docker-compose.override.yml`, keeping the LAN IP out of the repo.
+Compose *appends* `environment:` lists, so the base file's admin vars
+survive.
+
+Results went 95 → **103/104**. It found logos nothing else could
+(KCSM, Chilltrax, WSM's correct *AM* logo) and its top hit for 181.FM
+was the same transparent WebP that previously had to be hardcoded.
+
+Two filters were essential, both learned from earlier tiers: results
+are padded with icon libraries and stock-photo archives (lucide,
+artic.edu, shutterstock…) that match on generic words, so
+`_IMAGE_SEARCH_NOISE_HOSTS` drops those, and the same
+`_GENERIC_STATION_WORDS` guard from the Wikipedia tier still applies.
+Also sorts PNG/WebP/SVG ahead of JPEG, since only the former can carry
+transparency. Placed *after* Wikipedia but *before* falling back to a
+blurry favicon — a real logo beats a 16x16 icon.
+
 **A separate lesson about stale cache entries**: user reported
 "1.FM Hot Country" blank, which isn't in `stations.py` at all — it's
 the *ICY name* broadcast by `1.FM Absolute Country Hits`. Its cache

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.43] - 2026-09-06
+
+Station logos can now fall back to a self-hosted SearXNG instance,
+which finds logos for the stations nothing else could — 103 of 104
+curated stations now have one, up from 95. Optional: set
+MRADIO_SEARXNG_URL if you run one, otherwise nothing changes. See
+KB.md § 8.
+
 ## [0.5.42] - 2026-09-06
 
 Station logos that are only available flattened onto a white
