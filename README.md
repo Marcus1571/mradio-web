@@ -31,8 +31,8 @@ This page is just the overview.
   A "recently played" trivia history keeps the last 10 blurbs per
   account, re-readable while something else plays.
 - **English, Spanish, Italian, Portuguese, French, Russian, German,
-  Greek, and Dutch** UI and AI liner notes — switch instantly from the
-  top bar.
+  Greek, Dutch, and Danish** UI and AI liner notes — switch instantly
+  from the top bar.
 - **Multiple accounts**, each with their own favorites, provider choice,
   and an optional emoji-capable display name — admin-created, no public
   sign-up, matching a small self-hosted deployment for family/friends
