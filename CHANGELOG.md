@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.5] - 2026-09-06
+
+Fixed the PWA install prompt still offering the old app name after the
+0.5.4 rebrand. 0.5.2's caching fix correctly stopped `index.html` from
+being cached, but wrongly assumed every *other* static file was a
+Vite-content-hashed, safe-forever asset — true for `/assets/*.js`/`*.css`,
+but not for `manifest.webmanifest`, the favicon, or the PWA icons, which
+Vite copies straight from `public/` under the same filename on every
+build. Those were being cached for a full year, so a browser that had
+already fetched the manifest kept quoting its old `name` field
+indefinitely, even after uninstalling and trying to reinstall the app.
+Only files actually under `/assets/` are cached immutably now; every
+other static file (including `index.html`) always revalidates.
+
 ## [0.5.4] - 2026-09-06
 
 Renamed the app's displayed brand text from "mradio" / "dial room" to

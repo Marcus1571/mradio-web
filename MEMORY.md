@@ -1009,6 +1009,29 @@ to browser heuristics. Verified via `curl -sI` against both a hashed
 asset and `index.html`/`/reset-password` directly, confirming the
 expected header on each.
 
+**The 0.5.2 fix itself had the same bug it was fixing, for a different
+file (fixed 2026-09-06, 0.5.5)**: `_CacheAwareStaticFiles`'s rule was
+"cache everything immutably except `index.html`" — true for `/assets/
+*.js`/`*.css` (genuinely Vite-content-hashed), false for every other
+file this app serves from `public/` verbatim with a **stable**
+filename: `manifest.webmanifest`, `favicon.svg`, `apple-touch-icon.png`,
+`icon-*.png`. Surfaced when the user renamed the app (0.5.4,
+"mradio" → "mradio web") and the OS install prompt kept quoting the old
+name even after uninstalling and retrying — confirmed the server was
+serving the correct new manifest content the whole time
+(`curl` against LT showed `"name": "mradio web"`), so the only
+explanation left was the browser never re-fetching the manifest at
+all, which a 1-year `immutable` `Cache-Control` on it fully explains.
+Fixed by checking for `/assets/` in the path explicitly (verified via
+`find dist -maxdepth 1` that this is genuinely the only hashed
+directory Vite produces) rather than the previous "not index.html"
+exclusion-based logic — every other static file, `index.html` included,
+now gets `no-cache`. **Pattern worth remembering**: a cache-header fix
+scoped as "trust everything except this one known-bad file" is fragile
+by construction — the safer default is "trust nothing except this
+narrowly-identified known-safe location," which is what this second
+pass landed on.
+
 **Genuine miss, corrected 2026-09-06, 0.5.3**: the user's original
 0.5.0-era instruction was "replace the placeholder text `smtp.gmail.com`
 with `e.g. smtp.gmail.com`" — i.e. change the *wording*. 0.5.1 instead
