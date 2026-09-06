@@ -94,6 +94,15 @@ const ru: Dict = {
     apiKeyNotSet: 'не задан',
     opencodeGroup: 'opencode',
     opencodeEnable: 'Включить (порт или «1» по умолчанию)',
+    codexGroup: 'Подписка ChatGPT / Codex',
+    codexIntro:
+      'Войдите с подпиской ChatGPT Plus, Pro или Go вместо API-ключа. Использует тот же вход, ' +
+      'что и Codex CLI — неофициальный способ, который может перестать работать, если OpenAI его изменит, но бесплатный, если вы уже платите за ChatGPT.',
+    codexConnect: 'Подключить ChatGPT',
+    codexConnected: 'Подключено ({plan})',
+    codexDisconnect: 'Отключить',
+    codexWaiting: 'Ожидание завершения входа…',
+    codexUserCodeHint: 'Введите этот код: {code}, или откройте',
     errorFallback: 'Не удалось сохранить настройки.',
     test: 'Проверить',
     testing: 'Проверка…',

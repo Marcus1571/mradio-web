@@ -177,6 +177,47 @@ builds stay reproducible. A scheduled GitHub Action
 then `docker compose build` on the server to pick it up. It never
 auto-merges or pushes a new image anywhere by itself.
 
+### ChatGPT / Codex subscription
+
+**⚠️ Unofficial mechanism — read before enabling.** This lets an admin
+sign in with a personal ChatGPT Plus, Pro, or Go subscription instead of
+an API key. It works by running the same sign-in as OpenAI's own Codex
+CLI (`codex login --device-auth`) and then calling OpenAI's *internal*
+Codex backend (`chatgpt.com/backend-api/codex/responses`) with the
+resulting token — not the public, documented OpenAI API. This is the
+same category of mechanism Anthropic shut off for the equivalent Claude
+Code OAuth token in early 2026 (third-party use started billing as
+overage, then stopped working). OpenAI hasn't done this as of writing,
+but could at any time, without notice — if it breaks, liner notes for
+that provider just stop working until you either wait it out or switch
+to a different provider; nothing else in the app is affected. Use this
+only if you're comfortable with that risk.
+
+**Setting it up:**
+
+1. Go to mradio-web's **AI providers** page (user menu → Settings → AI
+   providers, admin only) and click **Connect with ChatGPT** in the
+   "ChatGPT / Codex subscription" section.
+2. The page shows a one-time code and a link. Open the link (or type it
+   into a browser yourself), sign in to the ChatGPT account you want to
+   use, and enter the code.
+3. Once you complete that, the page automatically shows "Connected"
+   along with your plan type (Plus/Pro/Go). No API key, no manual token
+   entry.
+4. Use **Disconnect** at any time to sign this app out — the stored
+   token is deleted and the provider goes back to "not configured" for
+   everyone.
+
+This provider is bundled the same way `opencode` is (§ above): the real
+`codex` CLI binary ships inside the Docker image (`Dockerfile`'s
+`codex-build` stage, `ARG CODEX_VERSION`), used only to perform the
+sign-in itself — plain HTTP login attempts are blocked by a Cloudflare
+bot/TLS-fingerprint check on OpenAI's side, confirmed during
+development, which the real CLI passes because it's a genuine trusted
+client. A scheduled GitHub Action
+(`.github/workflows/bump-codex.yml`) keeps that version pinned and
+up to date the same way `bump-opencode.yml` does.
+
 ### NVIDIA NIM (OpenAI-compatible)
 
 **Getting an API key:**

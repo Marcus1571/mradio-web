@@ -21,6 +21,7 @@ from .db import close_db, init_db
 from .enrichers import shutdown_all as shutdown_enrichers
 from .routers import analytics as analytics_router
 from .routers import auth as auth_router
+from .routers import codex as codex_router
 from .routers import config as config_router
 from .routers import enrich as enrich_router
 from .routers import favorites as favorites_router
@@ -49,6 +50,7 @@ app.include_router(users_router.router)
 app.include_router(stream_router.router)
 app.include_router(settings_router.router)
 app.include_router(smtp_router.router)
+app.include_router(codex_router.router)
 app.include_router(enrich_router.router)
 app.include_router(favorites_router.router)
 app.include_router(stations_router.router)

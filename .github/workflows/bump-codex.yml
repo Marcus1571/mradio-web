@@ -1,0 +1,63 @@
+name: Bump Codex CLI version
+
+# The Codex CLI ships via the official @openai/codex npm package (see
+# Dockerfile — used only to perform `codex login --device-auth` for the
+# ChatGPT/Codex subscription AI provider, not to run any agent features).
+# The Dockerfile pins an exact version rather than @latest so image builds
+# stay reproducible; this workflow is what keeps that pin from going
+# stale. It never publishes or auto-merges anything — it only opens a PR,
+# so a real upgrade of this binary always gets a human look before it
+# ships.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Monday 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Check for a newer @openai/codex release
+        id: check
+        run: |
+          current=$(grep -oP '(?<=ARG CODEX_VERSION=)\S+' Dockerfile)
+          latest=$(npm view @openai/codex version)
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          if [ "$current" != "$latest" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update the pinned version
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          sed -i "s/ARG CODEX_VERSION=.*/ARG CODEX_VERSION=${{ steps.check.outputs.latest }}/" Dockerfile
+
+      - name: Open a PR
+        if: steps.check.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: bump-codex-version
+          title: "Bump Codex CLI to ${{ steps.check.outputs.latest }}"
+          commit-message: "Bump @openai/codex ${{ steps.check.outputs.current }} -> ${{ steps.check.outputs.latest }}"
+          body: |
+            [@openai/codex](https://www.npmjs.com/package/@openai/codex) published
+            ${{ steps.check.outputs.latest }} (currently pinned:
+            ${{ steps.check.outputs.current }}).
+
+            Opened automatically by `.github/workflows/bump-codex.yml` —
+            review the [changelog](https://github.com/openai/codex/releases)
+            before merging; this doesn't auto-merge.

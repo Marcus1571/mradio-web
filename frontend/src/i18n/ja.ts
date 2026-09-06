@@ -94,6 +94,15 @@ const ja: Dict = {
     apiKeyNotSet: '未設定',
     opencodeGroup: 'opencode',
     opencodeEnable: '有効化（ポート番号、または標準の場合は「1」）',
+    codexGroup: 'ChatGPT / Codex サブスクリプション',
+    codexIntro:
+      'APIキーの代わりにChatGPT Plus、Pro、またはGoサブスクリプションでサインインします。Codex CLIと同じ' +
+      'サインイン方法を使用します — 非公式のため、OpenAIが変更すると動作しなくなる可能性がありますが、すでにChatGPTに課金している場合は無料です。',
+    codexConnect: 'ChatGPTで接続',
+    codexConnected: '接続済み（{plan}）',
+    codexDisconnect: '切断',
+    codexWaiting: 'サインインの完了を待っています…',
+    codexUserCodeHint: 'このコードを入力してください: {code}、または開く',
     errorFallback: '設定を保存できませんでした。',
     test: 'テスト',
     testing: 'テスト中…',

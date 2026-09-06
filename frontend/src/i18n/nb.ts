@@ -94,6 +94,15 @@ const nb: Dict = {
     apiKeyNotSet: 'ikke angitt',
     opencodeGroup: 'opencode',
     opencodeEnable: 'Aktiver (port, eller "1" for standard)',
+    codexGroup: 'ChatGPT-/Codex-abonnement',
+    codexIntro:
+      'Logg inn med et ChatGPT Plus-, Pro- eller Go-abonnement i stedet for en API-nøkkel. Bruker samme innlogging ' +
+      'som Codex CLI — uoffisielt og kan slutte å fungere hvis OpenAI endrer det, men gratis hvis du allerede betaler for ChatGPT.',
+    codexConnect: 'Koble til med ChatGPT',
+    codexConnected: 'Tilkoblet ({plan})',
+    codexDisconnect: 'Koble fra',
+    codexWaiting: 'Venter på at innloggingen skal fullføres…',
+    codexUserCodeHint: 'Skriv inn denne koden: {code}, eller åpne',
     errorFallback: 'Kunne ikke lagre innstillingene.',
     test: 'Test',
     testing: 'Tester…',

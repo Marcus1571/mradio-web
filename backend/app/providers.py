@@ -4,13 +4,16 @@ global (settings.py, admin-managed) — every user picks from the same set
 of configured providers, none of them hold their own keys."""
 
 import asyncio
+import json
 import shutil
 import time
 import urllib.parse
 
 import httpx
 
-PROVIDERS = ("opencode", "openai", "ollama")
+from . import codex_oauth, codex_settings
+
+PROVIDERS = ("opencode", "openai", "codex", "ollama")
 
 _OC_ONPATH: bool | None = None
 
@@ -64,13 +67,14 @@ def provider_enabled(name: str, settings: dict) -> bool:
         "opencode": bool(oc_port(settings)),
         "ollama": bool(settings.get("ollama_url")),
         "openai": bool(settings.get("api_key")),
+        "codex": bool(codex_settings.load().get("access_token")),
     }
     return probe.get(name, False)
 
 
 def ai_configured(settings: dict) -> bool:
     return bool(settings.get("ollama_url")) or bool(settings.get("api_key")) \
-        or bool(oc_port(settings))
+        or bool(oc_port(settings)) or bool(codex_settings.load().get("access_token"))
 
 
 def api_endpoint(base: str, suffix: str) -> str:
@@ -129,6 +133,62 @@ async def llm_openai(settings: dict, prompt: str) -> str | None:
         return content.strip() or None
     except (httpx.HTTPError, ValueError, IndexError):
         return None
+
+
+_CODEX_API_URL = "https://chatgpt.com/backend-api/codex/responses"
+_CODEX_MODEL = "gpt-5.6-terra"
+
+
+async def llm_codex(settings: dict, prompt: str) -> str | None:
+    """Calls OpenAI's internal Codex backend using a ChatGPT/Codex
+    subscription's OAuth token instead of an API key — see codex_oauth.py
+    for the important caveats about this being an unofficial mechanism."""
+    token = await codex_oauth.ensure_fresh_token()
+    if not token:
+        return None
+    cfg = codex_settings.load()
+    payload = {
+        "model": _CODEX_MODEL,
+        "instructions": "You are a helpful classical-music metadata assistant. "
+                        "Reply ONLY with the requested JSON, no markdown.",
+        "input": [{"role": "user", "content": prompt}],
+        "stream": True,
+        "store": False,
+    }
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "originator": "codex_cli_rs",
+        "Content-Type": "application/json",
+        "Accept": "text/event-stream",
+    }
+    if cfg.get("account_id"):
+        headers["ChatGPT-Account-Id"] = cfg["account_id"]
+    text_parts: list[str] = []
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            async with client.stream("POST", _CODEX_API_URL, json=payload, headers=headers) as r:
+                if r.status_code != 200:
+                    return None
+                event = ""
+                async for line in r.aiter_lines():
+                    if line.startswith("event:"):
+                        event = line[len("event:"):].strip()
+                    elif line.startswith("data:"):
+                        raw = line[len("data:"):].strip()
+                        if raw == "[DONE]" or not raw:
+                            continue
+                        try:
+                            data = json.loads(raw)
+                        except ValueError:
+                            continue
+                        if event == "response.output_text.delta":
+                            delta = data.get("delta")
+                            if delta:
+                                text_parts.append(delta)
+    except httpx.HTTPError:
+        return None
+    text = "".join(text_parts).strip()
+    return text or None
 
 
 class OpencodeSession:
@@ -286,6 +346,17 @@ async def _test_opencode(settings: dict) -> tuple[bool, str]:
     return True, "Connected."
 
 
+async def _test_codex(settings: dict) -> tuple[bool, str]:
+    cfg = codex_settings.load()
+    if not cfg.get("access_token"):
+        return False, "Not connected — use the Connect button above."
+    reply = await llm_codex(settings, 'Reply with exactly: {"trivia": "pong"}')
+    if not reply:
+        return False, "ChatGPT/Codex did not respond."
+    plan = cfg.get("chatgpt_plan_type")
+    return True, f"Connected ({plan})." if plan else "Connected."
+
+
 async def run_provider_test(provider: str, settings: dict) -> tuple[bool, str]:
     if provider == "ollama":
         return await _test_ollama(settings)
@@ -293,4 +364,6 @@ async def run_provider_test(provider: str, settings: dict) -> tuple[bool, str]:
         return await _test_openai(settings)
     if provider == "opencode":
         return await _test_opencode(settings)
+    if provider == "codex":
+        return await _test_codex(settings)
     return False, "Unknown provider."

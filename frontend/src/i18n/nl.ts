@@ -94,6 +94,15 @@ const nl: Dict = {
     apiKeyNotSet: 'niet ingesteld',
     opencodeGroup: 'opencode',
     opencodeEnable: 'Inschakelen (poort, of "1" voor standaard)',
+    codexGroup: 'ChatGPT-/Codex-abonnement',
+    codexIntro:
+      'Log in met een ChatGPT Plus-, Pro- of Go-abonnement in plaats van een API-sleutel. Gebruikt dezelfde login ' +
+      'als de Codex CLI — niet officieel en kan stoppen met werken als OpenAI dit wijzigt, maar gratis als je al voor ChatGPT betaalt.',
+    codexConnect: 'Verbinden met ChatGPT',
+    codexConnected: 'Verbonden ({plan})',
+    codexDisconnect: 'Verbinding verbreken',
+    codexWaiting: 'Wachten tot inloggen is voltooid…',
+    codexUserCodeHint: 'Voer deze code in: {code}, of open',
     errorFallback: 'Instellingen opslaan mislukt.',
     test: 'Testen',
     testing: 'Testen…',

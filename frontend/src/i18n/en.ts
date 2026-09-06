@@ -92,6 +92,15 @@ const en = {
     apiKeyNotSet: 'not set',
     opencodeGroup: 'opencode',
     opencodeEnable: 'Enable (port, or "1" for default)',
+    codexGroup: 'ChatGPT / Codex subscription',
+    codexIntro:
+      'Sign in with a ChatGPT Plus, Pro, or Go subscription instead of an API key. Uses the same sign-in ' +
+      'as the Codex CLI — unofficial and could stop working if OpenAI changes it, but free to use if you already pay for ChatGPT.',
+    codexConnect: 'Connect with ChatGPT',
+    codexConnected: 'Connected ({plan})',
+    codexDisconnect: 'Disconnect',
+    codexWaiting: 'Waiting for sign-in to complete…',
+    codexUserCodeHint: 'Enter this code: {code}, or open',
     errorFallback: 'Could not save settings.',
     test: 'Test',
     testing: 'Testing…',

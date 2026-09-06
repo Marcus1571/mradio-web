@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError, api } from '../api/client'
-import type { AISettings, AITestResult } from '../api/types'
+import type { AISettings, AITestResult, CodexConnectResponse } from '../api/types'
 import { IDLE_TEST, KbNote, TestBadge } from '../components/AdminSettingsShared'
 import type { TestState } from '../components/AdminSettingsShared'
+import { useCodexStatus } from '../hooks/useCodexStatus'
 import type { TFunction } from '../i18n'
 import '../styles/admin.css'
 
-type Provider = 'ollama' | 'openai' | 'opencode'
+type Provider = 'ollama' | 'openai' | 'opencode' | 'codex'
 
 export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunction }) {
   const [settings, setSettings] = useState<AISettings | null>(null)
@@ -18,10 +19,18 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
   const [ollamaTest, setOllamaTest] = useState<TestState>(IDLE_TEST)
   const [openaiTest, setOpenaiTest] = useState<TestState>(IDLE_TEST)
   const [opencodeTest, setOpencodeTest] = useState<TestState>(IDLE_TEST)
+  const [codexTest, setCodexTest] = useState<TestState>(IDLE_TEST)
+  const { status: codexStatus, refresh: refreshCodexStatus } = useCodexStatus()
+  const [codexConnecting, setCodexConnecting] = useState(false)
+  const [codexPromptResult, setCodexPromptResult] = useState<CodexConnectResponse | null>(null)
 
   useEffect(() => {
     api.get<AISettings>('/api/settings/ai').then(setSettings)
   }, [])
+
+  useEffect(() => {
+    if (codexStatus?.connected) setCodexPromptResult(null)
+  }, [codexStatus?.connected])
 
   function field<K extends keyof AISettings>(key: K, value: AISettings[K]) {
     setSettings((s) => (s ? { ...s, [key]: value } : s))
@@ -60,6 +69,35 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
     } catch {
       setState({ status: 'failure', message: t('aiSettings.testError') })
     }
+  }
+
+  async function testCodex() {
+    setCodexTest({ status: 'testing' })
+    try {
+      const res = await api.post<AITestResult>('/api/settings/codex/test', {})
+      setCodexTest({ status: res.ok ? 'success' : 'failure', message: res.message })
+    } catch {
+      setCodexTest({ status: 'failure', message: t('aiSettings.testError') })
+    }
+  }
+
+  async function connectCodex() {
+    setCodexConnecting(true)
+    setCodexPromptResult(null)
+    try {
+      const res = await api.post<CodexConnectResponse>('/api/settings/codex/connect', {})
+      setCodexPromptResult(res)
+      await refreshCodexStatus()
+    } finally {
+      setCodexConnecting(false)
+    }
+  }
+
+  async function disconnectCodex() {
+    await api.post('/api/settings/codex/disconnect', {})
+    setCodexPromptResult(null)
+    setCodexTest(IDLE_TEST)
+    await refreshCodexStatus()
   }
 
   if (!settings) return null
@@ -200,6 +238,59 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               </button>
               <TestBadge state={opencodeTest} t={t} />
             </div>
+          </div>
+
+          <div className="settings-group">
+            <h2>{t('aiSettings.codexGroup')}</h2>
+            <p className="admin-note">{t('aiSettings.codexIntro')}</p>
+            {codexStatus?.connected ? (
+              <>
+                <p className="admin-note">
+                  {t('aiSettings.codexConnected', { plan: codexStatus.chatgpt_plan_type || '—' })}
+                </p>
+                <div className="test-actions">
+                  <button className="test-btn" type="button" onClick={() => void disconnectCodex()}>
+                    {t('aiSettings.codexDisconnect')}
+                  </button>
+                  <button
+                    className="test-btn"
+                    type="button"
+                    disabled={codexTest.status === 'testing'}
+                    onClick={() => void testCodex()}
+                  >
+                    {codexTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
+                  </button>
+                  <TestBadge state={codexTest} t={t} />
+                </div>
+              </>
+            ) : codexStatus?.pending || codexPromptResult ? (
+              <div className="admin-note">
+                <p>{t('aiSettings.codexWaiting')}</p>
+                {codexPromptResult && (
+                  <p>
+                    {t('aiSettings.codexUserCodeHint', { code: codexPromptResult.user_code })}{' '}
+                    <a
+                      href={codexPromptResult.verification_uri}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {codexPromptResult.verification_uri}
+                    </a>
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="test-actions">
+                <button
+                  className="test-btn"
+                  type="button"
+                  disabled={codexConnecting}
+                  onClick={() => void connectCodex()}
+                >
+                  {codexConnecting ? t('aiSettings.testing') : t('aiSettings.codexConnect')}
+                </button>
+              </div>
+            )}
           </div>
 
           {error && <p className="admin-note" style={{ color: 'var(--danger)' }}>{error}</p>}

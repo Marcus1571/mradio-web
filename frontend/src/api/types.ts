@@ -75,6 +75,17 @@ export interface AITestResult {
   message: string
 }
 
+export interface CodexStatus {
+  connected: boolean
+  pending: boolean
+  chatgpt_plan_type: string
+}
+
+export interface CodexConnectResponse {
+  user_code: string
+  verification_uri: string
+}
+
 export interface StationLogo {
   logo: string | null
 }

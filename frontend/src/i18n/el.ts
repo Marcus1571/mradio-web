@@ -94,6 +94,15 @@ const el: Dict = {
     apiKeyNotSet: 'δεν έχει οριστεί',
     opencodeGroup: 'opencode',
     opencodeEnable: 'Ενεργοποίηση (θύρα ή «1» για προεπιλογή)',
+    codexGroup: 'Συνδρομή ChatGPT / Codex',
+    codexIntro:
+      'Συνδεθείτε με συνδρομή ChatGPT Plus, Pro ή Go αντί για κλειδί API. Χρησιμοποιεί την ίδια σύνδεση ' +
+      'με το Codex CLI — ανεπίσημη μέθοδος που ενδέχεται να σταματήσει να λειτουργεί αν το OpenAI την αλλάξει, αλλά δωρεάν αν ήδη πληρώνετε για το ChatGPT.',
+    codexConnect: 'Σύνδεση με ChatGPT',
+    codexConnected: 'Συνδέθηκε ({plan})',
+    codexDisconnect: 'Αποσύνδεση',
+    codexWaiting: 'Αναμονή ολοκλήρωσης σύνδεσης…',
+    codexUserCodeHint: 'Εισαγάγετε αυτόν τον κωδικό: {code}, ή ανοίξτε',
     errorFallback: 'Δεν ήταν δυνατή η αποθήκευση των ρυθμίσεων.',
     test: 'Δοκιμή',
     testing: 'Δοκιμή…',

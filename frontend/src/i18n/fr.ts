@@ -94,6 +94,15 @@ const fr: Dict = {
     apiKeyNotSet: 'non définie',
     opencodeGroup: 'opencode',
     opencodeEnable: 'Activer (port, ou "1" pour la valeur par défaut)',
+    codexGroup: 'Abonnement ChatGPT / Codex',
+    codexIntro:
+      "Connectez-vous avec un abonnement ChatGPT Plus, Pro ou Go au lieu d'une clé API. Utilise la même connexion " +
+      "que la CLI Codex — non officiel et pourrait cesser de fonctionner si OpenAI le modifie, mais gratuit si vous payez déjà ChatGPT.",
+    codexConnect: 'Se connecter avec ChatGPT',
+    codexConnected: 'Connecté ({plan})',
+    codexDisconnect: 'Déconnecter',
+    codexWaiting: 'En attente de la fin de la connexion…',
+    codexUserCodeHint: 'Entrez ce code : {code}, ou ouvrez',
     errorFallback: "Impossible d'enregistrer les paramètres.",
     test: 'Tester',
     testing: 'Test…',
