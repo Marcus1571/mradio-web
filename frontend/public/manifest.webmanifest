@@ -1,6 +1,6 @@
 {
-  "name": "mradio — Dial Room",
-  "short_name": "mradio",
+  "name": "mradio web",
+  "short_name": "mradio web",
   "description": "Self-hosted, multi-user internet radio player with AI liner notes.",
   "start_url": "/",
   "display": "standalone",

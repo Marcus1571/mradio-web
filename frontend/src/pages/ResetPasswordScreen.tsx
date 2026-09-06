@@ -45,8 +45,8 @@ export function ResetPasswordScreen() {
       <div className="auth-screen">
         <div className="auth-card">
           <div className="auth-brand">
-            <span className="brand-mark">mradio</span>
-            <span className="brand-sub">dial&nbsp;room</span>
+            <span className="brand-mark">mradio web</span>
+            <span className="brand-sub">player</span>
           </div>
           <h1 className="auth-title">Invalid link</h1>
           <p className="auth-hint">This password reset link is missing its token.</p>
@@ -63,8 +63,8 @@ export function ResetPasswordScreen() {
       <div className="auth-screen">
         <div className="auth-card">
           <div className="auth-brand">
-            <span className="brand-mark">mradio</span>
-            <span className="brand-sub">dial&nbsp;room</span>
+            <span className="brand-mark">mradio web</span>
+            <span className="brand-sub">player</span>
           </div>
           <h1 className="auth-title">Password reset</h1>
           <p className="auth-hint">You can now sign in with your new password.</p>
@@ -80,8 +80,8 @@ export function ResetPasswordScreen() {
     <div className="auth-screen">
       <form className="auth-card" onSubmit={onSubmit}>
         <div className="auth-brand">
-          <span className="brand-mark">mradio</span>
-          <span className="brand-sub">dial&nbsp;room</span>
+          <span className="brand-mark">mradio web</span>
+          <span className="brand-sub">player</span>
         </div>
         <h1 className="auth-title">Reset your password</h1>
         <label className="field">

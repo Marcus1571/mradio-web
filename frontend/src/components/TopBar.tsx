@@ -62,8 +62,8 @@ export function TopBar({
   return (
     <div className="topbar">
       <button className="brand" type="button" onClick={() => onNavigate('dashboard')}>
-        <span className="brand-mark">mradio</span>
-        <span className="brand-sub">dial&nbsp;room</span>
+        <span className="brand-mark">mradio web</span>
+        <span className="brand-sub">player</span>
       </button>
       <div className="topbar-right">
         <div className="dropdown-picker" ref={langRef}>

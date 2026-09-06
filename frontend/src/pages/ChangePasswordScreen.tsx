@@ -67,8 +67,8 @@ export function ChangePasswordScreen({
     <div className="auth-screen">
       <form className="auth-card" onSubmit={onSubmit}>
         <div className="auth-brand">
-          <span className="brand-mark">mradio</span>
-          <span className="brand-sub">dial&nbsp;room</span>
+          <span className="brand-mark">mradio web</span>
+          <span className="brand-sub">player</span>
         </div>
         <h1 className="auth-title">{forced ? 'Choose a password' : t('changePassword.title')}</h1>
         {forced && (

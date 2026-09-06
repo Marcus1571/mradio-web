@@ -29,8 +29,8 @@ export function ForgotPasswordScreen({ onBack }: { onBack: () => void }) {
       <div className="auth-screen">
         <div className="auth-card">
           <div className="auth-brand">
-            <span className="brand-mark">mradio</span>
-            <span className="brand-sub">dial&nbsp;room</span>
+            <span className="brand-mark">mradio web</span>
+            <span className="brand-sub">player</span>
           </div>
           <h1 className="auth-title">Check your email</h1>
           <p className="auth-hint">
@@ -48,8 +48,8 @@ export function ForgotPasswordScreen({ onBack }: { onBack: () => void }) {
     <div className="auth-screen">
       <form className="auth-card" onSubmit={onSubmit}>
         <div className="auth-brand">
-          <span className="brand-mark">mradio</span>
-          <span className="brand-sub">dial&nbsp;room</span>
+          <span className="brand-mark">mradio web</span>
+          <span className="brand-sub">player</span>
         </div>
         <h1 className="auth-title">Forgot password?</h1>
         <p className="auth-hint">Enter your account's email and we'll send you a reset link.</p>
