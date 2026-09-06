@@ -16,26 +16,37 @@ entry), so this app's own curated display names — which often carry a
 " | subtitle" or a trailing "(region)" qualifier for the user's benefit
 — regularly miss real entries a human would call an obvious match. A
 failed search retries with the name progressively simplified (strip
-" | ...", strip a trailing "(...)", then just the first word) before
-giving up.
+" | ...", strip a trailing "(...)", the text *after* a " | " on its
+own, then just the first word) before giving up.
+
+The " | subtitle" half often carries the actual broadcaster's real
+name, distinct from the disambiguating prefix that only exists to tell
+this app's own sibling stations apart — e.g. "VCR Auditorium" vs. "VCR
+Classica+" are both "| Venice Classic Radio Italia" underneath.
+Confirmed live: searching the literal suffix "Venice Classic Radio
+Italia" still matches nothing (Radio-Browser doesn't index the
+trailing "Italia" as part of the name), but "Venice Classic Radio" —
+one word shorter — finds the real station with a live, working logo.
+So this tier also retries with its own last word dropped if the full
+suffix search comes up empty.
 
 The last tier (bare first word, e.g. "181.FM" out of "181.FM Kickin'
 Country") is genuinely ambiguous when that word is a short all-letter
-acronym — confirmed live that searching "VCR" alone (from "VCR
-Auditorium") surfaces two unrelated stations sharing that same
-3-letter token ahead of the real Venice Classic Radio match, both with
-their own live, working favicons, so a naive "first working favicon"
-rule would confidently attach the wrong logo. So this tier only fires
-for a first word that's longer than 4 characters or contains a digit
-(numeric station brands like "181.FM", ".977", "1.FM" are distinctive
-almost by definition; bare call-sign-shaped acronyms like "VCR",
-"WQXR", "KIX" are not) — and even then, the candidate's own indexed
-name must still share a real word with the original curated name, as a
-cheap extra check against coincidental collisions. A station that
-fails all of this ends up with no logo rather than risk a wrong
-one — confirmed live this is the right trade-off (VCR Auditorium
-correctly falls through to no-logo instead of getting an unrelated
-station's icon)."""
+acronym — confirmed live that searching "VCR" alone surfaces two
+unrelated stations sharing that same 3-letter token ahead of the real
+Venice Classic Radio match, both with their own live, working
+favicons, so a naive "first working favicon" rule would confidently
+attach the wrong logo (this exact case is now caught earlier by the
+pipe-suffix tier above before it would ever reach this one, but the
+guard stays — a future curated station without a " | subtitle" could
+still hit it). So this tier only fires for a first word that's longer
+than 4 characters or contains a digit (numeric station brands like
+"181.FM", ".977", "1.FM" are distinctive almost by definition; bare
+call-sign-shaped acronyms like "VCR", "WQXR", "KIX" are not) — and
+even then, the candidate's own indexed name must still share a real
+word with the original curated name, as a cheap extra check against
+coincidental collisions. A station that fails all of this ends up with
+no logo rather than risk a wrong one."""
 
 import re
 
@@ -66,6 +77,17 @@ def _name_variants(name: str) -> list[tuple[str, bool]]:
         if stripped_paren and stripped_paren not in seen:
             variants.append((stripped_paren, False))
             seen.add(stripped_paren)
+    if "|" in name:
+        pipe_suffix = name.split("|", 1)[1].strip()
+        if pipe_suffix and pipe_suffix not in seen:
+            variants.append((pipe_suffix, False))
+            seen.add(pipe_suffix)
+        suffix_words = pipe_suffix.split()
+        if len(suffix_words) > 1:
+            shortened_suffix = " ".join(suffix_words[:-1])
+            if shortened_suffix not in seen:
+                variants.append((shortened_suffix, False))
+                seen.add(shortened_suffix)
     last_base = variants[-1][0]
     first_word = last_base.split()[0] if last_base.split() else ""
     # Bare short all-letter first words are usually a station's call
