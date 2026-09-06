@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.5.0] - 2026-09-06
+
+Added self-service "forgot password": from the sign-in screen, request
+a reset link by email, click it, set a new password — no admin needed,
+as long as outgoing email is configured and the account has an email
+address set. New **Settings → Email (SMTP)** page (admin-only) lets the
+admin configure any SMTP provider, with a first-class step-by-step
+walkthrough for generating a Gmail App Password (not OAuth — a Google
+"Sign in with Google"-style flow would need a restricted-scope security
+review to send mail on someone's behalf, disproportionate for a
+self-hosted app; an app password is Google's own recommended path for
+this exact situation).
+
+Reset links automatically point at whichever domain a listener actually
+used to reach the app (via the request's forwarded-host header) — no
+per-domain configuration needed if the app is reachable through more
+than one address. An optional "Public URL" override exists as a
+fallback. Reset tokens are single-use, expire after 1 hour, and the
+forgot-password endpoint always returns the same response whether or
+not the email is registered, so it can't be used to discover which
+accounts exist.
+
 ## [0.4.2] - 2026-09-06
 
 Fixed two layout bugs surfaced by longer display names with multiple

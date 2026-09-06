@@ -869,6 +869,83 @@ entry above — still not built) will be a third card here, not a new
 dropdown entry — this was designed with that in mind, not just for the
 two sections that exist today.
 
+## SMTP settings + self-service forgot-password (added 2026-09-06, 0.5.0)
+
+Second half of the account-management request that started with
+full_name/email (0.4.0). User explicitly asked about a Gmail OAuth
+wizard for this — discussed and decided against it: sending mail via
+Gmail's API needs the `gmail.send` scope, a Google "restricted scope"
+requiring a formal security review once an app leaves testing mode
+(weeks, possibly a paid CASA audit) — wildly disproportionate for a
+self-hosted app with a handful of accounts. A Gmail **App Password**
+achieves the identical practical outcome (authenticate as "this app,
+sending as my address") with a password field instead of an OAuth
+consent flow, zero review risk, and is literally Google's own
+documented recommended path for small/personal SMTP use cases — not a
+compromise. `EmailSettingsPage.tsx` gives Gmail a first-class walkthrough
+(2FA prerequisite, direct link to `myaccount.google.com/apppasswords`)
+while still accepting any other SMTP provider generically.
+
+**Reset-link base URL — the multi-domain decision.** User specifically
+asked about running this behind two domains (existing DDNS + a possible
+Cloudflare Tunnel domain) and whether a reset email would "know" which
+one to link back to. Deliberately did *not* hardcode a single admin-set
+public URL for this (an earlier draft plan from a sub-agent proposed
+exactly that, reasoned from `KB.md` only documenting `X-Forwarded-For`/
+`-Proto` as trusted headers — overridden after this conversation).
+Instead, `routers/auth.py`'s `_base_url()` prefers the *request's own*
+`X-Forwarded-Host`/`Host` header, falling back to an optional admin
+`public_url` override only if that's ever missing — so whichever domain
+a listener actually used to reach the app is automatically the one that
+comes back in their reset email, correct for any number of domains
+pointing at the same box with zero per-domain config. `KB.md` §3 updated
+to note the app now also relies on `X-Forwarded-Host` (NPM forwards it
+by default already, same as the other two headers — nothing to
+configure).
+
+**The one genuinely new piece of frontend infrastructure**: this SPA
+has no client-side router at all (`App.tsx` picks screens via plain
+auth-state `useState`). A `/reset-password?token=...` emailed link would
+have 404'd against the existing `StaticFiles(html=True)` mount, which
+(confirmed by reading Starlette's own source) only serves `index.html`
+for the root path, not arbitrary unmatched paths. Fixed with one
+explicit `@app.get("/reset-password")` route in `main.py` returning
+`FileResponse(index.html)`, registered before the static mount — no
+router library added. `App.tsx` then checks
+`window.location.pathname === '/reset-password'` before the auth gate
+(must work even with a stale session cookie present) and renders the
+new `ResetPasswordScreen`.
+
+**Security properties, built in from the start, not bolted on**:
+- `password_resets` table + `password_reset.py` reuse `auth.py`'s exact
+  session-token pattern (`secrets.token_urlsafe(32)`, SHA-256 hash at
+  rest via the shared `_token_hash()` helper, never the raw token
+  stored) — no new crypto invented. 1-hour TTL (vs. sessions' 30 days),
+  and single-use via a `used_at` timestamp column.
+- `POST /api/auth/forgot-password` returns the **exact same** `{"ok":
+  true}` whether the email exists, is disabled, sending failed, or SMTP
+  isn't configured at all — verified live via Playwright by comparing
+  the full rendered response text byte-for-byte between a real and a
+  fake email, not just spot-checking.
+- Verified end-to-end with a real (if throwaway) SMTP target — a local
+  `aiosmtpd` debug server (installed only in a scratch venv, never added
+  to `requirements.txt`) — including a full round trip: request reset →
+  confirm zero `password_resets` rows for a non-existent email vs. one
+  real row for a registered one → consume the token via the actual
+  running `/reset-password` page (not just calling the function
+  directly, to also prove the routing fix above works) → confirm login
+  with the new password succeeds → confirm reusing the same token a
+  second time is correctly rejected.
+- `EmailSettingsPage.tsx` reuses `AISettingsPage.tsx`'s exact
+  secret-field pattern (separate `passwordInput` state, empty by
+  default, placeholder shows the redacted saved value, only sent if
+  non-empty) — extracted `KbNote`/`TestBadge`/`TestState` into a new
+  shared `components/AdminSettingsShared.tsx` so both settings pages
+  import the same implementation instead of duplicating it.
+
+Ships as the third card on the Settings hub (see entry above) — exactly
+where that feature was designed to accommodate it.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
