@@ -1509,7 +1509,7 @@ round-trip correctly through the existing API endpoints unchanged
 (no backend changes needed for this — pure frontend UI swap), and the
 modal renders correctly in both dark and light themes.
 
-## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30; bigger + divider redesign 0.5.31)
+## Station logos, cached (added 2026-09-06, 0.5.18; name-search retry 0.5.29; pipe-suffix fix 0.5.30; bigger + divider redesign 0.5.31; layout bug fixed 0.5.32)
 
 The now-playing panel's station row had visible empty space next to the
 station name — the user asked whether a logo could be shown there, and
@@ -1639,35 +1639,50 @@ live this resolves BOTH VCR stations at once, since they share the
 identical pipe-suffix — same one-time cache-purge requirement as
 0.5.29 applies again for these two entries specifically.
 
-**Logo made bigger + divider redesign (0.5.31)**: once logos actually
-started showing up, user wanted them much bigger (28px → 64px) with
-the header's divider line stopping short of the logo's column instead
-of running behind it — a "double space" effect, sketched as a red
-box in a screenshot with the explicit note the box itself wasn't to be
-drawn, only the layout it marked. Implementation: `.panel-head`
-previously had `border-bottom` directly on the flex row, which sizes
-to its tallest child — simply enlarging `.station-logo` would have
-stretched the whole header and dragged the divider down with it,
-producing a taller header with the logo still flush inside it, not the
-requested overlap. Fixed by moving the divider to a `::after`
-pseudo-element positioned by explicit `top` (at the bottom of the
-*text* row specifically, not the flex box), giving `.panel-head` extra
-`padding-bottom` sized to the logo's overhang, and switching
-`.station-logo` from a normal flex child to `position: absolute`
-(centered via `top: 50%; transform: translateY(-50%)` across the now-
-taller head box) so it doesn't participate in flex sizing at all and
-can freely straddle the shortened divider. Used `.panel-head:has(.station-logo)`
-to scope the extra padding/shortened-divider rules to only the "logo
-present" case — when there's no logo, the header stays exactly as
-compact as before. Verified the geometry by hand (space tokens: this
-app's `--space-xs` = 12px) since no screenshot/browser tool was
-available in that session: text row ~24px + 12px top padding = divider
-at 44px from the head's top; with the added 52px bottom padding the
-head is ~88px tall, so the logo's `top: 50%` center (44px) exactly
-lines up with the divider, and its 64px height (32px above/below
-center) spans symmetrically across it — confirmed by arithmetic, not
-by eye, and flagged that limitation to the user rather than claiming a
-visual check that didn't happen.
+**Logo made bigger + divider redesign, first attempt had a real layout
+bug (0.5.31, fixed 0.5.32)**: once logos actually started showing up,
+user wanted them much bigger with the header's divider line stopping
+short of the logo's column instead of running behind it — a "double
+space" effect, sketched as a red box in a screenshot with the explicit
+note the box itself wasn't to be drawn, only the layout it marked.
+
+**0.5.31's mistake**: gave `.panel-head` extra `padding-bottom` sized
+to the logo's overhang, reasoning (on paper, via hand-computed
+geometry, since no screenshot tool was available) that this would let
+a `top: 50%`-centered absolutely-positioned logo straddle a
+correspondingly-repositioned divider. The arithmetic checked out, but
+missed the actual consequence: `.panel-head`'s own box genuinely grew
+by that padding, and `.np-body` (the metadata/track section) starts
+immediately after `.panel-head` in normal flow — so all that extra
+padding became real, visible dead space between the divider and the
+now-playing content below it, confirmed by the user's own screenshot
+with a second red box drawn around the empty gap. **Lesson**: computing
+"does the geometry line up" isn't the same as checking "does growing
+this box push something else I forgot about" — box model consequences
+on sibling elements are exactly the kind of thing that's easy to miss
+without actually rendering the page, and no amount of arithmetic
+substitutes for that.
+
+**0.5.32's fix**: `.panel-head` goes back to its original compact
+height (no extra padding at all) — the divider is still shortened via
+`.panel-head:has(.station-logo)::after`, but the logo itself is
+positioned with a fixed `top: var(--space-xs)` (flush with the
+header's own top padding, same as the station-name text) instead of
+being vertically centered across an artificially-taller box. At 80px
+tall (bumped up from 64px once the layout bug no longer made it look
+smaller than it was), the logo now genuinely overhangs past
+`.panel-head`'s real bottom edge into `.np-body`'s space — but because
+`.panel-head` itself never grew, `.np-body` starts exactly where it
+always did, so there's no dead space. The overhang overlaps
+`.np-body`'s own top-right corner rather than displacing its content
+downward, which is the correct implementation of "double space" the
+user actually wanted: the logo visually intrudes into the section
+below, not the section below being pushed away from the logo.
+Accepted, not fixed: a very long track title wrapping to multiple
+lines could theoretically run under the logo's corner on a narrow
+panel — a rare cosmetic edge case, not treated as worth adding
+complexity (e.g. shape-avoidance CSS) to prevent, consistent with this
+project's "don't engineer for hypotheticals" convention.
 
 Right after [[mradio_web_status]]'s 0.5.16 pins/heatmap split shipped, the
 user noticed Pins mode was *still* using `radius={6 + count}` — the split

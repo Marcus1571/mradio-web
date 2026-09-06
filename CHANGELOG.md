@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.32] - 2026-09-06
+
+Fixed unwanted empty space above the playback metadata that 0.5.31
+introduced — growing the header to fit the bigger logo had pushed the
+whole now-playing section down with it. The header stays its normal
+compact height now; the logo (also made a bit bigger, 80px) overhangs
+past it into its own space without displacing anything below.
+
 ## [0.5.31] - 2026-09-06
 
 Made the station logo in the now-playing header much bigger (28px →
