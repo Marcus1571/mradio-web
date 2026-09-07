@@ -619,7 +619,7 @@ above — this reasoning was wrong.)
 future) favorites change to existing users automatically** — per the
 user's explicit instruction that this is a one-time-only operation.
 
-## Language support (added 2026-09-05, 0.2.0 + 0.2.1 + 0.3.1; Portuguese + pattern cleanup 2026-09-06, 0.3.5; French 2026-09-06, 0.3.10; Russian 2026-09-06, 0.5.8; German 2026-09-06, 0.5.9; Greek 2026-09-06, 0.5.10; Dutch 2026-09-06, 0.5.11; Danish 2026-09-06, 0.5.12; Swedish 2026-09-06, 0.5.13; Norwegian Bokmål 2026-09-06, 0.5.14; Japanese 2026-09-06, 0.5.15) — fully done
+## Language support (added 2026-09-05, 0.2.0 + 0.2.1 + 0.3.1; Portuguese + pattern cleanup 2026-09-06, 0.3.5; French 2026-09-06, 0.3.10; Russian 2026-09-06, 0.5.8; German 2026-09-06, 0.5.9; Greek 2026-09-06, 0.5.10; Dutch 2026-09-06, 0.5.11; Danish 2026-09-06, 0.5.12; Swedish 2026-09-06, 0.5.13; Norwegian Bokmål 2026-09-06, 0.5.14; Japanese 2026-09-06, 0.5.15; Turkish 2026-09-07, 1.0.3) — fully done
 
 UI language (English/Spanish/Italian/Portuguese/French/Russian/German/
 Greek/Dutch/Danish/Swedish/Norwegian Bokmål/Japanese, top-bar dropdown,
@@ -670,7 +670,23 @@ to two lines in its narrow column, which is a natural wrap (harmless,
 consistent with how German's longer strings were judged acceptable
 in 0.5.9), not a truncation or missing-translation bug — thirteenth
 language added, this pattern is now well-proven across Latin,
-Cyrillic, Greek, and CJK scripts alike.
+Cyrillic, Greek, and CJK scripts alike. Turkish (`tr`, 1.0.3, 14th)
+followed the identical 6-spot pattern with no surprises — dotted/
+dotless I (İ/ı) and the other Turkish-specific diacritics (ş, ğ, ç)
+render correctly with no special handling needed anywhere in the
+stack, confirmed via a headless-Chrome screenshot of a throwaway
+harness (`DevHarness.tsx`, same disposable-harness technique used for
+the 1.0.1/1.0.2 no-ICY-message verification — mounted in place of
+`App` in `main.tsx`, screenshotted, then fully reverted, nothing
+committed) exercising both a normal playing-with-liner-notes state and
+the no-ICY-support message from 1.0.1/1.0.2, both in Turkish. Not
+re-verified live against the Analytics/Settings/Users pages this time
+(no auth harness set up for those, unlike the Playwright passes used
+for German/Russian/Japanese) — the i18n mechanism itself (TypeScript's
+`Dict`-shape enforcement, the identical key structure across 14 now-
+proven files) is what actually guards those pages, not per-language
+manual checking, so this is a reasonable proportionality call, not a
+skipped step.
 `Dashboard.tsx`'s config-load fallback chain (previously an `===`
 chain naming each language code, needing an edit per new language) was
 **simplified in 0.3.5** to validate against `LANGUAGES` generically

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.3] - 2026-09-07
+
+Added Turkish as the 14th UI/AI-liner-notes language — same top-bar
+language switcher as the other 13.
+
 ## [1.0.2] - 2026-09-07
 
 1.0.1 shipped a fix for stations with no ICY metadata support at all, but
