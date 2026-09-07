@@ -724,6 +724,43 @@ correctly with zero special handling needed in this app's own code.
 extension every other existing language) re-screenshotted as an
 explicit before/after control to confirm zero regression to the
 LTR default.
+
+**Gap in the above verification, caught by the user immediately in
+production (fixed 2026-09-07, 1.0.5)**: the harness used to verify
+1.0.4 didn't render an actual station logo (`NowPlayingPanel`'s logo is
+conditional on `useStationLogo()` resolving a real image, which needs
+network access the harness didn't have), so the one absolutely-
+positioned element on this panel never got exercised — and it was
+wrong. `.station-logo` was pinned with a hardcoded `right:
+var(--logo-inset)`, and `.panel-head-with-logo::after` (the shortened
+divider segment behind it) hardcoded `right: calc(...)` too — both
+stayed glued to the physical right edge in Hebrew while the rest of
+the panel correctly mirrored, so the logo visually collided with the
+now-right-flowing `.np-metrics` text. Fixed by switching both to the
+CSS logical property `inset-inline-end`, which resolves to `right` in
+LTR and `left` in RTL automatically — no `[dir="rtl"]` override needed,
+same one-property fix pattern applies everywhere this class of bug can
+occur. Audited the rest of `dashboard.css` for the same mistake while
+fixing this one (grepped every `position: absolute`/`fixed` block for
+asymmetric `left`/`right`) and found two more: `.user-dropdown` and
+`.dropdown-menu` (the account menu and the language/provider dropdown
+pickers) were both anchored `right: 0` to their trigger button, same
+fix applied to both. `.panel-head::after` and `.live-dot::after` were
+checked and are fine as-is — both set `left`/`right` symmetrically (or
+use `inset` outright), so they were never side-specific to begin with.
+
+**Lesson, worth remembering for any future RTL language**: a harness
+without real backend/network data can validate text flow and typography
+but will silently skip any element whose presence depends on that data
+(here, a station logo) — a gap like this needs either a harness that
+fakes the missing piece (what 1.0.5's fix verification did instead: a
+harness rendering `.station-logo` directly with a data-URI placeholder
+image, screenshotted in both directions) or a live check against the
+real running app before calling RTL support "done." Re-verified 1.0.5's
+fix this way, confirmed the logo/divider correctly move to the left in
+Hebrew with the divider's shortened segment on the matching side, and
+re-confirmed zero regression to the LTR English render alongside it.
+
 `Dashboard.tsx`'s config-load fallback chain (previously an `===`
 chain naming each language code, needing an edit per new language) was
 **simplified in 0.3.5** to validate against `LANGUAGES` generically

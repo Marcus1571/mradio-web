@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.5] - 2026-09-07
+
+Fixed the station logo overlapping the now-playing panel's metrics row
+in Hebrew, caught right after 1.0.4 shipped. The logo and a couple of
+dropdown menus were pinned to a fixed physical side (`right`) instead
+of a direction-aware one, so they didn't move to the mirrored side
+along with the rest of the RTL layout. Both now flip correctly.
+
 ## [1.0.4] - 2026-09-07
 
 Added Hebrew as the 15th UI/AI-liner-notes language — this app's first

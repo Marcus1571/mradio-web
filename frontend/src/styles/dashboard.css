@@ -121,7 +121,10 @@
 
 .user-dropdown {
   position: absolute;
-  right: 0;
+  /* inset-inline-end (not right): anchors to the trigger's trailing
+     edge in either direction, so it doesn't detach from the button in
+     RTL (Hebrew), the same fix applied to .station-logo above. */
+  inset-inline-end: 0;
   top: calc(100% + var(--space-2xs));
   min-width: 200px;
   background: var(--paper-2);
@@ -274,8 +277,17 @@
    against .panel itself (see .station-logo), so its size is fully
    independent of .panel-head's own compact height. Only the divider
    is shortened above the logo's column. */
+/* inset-inline-end (not right): the logo sits at the header's trailing
+   edge, which is the right in LTR but the left in RTL (Hebrew) — the
+   logical property keeps this synced with .station-logo's own
+   inset-inline-end below, no separate [dir="rtl"] override needed.
+   Confirmed live: the hardcoded `right` version left this divider
+   shortened on the physical right in Hebrew while the logo itself
+   (also fixed then) had already moved to the left, so the divider
+   ran the wrong length and overlapped the metrics row on the other
+   side. */
 .panel-head-with-logo::after {
-  right: calc(var(--logo-inset) + var(--logo-size) + var(--space-sm));
+  inset-inline-end: calc(var(--logo-inset) + var(--logo-size) + var(--space-sm));
 }
 
 .panel-title {
@@ -366,7 +378,11 @@
 .station-logo {
   position: absolute;
   top: var(--logo-inset);
-  right: var(--logo-inset);
+  /* inset-inline-end (not right): moves to the header's trailing edge
+     regardless of direction — right in LTR, left in RTL (Hebrew) — so
+     the logo follows the same "reading order flips" rule as the text
+     around it instead of staying pinned to a fixed physical side. */
+  inset-inline-end: var(--logo-inset);
   height: var(--logo-size);
   width: auto;
   max-width: 140px;
@@ -745,7 +761,9 @@
 
 .dropdown-menu {
   position: absolute;
-  right: 0;
+  /* inset-inline-end (not right): same RTL fix as .user-dropdown above
+     — anchors to the trigger chip's trailing edge in either direction. */
+  inset-inline-end: 0;
   top: calc(100% + var(--space-2xs));
   background: var(--paper-2);
   border: 1px solid var(--line);
