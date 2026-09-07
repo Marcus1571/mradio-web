@@ -104,6 +104,15 @@ const ru: Dict = {
     codexDisconnect: 'Отключить',
     codexWaiting: 'Ожидание завершения входа…',
     codexUserCodeHint: 'Введите этот код: {code}, или откройте',
+    grokGroup: 'Grok',
+    grokIntro:
+      'Модели Grok от xAI. Выберите ключ API (оплата за токены на вашем аккаунте xAI) или подписку ' +
+      'SuperGrok / X Premium+.',
+    grokModeLabel: 'Способ входа в Grok',
+    grokModeApiKey: 'Ключ API',
+    grokModeSubscription: 'Подписка',
+    grokConnect: 'Подключиться через Grok',
+    grokConnected: 'Подключено к вашей подписке Grok.',
     errorFallback: 'Не удалось сохранить настройки.',
     test: 'Проверить',
     testing: 'Проверка…',

@@ -48,7 +48,7 @@ export interface Config {
 }
 
 export interface ProviderInfo {
-  name: 'opencode' | 'openai' | 'ollama'
+  name: 'opencode' | 'openai' | 'ollama' | 'codex' | 'grok'
   enabled: boolean
 }
 
@@ -68,6 +68,11 @@ export interface AISettings {
   api_timeout: number
   opencode: string
   opencode_timeout: number
+  grok_mode: 'api_key' | 'subscription'
+  grok_api_base: string
+  grok_api_key: string
+  grok_model: string
+  grok_timeout: number
 }
 
 export interface AITestResult {
@@ -82,6 +87,16 @@ export interface CodexStatus {
 }
 
 export interface CodexConnectResponse {
+  user_code: string
+  verification_uri: string
+}
+
+export interface GrokStatus {
+  connected: boolean
+  pending: boolean
+}
+
+export interface GrokConnectResponse {
   user_code: string
   verification_uri: string
 }

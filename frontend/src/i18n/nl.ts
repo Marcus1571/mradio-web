@@ -104,6 +104,15 @@ const nl: Dict = {
     codexDisconnect: 'Verbinding verbreken',
     codexWaiting: 'Wachten tot inloggen is voltooid…',
     codexUserCodeHint: 'Voer deze code in: {code}, of open',
+    grokGroup: 'Grok',
+    grokIntro:
+      "Grok-modellen van xAI. Kies een API-sleutel (per token gefactureerd op je xAI-account) of je " +
+      'SuperGrok-/X Premium+-abonnement.',
+    grokModeLabel: 'Grok-aanmeldmethode',
+    grokModeApiKey: 'API-sleutel',
+    grokModeSubscription: 'Abonnement',
+    grokConnect: 'Verbinden met Grok',
+    grokConnected: 'Verbonden met je Grok-abonnement.',
     errorFallback: 'Instellingen opslaan mislukt.',
     test: 'Testen',
     testing: 'Testen…',

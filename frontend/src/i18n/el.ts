@@ -104,6 +104,15 @@ const el: Dict = {
     codexDisconnect: 'Αποσύνδεση',
     codexWaiting: 'Αναμονή ολοκλήρωσης σύνδεσης…',
     codexUserCodeHint: 'Εισαγάγετε αυτόν τον κωδικό: {code}, ή ανοίξτε',
+    grokGroup: 'Grok',
+    grokIntro:
+      'Μοντέλα Grok της xAI. Επιλέξτε κλειδί API (χρέωση ανά token στον λογαριασμό xAI σας) ή τη συνδρομή ' +
+      'SuperGrok / X Premium+.',
+    grokModeLabel: 'Μέθοδος σύνδεσης Grok',
+    grokModeApiKey: 'Κλειδί API',
+    grokModeSubscription: 'Συνδρομή',
+    grokConnect: 'Σύνδεση με Grok',
+    grokConnected: 'Συνδέθηκε με τη συνδρομή Grok σας.',
     errorFallback: 'Δεν ήταν δυνατή η αποθήκευση των ρυθμίσεων.',
     test: 'Δοκιμή',
     testing: 'Δοκιμή…',

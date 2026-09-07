@@ -22,6 +22,7 @@ const _PROVIDER_LABEL: Record<string, string> = {
   ollama: 'Ollama',
   openai: 'NIM',
   codex: 'ChatGPT',
+  grok: 'Grok',
 }
 
 function TriviaHistoryStrip({ version, t }: { version: number; t: TFunction }) {

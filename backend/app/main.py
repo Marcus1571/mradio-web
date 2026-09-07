@@ -25,6 +25,7 @@ from .routers import codex as codex_router
 from .routers import config as config_router
 from .routers import enrich as enrich_router
 from .routers import favorites as favorites_router
+from .routers import grok as grok_router
 from .routers import settings as settings_router
 from .routers import smtp as smtp_router
 from .routers import stations as stations_router
@@ -51,6 +52,7 @@ app.include_router(stream_router.router)
 app.include_router(settings_router.router)
 app.include_router(smtp_router.router)
 app.include_router(codex_router.router)
+app.include_router(grok_router.router)
 app.include_router(enrich_router.router)
 app.include_router(favorites_router.router)
 app.include_router(stations_router.router)

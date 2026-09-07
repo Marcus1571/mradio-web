@@ -312,6 +312,25 @@
   opacity: 1;
 }
 
+.grok-mode-toggle {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-2xs);
+}
+
+.grok-mode-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.grok-mode-option input[type="radio"] {
+  accent-color: var(--accent);
+}
+
 .test-actions {
   display: flex;
   align-items: center;

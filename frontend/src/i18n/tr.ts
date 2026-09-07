@@ -104,6 +104,15 @@ const tr: Dict = {
     codexDisconnect: 'Bağlantıyı kes',
     codexWaiting: 'Girişin tamamlanması bekleniyor…',
     codexUserCodeHint: 'Bu kodu girin: {code}, veya açın',
+    grokGroup: 'Grok',
+    grokIntro:
+      'xAI\'nin Grok modelleri. Bir API anahtarı (xAI hesabınıza jeton başına faturalandırılır) veya ' +
+      'SuperGrok / X Premium+ aboneliğinizi seçin.',
+    grokModeLabel: 'Grok giriş yöntemi',
+    grokModeApiKey: 'API anahtarı',
+    grokModeSubscription: 'Abonelik',
+    grokConnect: 'Grok ile bağlan',
+    grokConnected: 'Grok aboneliğinize bağlandı.',
     errorFallback: 'Ayarlar kaydedilemedi.',
     test: 'Test et',
     testing: 'Test ediliyor…',

@@ -49,6 +49,11 @@ class AISettingsUpdate(BaseModel):
     api_timeout: int | None = None
     opencode: str | None = None
     opencode_timeout: int | None = None
+    grok_mode: str | None = None
+    grok_api_base: str | None = None
+    grok_api_key: str | None = None
+    grok_model: str | None = None
+    grok_timeout: int | None = None
 
 
 class ProviderSwitchRequest(BaseModel):

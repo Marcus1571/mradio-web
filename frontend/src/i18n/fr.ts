@@ -104,6 +104,15 @@ const fr: Dict = {
     codexDisconnect: 'Déconnecter',
     codexWaiting: 'En attente de la fin de la connexion…',
     codexUserCodeHint: 'Entrez ce code : {code}, ou ouvrez',
+    grokGroup: 'Grok',
+    grokIntro:
+      "Modèles Grok de xAI. Choisissez une clé API (facturée au jeton sur votre compte xAI) ou votre " +
+      'abonnement SuperGrok / X Premium+.',
+    grokModeLabel: 'Méthode de connexion à Grok',
+    grokModeApiKey: 'Clé API',
+    grokModeSubscription: 'Abonnement',
+    grokConnect: 'Se connecter avec Grok',
+    grokConnected: 'Connecté à votre abonnement Grok.',
     errorFallback: "Impossible d'enregistrer les paramètres.",
     test: 'Tester',
     testing: 'Test…',

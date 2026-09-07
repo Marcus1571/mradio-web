@@ -104,6 +104,15 @@ const nb: Dict = {
     codexDisconnect: 'Koble fra',
     codexWaiting: 'Venter på at innloggingen skal fullføres…',
     codexUserCodeHint: 'Skriv inn denne koden: {code}, eller åpne',
+    grokGroup: 'Grok',
+    grokIntro:
+      'Grok-modeller fra xAI. Velg en API-nøkkel (fakturert per token på xAI-kontoen din) eller ' +
+      'SuperGrok-/X Premium+-abonnementet ditt.',
+    grokModeLabel: 'Grok-innloggingsmetode',
+    grokModeApiKey: 'API-nøkkel',
+    grokModeSubscription: 'Abonnement',
+    grokConnect: 'Koble til med Grok',
+    grokConnected: 'Koblet til Grok-abonnementet ditt.',
     errorFallback: 'Kunne ikke lagre innstillingene.',
     test: 'Test',
     testing: 'Tester…',

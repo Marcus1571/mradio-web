@@ -25,9 +25,18 @@ _DEFAULTS = {
     "api_timeout": 30,
     "opencode": "",
     "opencode_timeout": 180,
+    # "api_key" (metered, per-token) or "subscription" (OAuth against a
+    # SuperGrok/X Premium+ account, see grok_oauth.py) — the two are
+    # mutually exclusive; grok_settings.json holds the OAuth token
+    # itself, mirroring codex_settings.json's separate file.
+    "grok_mode": "api_key",
+    "grok_api_base": "https://api.x.ai/v1",
+    "grok_api_key": "",
+    "grok_model": "grok-4.3",
+    "grok_timeout": 30,
 }
 
-_SECRET_FIELDS = {"api_key"}
+_SECRET_FIELDS = {"api_key", "grok_api_key"}
 
 
 def _seed_from_env() -> dict:

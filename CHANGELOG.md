@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.0] - 2026-09-07
+
+Added **Grok (xAI)** as a 5th AI liner-notes provider, with a choice of
+two sign-in methods:
+
+- **API key** — a metered, pay-per-token key from xAI's own developer
+  console, same shape as the existing NIM/OpenAI-compatible option.
+- **Subscription** — sign in with a SuperGrok or X Premium+ subscription
+  instead, via a device-code flow, no per-token billing. Unlike the
+  ChatGPT option, this uses xAI's genuinely documented OAuth endpoint
+  and its public API — no bundled CLI binary needed.
+
+Pick either from a toggle in the new Grok card on the AI providers page
+(user menu → Settings → AI providers, admin only). See
+[KB §6](KB.md#6-configuring-ai-providers) for setup steps for both.
+
 ## [1.0.7] - 2026-09-07
 
 Fixed a major bug: stopping playback and pressing Play again (same

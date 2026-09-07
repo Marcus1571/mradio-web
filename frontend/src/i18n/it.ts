@@ -104,6 +104,15 @@ const it: Dict = {
     codexDisconnect: 'Disconnetti',
     codexWaiting: 'In attesa del completamento dell\'accesso…',
     codexUserCodeHint: 'Inserisci questo codice: {code}, oppure apri',
+    grokGroup: 'Grok',
+    grokIntro:
+      "Modelli Grok di xAI. Scegli una chiave API (fatturata per token sul tuo account xAI) oppure il tuo " +
+      'abbonamento SuperGrok / X Premium+.',
+    grokModeLabel: 'Metodo di accesso a Grok',
+    grokModeApiKey: 'Chiave API',
+    grokModeSubscription: 'Abbonamento',
+    grokConnect: 'Connetti con Grok',
+    grokConnected: 'Connesso al tuo abbonamento Grok.',
     errorFallback: 'Impossibile salvare le impostazioni.',
     test: 'Prova',
     testing: 'Provando…',

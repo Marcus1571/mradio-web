@@ -160,6 +160,16 @@ export function OllamaIcon({ className }: IconProps) {
   )
 }
 
+export function GrokIcon({ className }: IconProps) {
+  // Two crossing angular strokes, echoing xAI's own mark — distinct from
+  // SparkleIcon's 4-point star (used elsewhere for AI liner notes).
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M3 3 8 8M13 3 8 8M8 8 3 13M8 8l5 5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function NimIcon({ className }: IconProps) {
   // Stylised chip/die — a GPU-served endpoint.
   return (

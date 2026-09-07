@@ -104,6 +104,15 @@ const sv: Dict = {
     codexDisconnect: 'Koppla från',
     codexWaiting: 'Väntar på att inloggningen ska slutföras…',
     codexUserCodeHint: 'Ange denna kod: {code}, eller öppna',
+    grokGroup: 'Grok',
+    grokIntro:
+      'Grok-modeller från xAI. Välj en API-nyckel (debiteras per token på ditt xAI-konto) eller din ' +
+      'SuperGrok-/X Premium+-prenumeration.',
+    grokModeLabel: 'Grok-inloggningsmetod',
+    grokModeApiKey: 'API-nyckel',
+    grokModeSubscription: 'Prenumeration',
+    grokConnect: 'Anslut med Grok',
+    grokConnected: 'Ansluten till din Grok-prenumeration.',
     errorFallback: 'Det gick inte att spara inställningarna.',
     test: 'Testa',
     testing: 'Testar…',

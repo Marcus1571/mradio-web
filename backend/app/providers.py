@@ -11,9 +11,9 @@ import urllib.parse
 
 import httpx
 
-from . import codex_oauth, codex_settings
+from . import codex_oauth, codex_settings, grok_oauth, grok_settings
 
-PROVIDERS = ("codex", "opencode", "ollama", "openai")
+PROVIDERS = ("codex", "grok", "opencode", "ollama", "openai")
 
 _OC_ONPATH: bool | None = None
 
@@ -62,19 +62,34 @@ def oc_port(settings: dict) -> int:
     return 0
 
 
+def grok_enabled(settings: dict) -> bool:
+    """True if EITHER of Grok's two mutually-exclusive modes (settings.py's
+    grok_mode radio choice) is actually configured — an API key typed in
+    for "api_key" mode, or a completed OAuth login for "subscription"
+    mode. Only the mode currently selected is checked, matching how the
+    other providers only count as enabled when their one credential
+    field is filled."""
+    mode = settings.get("grok_mode") or "api_key"
+    if mode == "subscription":
+        return bool(grok_settings.load().get("access_token"))
+    return bool(settings.get("grok_api_key"))
+
+
 def provider_enabled(name: str, settings: dict) -> bool:
     probe = {
         "opencode": bool(oc_port(settings)),
         "ollama": bool(settings.get("ollama_url")),
         "openai": bool(settings.get("api_key")),
         "codex": bool(codex_settings.load().get("access_token")),
+        "grok": grok_enabled(settings),
     }
     return probe.get(name, False)
 
 
 def ai_configured(settings: dict) -> bool:
     return bool(settings.get("ollama_url")) or bool(settings.get("api_key")) \
-        or bool(oc_port(settings)) or bool(codex_settings.load().get("access_token"))
+        or bool(oc_port(settings)) or bool(codex_settings.load().get("access_token")) \
+        or grok_enabled(settings)
 
 
 def api_endpoint(base: str, suffix: str) -> str:
@@ -127,6 +142,54 @@ async def llm_openai(settings: dict, prompt: str) -> str | None:
         async with httpx.AsyncClient(timeout=timeout) as client:
             r = await client.post(base, json=payload, headers={
                 "Authorization": "Bearer " + (settings.get("api_key") or "")})
+            r.raise_for_status()
+            data = r.json()
+        content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
+        return content.strip() or None
+    except (httpx.HTTPError, ValueError, IndexError):
+        return None
+
+
+async def llm_grok(settings: dict, prompt: str) -> str | None:
+    """Two mutually-exclusive auth modes, chosen by settings["grok_mode"]
+    (the radio toggle in the AI providers page's Grok bubble) — both call
+    the exact same public, documented api.x.ai chat/completions endpoint,
+    OpenAI-compatible request/response shape, differing only in how the
+    Bearer token is obtained: a typed-in API key, or a subscription OAuth
+    token from grok_oauth.py. Unlike llm_codex, there's no internal/
+    undocumented backend API involved in either mode — see grok_oauth.py
+    for the full reasoning on why that distinction matters here."""
+    mode = settings.get("grok_mode") or "api_key"
+    if mode == "subscription":
+        token = await grok_oauth.ensure_fresh_token()
+        if not token:
+            return None
+        base_url = "https://api.x.ai/v1"
+        model = settings.get("grok_model") or "grok-4.3"
+        timeout = float(settings.get("grok_timeout", 30))
+    else:
+        token = settings.get("grok_api_key") or ""
+        if not token:
+            return None
+        base_url = settings.get("grok_api_base") or "https://api.x.ai/v1"
+        model = settings.get("grok_model") or "grok-4.3"
+        timeout = float(settings.get("grok_timeout", 30))
+    url = api_endpoint(base_url, "chat/completions")
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content":
+                "You are a helpful classical-music metadata assistant. "
+                "Reply ONLY with the requested JSON, no markdown."},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": 0.1,
+        "max_tokens": 1200,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            r = await client.post(url, json=payload,
+                                  headers={"Authorization": f"Bearer {token}"})
             r.raise_for_status()
             data = r.json()
         content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
@@ -363,6 +426,19 @@ async def _test_codex(settings: dict) -> tuple[bool, str]:
     return True, f"Connected ({plan})." if plan else "Connected."
 
 
+async def _test_grok(settings: dict) -> tuple[bool, str]:
+    mode = settings.get("grok_mode") or "api_key"
+    if mode == "subscription":
+        if not grok_settings.load().get("access_token"):
+            return False, "Not connected — use the Connect button above."
+    elif not settings.get("grok_api_key"):
+        return False, "No API key configured."
+    reply = await llm_grok(settings, 'Reply with exactly: {"trivia": "pong"}')
+    if not reply:
+        return False, "Grok did not respond."
+    return True, "Connected."
+
+
 async def run_provider_test(provider: str, settings: dict) -> tuple[bool, str]:
     if provider == "ollama":
         return await _test_ollama(settings)
@@ -372,4 +448,6 @@ async def run_provider_test(provider: str, settings: dict) -> tuple[bool, str]:
         return await _test_opencode(settings)
     if provider == "codex":
         return await _test_codex(settings)
+    if provider == "grok":
+        return await _test_grok(settings)
     return False, "Unknown provider."

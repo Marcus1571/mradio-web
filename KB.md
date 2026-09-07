@@ -223,6 +223,52 @@ client. A scheduled GitHub Action
 (`.github/workflows/bump-codex.yml`) keeps that version pinned and
 up to date the same way `bump-opencode.yml` does.
 
+### Grok (xAI)
+
+Two ways to use xAI's Grok models, chosen with a radio toggle in the
+Grok section of the **AI providers** page — mutually exclusive, pick
+one.
+
+**Option A — API key (metered, pay per token):**
+
+1. Create an account at [console.x.ai](https://console.x.ai) and
+   generate an API key.
+2. Select **API key** in the Grok section's radio toggle.
+3. Fields:
+   - **API base URL**: defaults to `https://api.x.ai/v1` on a fresh
+     install — xAI's own documented API.
+   - **Model**: defaults to `grok-4.3` on a fresh install. Check
+     [console.x.ai](https://console.x.ai) for xAI's current model
+     lineup and pricing if you want a different one.
+   - **API key**: paste the key from step 1. Stored server side; the
+     settings page only ever shows it redacted after saving.
+4. **Save**.
+
+**Option B — SuperGrok / X Premium+ subscription (no per-token
+billing):**
+
+1. Select **Subscription** in the Grok section's radio toggle, then
+   click **Connect with Grok**.
+2. The page shows a one-time code and a link. Open the link (or type
+   it into a browser yourself), sign in to the xAI/X account you want
+   to use, and enter the code.
+3. Once you complete that, the page automatically shows "Connected."
+4. Use **Disconnect** at any time to sign this app out.
+
+This works via xAI's own standard OAuth device-code flow
+(`auth.x.ai`) — confirmed during development that, unlike OpenAI's
+equivalent for ChatGPT/Codex above, this endpoint is genuinely
+reachable by a plain HTTP client with no bot/TLS-fingerprint block, and
+the resulting token is used against `api.x.ai`, the same public
+documented API Option A also calls, not an undocumented internal
+route. No CLI binary is bundled for this — it's plain HTTP calls, same
+as everything else in this app. Still worth the same disclosure as
+ChatGPT/Codex above: this authenticates the same way third-party CLI
+tools do, not through a first-party integration xAI has explicitly
+blessed, and xAI could change or restrict what an OAuth token is
+entitled to at any time. If it breaks, switch to Option A or another
+provider; nothing else in the app is affected.
+
 ### NVIDIA NIM (OpenAI-compatible)
 
 **Getting an API key:**

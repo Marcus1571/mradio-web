@@ -102,6 +102,15 @@ const en = {
     codexDisconnect: 'Disconnect',
     codexWaiting: 'Waiting for sign-in to complete…',
     codexUserCodeHint: 'Enter this code: {code}, or open',
+    grokGroup: 'Grok',
+    grokIntro:
+      "xAI's Grok models. Choose an API key (billed per token to your xAI account) or your SuperGrok / " +
+      'X Premium+ subscription instead.',
+    grokModeLabel: 'Grok sign-in method',
+    grokModeApiKey: 'API key',
+    grokModeSubscription: 'Subscription',
+    grokConnect: 'Connect with Grok',
+    grokConnected: 'Connected to your Grok subscription.',
     errorFallback: 'Could not save settings.',
     test: 'Test',
     testing: 'Testing…',

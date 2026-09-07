@@ -1,20 +1,22 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError, api } from '../api/client'
-import type { AISettings, AITestResult, CodexConnectResponse } from '../api/types'
+import type { AISettings, AITestResult, CodexConnectResponse, GrokConnectResponse } from '../api/types'
 import { IDLE_TEST, KbNote, TestBadge } from '../components/AdminSettingsShared'
 import type { TestState } from '../components/AdminSettingsShared'
-import { ChatGPTIcon, NimIcon, OllamaIcon, OpenCodeIcon } from '../components/Icons'
+import { ChatGPTIcon, GrokIcon, NimIcon, OllamaIcon, OpenCodeIcon } from '../components/Icons'
 import { useCodexStatus } from '../hooks/useCodexStatus'
+import { useGrokStatus } from '../hooks/useGrokStatus'
 import { useProviders } from '../hooks/useProviders'
 import type { TFunction } from '../i18n'
 import '../styles/admin.css'
 
-type Provider = 'ollama' | 'openai' | 'opencode' | 'codex'
+type Provider = 'ollama' | 'openai' | 'opencode' | 'codex' | 'grok'
 
 export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunction }) {
   const [settings, setSettings] = useState<AISettings | null>(null)
   const [apiKeyInput, setApiKeyInput] = useState('')
+  const [grokApiKeyInput, setGrokApiKeyInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
@@ -22,9 +24,13 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
   const [openaiTest, setOpenaiTest] = useState<TestState>(IDLE_TEST)
   const [opencodeTest, setOpencodeTest] = useState<TestState>(IDLE_TEST)
   const [codexTest, setCodexTest] = useState<TestState>(IDLE_TEST)
+  const [grokTest, setGrokTest] = useState<TestState>(IDLE_TEST)
   const { status: codexStatus, refresh: refreshCodexStatus } = useCodexStatus()
   const [codexConnecting, setCodexConnecting] = useState(false)
   const [codexPromptResult, setCodexPromptResult] = useState<CodexConnectResponse | null>(null)
+  const { status: grokStatus, refresh: refreshGrokStatus } = useGrokStatus()
+  const [grokConnecting, setGrokConnecting] = useState(false)
+  const [grokPromptResult, setGrokPromptResult] = useState<GrokConnectResponse | null>(null)
   const { providers, refresh: refreshProviders } = useProviders()
 
   function isEnabled(name: Provider): boolean {
@@ -42,6 +48,13 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
     }
   }, [codexStatus?.connected, refreshProviders])
 
+  useEffect(() => {
+    if (grokStatus?.connected) {
+      setGrokPromptResult(null)
+      void refreshProviders()
+    }
+  }, [grokStatus?.connected, refreshProviders])
+
   function field<K extends keyof AISettings>(key: K, value: AISettings[K]) {
     setSettings((s) => (s ? { ...s, [key]: value } : s))
   }
@@ -55,9 +68,12 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
       const body: Partial<AISettings> = { ...settings }
       if (apiKeyInput) body.api_key = apiKeyInput
       else delete body.api_key
+      if (grokApiKeyInput) body.grok_api_key = grokApiKeyInput
+      else delete body.grok_api_key
       const res = await api.patch<AISettings>('/api/settings/ai', body)
       setSettings(res)
       setApiKeyInput('')
+      setGrokApiKeyInput('')
       setSaved(true)
       await refreshProviders()
       window.setTimeout(() => setSaved(false), 2500)
@@ -110,6 +126,37 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
     setCodexPromptResult(null)
     setCodexTest(IDLE_TEST)
     await refreshCodexStatus()
+    await refreshProviders()
+  }
+
+  async function testGrok() {
+    setGrokTest({ status: 'testing' })
+    try {
+      const res = await api.post<AITestResult>('/api/settings/grok/test', {})
+      setGrokTest({ status: res.ok ? 'success' : 'failure', message: res.message })
+    } catch {
+      setGrokTest({ status: 'failure', message: t('aiSettings.testError') })
+    }
+  }
+
+  async function connectGrok() {
+    setGrokConnecting(true)
+    setGrokPromptResult(null)
+    try {
+      const res = await api.post<GrokConnectResponse>('/api/settings/grok/connect', {})
+      setGrokPromptResult(res)
+      await refreshGrokStatus()
+      await refreshProviders()
+    } finally {
+      setGrokConnecting(false)
+    }
+  }
+
+  async function disconnectGrok() {
+    await api.post('/api/settings/grok/disconnect', {})
+    setGrokPromptResult(null)
+    setGrokTest(IDLE_TEST)
+    await refreshGrokStatus()
     await refreshProviders()
   }
 
@@ -184,6 +231,137 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                     onClick={() => void connectCodex()}
                   >
                     {codexConnecting ? t('aiSettings.testing') : t('aiSettings.codexConnect')}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="settings-group">
+              <div className="settings-group-head">
+                <h2>
+                  <GrokIcon className="provider-mark" />
+                  <span className={`provider-status-dot ${isEnabled('grok') ? 'on' : ''}`} aria-hidden="true" />
+                  {t('aiSettings.grokGroup')}
+                </h2>
+              </div>
+              <p className="admin-note">{t('aiSettings.grokIntro')}</p>
+
+              <div className="grok-mode-toggle" role="radiogroup" aria-label={t('aiSettings.grokModeLabel')}>
+                <label className="grok-mode-option">
+                  <input
+                    type="radio"
+                    name="grok_mode"
+                    checked={settings.grok_mode === 'api_key'}
+                    onChange={() => field('grok_mode', 'api_key')}
+                  />
+                  {t('aiSettings.grokModeApiKey')}
+                </label>
+                <label className="grok-mode-option">
+                  <input
+                    type="radio"
+                    name="grok_mode"
+                    checked={settings.grok_mode === 'subscription'}
+                    onChange={() => field('grok_mode', 'subscription')}
+                  />
+                  {t('aiSettings.grokModeSubscription')}
+                </label>
+              </div>
+
+              {settings.grok_mode === 'api_key' ? (
+                <>
+                  <div className="settings-row">
+                    <label htmlFor="grok_api_base">{t('aiSettings.apiBaseUrl')}</label>
+                    <input
+                      id="grok_api_base"
+                      value={settings.grok_api_base}
+                      onChange={(e) => field('grok_api_base', e.target.value)}
+                    />
+                  </div>
+                  <div className="settings-row">
+                    <label htmlFor="grok_model">{t('aiSettings.model')}</label>
+                    <input
+                      id="grok_model"
+                      value={settings.grok_model}
+                      onChange={(e) => field('grok_model', e.target.value)}
+                    />
+                  </div>
+                  <div className="settings-row">
+                    <label htmlFor="grok_api_key">{t('aiSettings.apiKey')}</label>
+                    <input
+                      id="grok_api_key"
+                      type="password"
+                      placeholder={settings.grok_api_key || t('aiSettings.apiKeyNotSet')}
+                      value={grokApiKeyInput}
+                      onChange={(e) => setGrokApiKeyInput(e.target.value)}
+                    />
+                  </div>
+                  <div className="test-actions">
+                    <button
+                      className="test-btn"
+                      type="button"
+                      disabled={grokTest.status === 'testing'}
+                      onClick={() =>
+                        void testProvider(
+                          'grok',
+                          {
+                            grok_mode: 'api_key',
+                            grok_api_base: settings.grok_api_base,
+                            grok_model: settings.grok_model,
+                            grok_timeout: settings.grok_timeout,
+                            ...(grokApiKeyInput ? { grok_api_key: grokApiKeyInput } : {}),
+                          },
+                          setGrokTest,
+                        )
+                      }
+                    >
+                      {grokTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
+                    </button>
+                    <TestBadge state={grokTest} t={t} />
+                  </div>
+                </>
+              ) : grokStatus?.connected ? (
+                <>
+                  <p className="admin-note">{t('aiSettings.grokConnected')}</p>
+                  <div className="test-actions">
+                    <button className="test-btn" type="button" onClick={() => void disconnectGrok()}>
+                      {t('aiSettings.codexDisconnect')}
+                    </button>
+                    <button
+                      className="test-btn"
+                      type="button"
+                      disabled={grokTest.status === 'testing'}
+                      onClick={() => void testGrok()}
+                    >
+                      {grokTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
+                    </button>
+                    <TestBadge state={grokTest} t={t} />
+                  </div>
+                </>
+              ) : grokStatus?.pending || grokPromptResult ? (
+                <div className="admin-note">
+                  <p>{t('aiSettings.codexWaiting')}</p>
+                  {grokPromptResult && (
+                    <p>
+                      {t('aiSettings.codexUserCodeHint', { code: grokPromptResult.user_code })}{' '}
+                      <a
+                        href={grokPromptResult.verification_uri}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {grokPromptResult.verification_uri}
+                      </a>
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="test-actions">
+                  <button
+                    className="test-btn"
+                    type="button"
+                    disabled={grokConnecting}
+                    onClick={() => void connectGrok()}
+                  >
+                    {grokConnecting ? t('aiSettings.testing') : t('aiSettings.grokConnect')}
                   </button>
                 </div>
               )}

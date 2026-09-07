@@ -104,6 +104,15 @@ const da: Dict = {
     codexDisconnect: 'Afbryd forbindelse',
     codexWaiting: 'Venter på, at login fuldføres…',
     codexUserCodeHint: 'Indtast denne kode: {code}, eller åbn',
+    grokGroup: 'Grok',
+    grokIntro:
+      'Grok-modeller fra xAI. Vælg en API-nøgle (faktureret pr. token på din xAI-konto) eller dit ' +
+      'SuperGrok-/X Premium+-abonnement.',
+    grokModeLabel: 'Grok-loginmetode',
+    grokModeApiKey: 'API-nøgle',
+    grokModeSubscription: 'Abonnement',
+    grokConnect: 'Opret forbindelse til Grok',
+    grokConnected: 'Forbundet til dit Grok-abonnement.',
     errorFallback: 'Kunne ikke gemme indstillinger.',
     test: 'Test',
     testing: 'Tester…',

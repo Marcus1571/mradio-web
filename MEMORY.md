@@ -2677,6 +2677,105 @@ the "stuck after Stop→Play" bug that was reported and fixed here —
 left untouched rather than risking a change to retry cadence/backoff
 that wasn't asked for and isn't the reported symptom.
 
+## Grok (xAI) added as 5th AI provider, with a real sign-in choice (added 2026-09-07, 1.1.0)
+
+User asked for Grok "similar to what we did with ChatGPT." Investigated
+before assuming the same shape applied, and it doesn't — Grok has two
+genuinely different, both-legitimate integration paths, unlike ChatGPT
+which only had one viable route:
+
+1. A real, documented, OpenAI-compatible metered API (`api.x.ai`) — the
+   same shape the existing NIM/OpenAI-compatible provider already
+   covers generically.
+2. An unofficial-but-technically-clean subscription OAuth flow
+   (SuperGrok/X Premium+), mirroring ChatGPT's shape but — crucially,
+   confirmed live, not assumed — without ChatGPT's actual blocker.
+
+**Clarified scope with the user before building**: asked whether Grok
+should reuse the existing generic OpenAI-compatible slot for API-key
+mode, or get its own dedicated fields — user chose dedicated (so NIM
+and Grok-via-key can be configured simultaneously, not sharing one
+slot), plus explicitly wants both modes available as a radio toggle in
+one Grok "bubble," not a forced either/or provider split.
+
+**Research pass before writing any OAuth code (user explicitly asked
+for this order, given the ChatGPT precedent of one wasted implementation
+attempt)**: confirmed live via `curl` — not just read about in
+third-party docs — that `auth.x.ai`'s OIDC discovery
+(`/.well-known/openid-configuration`), device-code endpoint (`POST
+/oauth2/device/code`), and token endpoint all return real 200 responses
+to a plain `curl`/httpx client, no Cloudflare bot/TLS-fingerprint
+challenge of the kind that blocked `auth.openai.com` and forced the
+Codex CLI bundling workaround. Found and read the full, real,
+working source of an open-source implementation
+(`piex-dev/piex`'s `extensions/xai-oauth`, itself ported from
+`NousResearch/hermes-agent`) to get the exact endpoint URLs, the public
+client_id (`b1a00492-073a-47ea-816f-4c329264a828` — a public client
+identifier, not a secret, same category as `codex_oauth.py`'s hardcoded
+`CLIENT_ID`), and scope string, rather than guessing or reverse-
+engineering. **This means the subscription half needed zero bundled
+binaries and zero Dockerfile changes** — plain `httpx` calls, unlike
+`codex_oauth.py`'s subprocess-based CLI delegation.
+
+**New backend files**, mirroring the `codex_oauth.py`/`codex_settings.py`/
+`routers/codex.py` pattern exactly but adapted for the plain-HTTP
+reality: `grok_oauth.py` (device-code start/poll/refresh — poll-driven
+from the status endpoint rather than a background `asyncio.Task`, since
+there's no subprocess to block on; `routers/grok.py`'s `/status` route
+calls `poll_once()` itself, same interval-driven design the frontend's
+`useGrokStatus` hook already polls on), `grok_settings.py` (token
+storage, identical shape to `codex_settings.py`), `routers/grok.py`
+(connect/disconnect/status/test, mirrors `routers/codex.py`).
+`providers.py` gained `llm_grok()` (dispatches to either mode based on
+`settings["grok_mode"]`, both paths hitting the same `api.x.ai`
+`chat/completions` endpoint — the only difference is how the Bearer
+token is obtained) and `grok_enabled()` (checks whichever of the two
+mutually-exclusive modes is actually selected). `PROVIDERS` tuple,
+`enricher.py`'s `_llm()` dispatch, `models.py`'s `AISettingsUpdate`, and
+`routers/settings.py`'s test-provider `Literal` all extended the same
+mechanical way every provider before it was.
+
+**Frontend**: new `GrokIcon` (crossing angular strokes, distinct from
+the existing 4-point `SparkleIcon` used elsewhere for AI liner notes),
+new `useGrokStatus.ts` hook (identical shape to `useCodexStatus.ts`),
+and a new Grok card in `AISettingsPage.tsx` between ChatGPT and
+OpenCode — a `role="radiogroup"` toggle (new `.grok-mode-toggle`/
+`.grok-mode-option` CSS, no prior radio-button pattern existed anywhere
+in this app to reuse) switching between the API-key fields (base URL/
+model/key, prefilled to `https://api.x.ai/v1` / `grok-4.3`) and the
+subscription connect/status flow (reuses `codexUserCodeHint`/
+`codexWaiting`'s i18n strings rather than duplicating near-identical
+copy, since the device-code UX is genuinely the same interaction).
+
+**Verified with real functional tests against the live xAI API, not
+mocks**: a throwaway script minted a real device code via
+`start_device_flow()`, confirmed `pending_status()` and `poll_once()`
+behave exactly as designed against actual live responses (including
+the real `authorization_pending` 400 response, matching the code's
+error handling exactly), and confirmed the full FastAPI app imports
+cleanly with all 5 new `/api/settings/grok/*` routes correctly wired
+and requiring auth (401, not 404, via `TestClient`) — not just that
+the Python files parse. Frontend: a throwaway harness rendered the
+real `AISettingsPage` component (with `window.fetch` stubbed for the
+settings/providers endpoints it calls on mount) and screenshotted both
+radio states — API-key mode showing the three prefilled fields, and
+Subscription mode showing the "Connect with Grok" button matching the
+ChatGPT bubble's own not-connected layout — confirming the actual
+rendered UI, not just that the JSX compiles. `tsc --noEmit`, `oxlint`,
+`vite build`, and a Python `ast.parse` syntax check across every new/
+touched backend file all clean.
+
+**Disclosure in KB.md/README.md mirrors ChatGPT/Codex's own** — new
+`### Grok (xAI)` section in KB.md's §6 documents both setup paths, and
+explicitly notes the subscription path's lower-but-nonzero risk profile
+(genuinely documented endpoints, but still not a first-party-blessed
+integration — xAI could restrict what an OAuth token is entitled to at
+any time, same category of risk as ChatGPT/Codex, just without the
+technical bot-block workaround that made ChatGPT's mechanism feel more
+fragile). README's "AI liner notes are optional" bullet updated to
+cover both providers with an unofficial sign-in option, not just
+ChatGPT.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

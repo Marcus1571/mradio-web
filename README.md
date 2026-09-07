@@ -26,7 +26,8 @@ This page is just the overview.
 - **AI liner notes** — a short, factual write-up about the piece and its
   composer/artist, generated on the fly and cached (shared across
   everyone, so the same track is never re-queried twice) via OpenCode,
-  Ollama, ChatGPT, or any OpenAI-compatible endpoint (e.g. NVIDIA NIM). See
+  Ollama, ChatGPT, Grok, or any OpenAI-compatible endpoint (e.g. NVIDIA
+  NIM). See
   [KB §6 — Configuring AI providers](KB.md#6-configuring-ai-providers).
   A "recently played" trivia history keeps the last 10 blurbs per
   account, re-readable while something else plays.
@@ -100,12 +101,13 @@ but they're the ones that catch people out:
 
   [KB §3](KB.md#3-reverse-proxy-nginx-proxy-manager) has the full
   walkthrough.
-- **AI liner notes are optional, and one provider is unofficial.**
-  OpenCode is bundled and works out of the box; Ollama and any
-  OpenAI-compatible endpoint just need a URL or key. The ChatGPT option
-  signs in through the Codex CLI's device flow, which is not a
-  documented API and could stop working if OpenAI changes it — see
-  [KB §6](KB.md#6-configuring-ai-providers) before enabling that one.
+- **AI liner notes are optional, and two providers have an unofficial
+  sign-in option.** OpenCode is bundled and works out of the box;
+  Ollama, NIM, and Grok's API-key mode just need a URL or key. ChatGPT,
+  and Grok's subscription mode, sign in via an unofficial device-code
+  flow using a real chat subscription instead of a documented,
+  first-party API — see [KB §6](KB.md#6-configuring-ai-providers)
+  before enabling either.
   The app works fine with no AI provider at all.
 - **It's built for a household, not the public internet.** Accounts are
   admin-created (no sign-up), AI credentials are shared across everyone
