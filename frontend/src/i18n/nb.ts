@@ -18,6 +18,7 @@ const nb: Dict = {
     signOut: 'Logg ut',
     switchToLight: 'Bytt til lyst tema',
     switchToDark: 'Bytt til mørkt tema',
+    reloadApp: 'Last inn appen på nytt',
   },
   settings: {
     title: 'Innstillinger',
@@ -167,6 +168,7 @@ const nb: Dict = {
     pickStation: 'Velg en stasjon fra favoritter eller sjangre for å begynne å lytte.',
     stopped: 'Stoppet — trykk på spill av for å koble til på nytt.',
     connecting: 'Kobler til…',
+    noIcySupport: 'Denne stasjonen støtter ikke ICY-metadata — sporinformasjon er ikke tilgjengelig.',
     linerNotes: 'Notater',
     askingProvider: 'Spør AI-leverandøren…',
     askingNamedProvider: 'Spør {provider}…',

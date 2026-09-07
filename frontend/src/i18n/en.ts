@@ -16,6 +16,7 @@ const en = {
     signOut: 'Sign out',
     switchToLight: 'Switch to light theme',
     switchToDark: 'Switch to dark theme',
+    reloadApp: 'Reload app',
   },
   settings: {
     title: 'Settings',
@@ -165,6 +166,7 @@ const en = {
     pickStation: 'Pick a station from favorites or genres to start listening.',
     stopped: 'Stopped — press play to reconnect.',
     connecting: 'Connecting…',
+    noIcySupport: 'This station does not support ICY metadata — no track info is available.',
     linerNotes: 'Liner notes',
     askingProvider: 'Asking the AI provider…',
     askingNamedProvider: 'Asking {provider}…',

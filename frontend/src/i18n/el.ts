@@ -18,6 +18,7 @@ const el: Dict = {
     signOut: 'Αποσύνδεση',
     switchToLight: 'Μετάβαση σε ανοιχτό θέμα',
     switchToDark: 'Μετάβαση σε σκούρο θέμα',
+    reloadApp: 'Επαναφόρτωση εφαρμογής',
   },
   settings: {
     title: 'Ρυθμίσεις',
@@ -167,6 +168,7 @@ const el: Dict = {
     pickStation: 'Επιλέξτε έναν σταθμό από τα αγαπημένα ή τα είδη για να ξεκινήσετε να ακούτε.',
     stopped: 'Διακόπηκε — πατήστε play για επανασύνδεση.',
     connecting: 'Σύνδεση…',
+    noIcySupport: 'Αυτός ο σταθμός δεν υποστηρίζει μεταδεδομένα ICY — δεν υπάρχουν διαθέσιμες πληροφορίες κομματιού.',
     linerNotes: 'Σημειώσεις κομματιού',
     askingProvider: 'Ερώτηση στον πάροχο AI…',
     askingNamedProvider: 'Ερώτηση στο {provider}…',

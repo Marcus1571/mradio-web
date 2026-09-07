@@ -16,17 +16,34 @@ just drop events with no subscriber, which left the frontend stuck showing
 "Connecting…" until the track next changed or the user hit Reconnect. Since
 `station` and `title` are "latest value wins" state, not a delivery-order-
 sensitive event stream, the fix is to remember the latest one per sid and
-replay it immediately to a new subscriber."""
+replay it immediately to a new subscriber.
+
+One `sid` lives for the whole player session (see usePlayer.ts), reused
+across every station switch — not one per stream connection. Switching
+stations reassigns `audio.src`, which aborts the old /api/stream fetch
+client-side, but the server only learns of that asynchronously (a
+GeneratorExit the old request's `finally` handles in a shielded background
+task — see stream.py). That leaves a real window where the old station's
+proxy connection is still alive and can emit one more `title`/`station`
+event for a station the user already left, with nothing to tell it apart
+from the new one sharing the same sid. `begin_generation()` mints a token
+per /api/stream connection; publish() tags every event with it and
+`current_generation()` lets a caller confirm before publishing that its
+connection is still the active one for that sid, so a late straggler from
+an abandoned connection is dropped instead of corrupting the new one's
+state."""
 
 import asyncio
 import logging
 import time
+import uuid
 
 logger = logging.getLogger("mradio.nowplaying")
 
 _queues: dict[str, list[asyncio.Queue]] = {}
 _last_station: dict[str, dict] = {}
 _last_title: dict[str, dict] = {}
+_generation: dict[str, str] = {}
 
 # Who's actually connected right now, for the admin analytics page's
 # "Live now" view — keyed by sid, populated/cleared from routers/stream.py
@@ -66,6 +83,22 @@ def live_snapshot() -> list[dict]:
         {**s, "elapsed_seconds": int(now - s["connected_at"])}
         for s in _live_sessions.values()
     ]
+
+
+def begin_generation(sid: str) -> str:
+    """Call once at the start of a new /api/stream connection for `sid`,
+    before publishing its `station` event. Returns a token the connection
+    must pass to is_current_generation() before each subsequent publish —
+    if a stale connection for the same sid is still draining in the
+    background (see module docstring), its token no longer matches and its
+    leftover events are dropped instead of clobbering the new one's."""
+    gen = uuid.uuid4().hex
+    _generation[sid] = gen
+    return gen
+
+
+def is_current_generation(sid: str, gen: str) -> bool:
+    return _generation.get(sid) == gen
 
 
 def publish(sid: str, event: dict) -> None:
@@ -109,4 +142,5 @@ def unsubscribe(sid: str, q: asyncio.Queue) -> None:
         _queues.pop(sid, None)
         _last_station.pop(sid, None)
         _last_title.pop(sid, None)
+        _generation.pop(sid, None)
         logger.info("unsubscribe sid=%s — no subscribers left, cache cleared", sid)

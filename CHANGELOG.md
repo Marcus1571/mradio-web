@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.1] - 2026-09-07
+
+Fixed a real bug and a misleading UI state, both in the now-playing panel:
+
+- **Metadata mix-up when switching stations quickly.** The audio-stream
+  proxy connection for a station you just left could still be finishing
+  up in the background and emit one more title/station update after you'd
+  already switched — occasionally landing on the new station's display.
+  Each stream connection is now tagged with its own generation id server
+  side, so a straggler from an abandoned connection is dropped instead of
+  overwriting the current one's metadata.
+- **"Connecting…" no longer lies forever for stations with no ICY
+  metadata.** Some stations simply never send a track title (no
+  `icy-metaint` support) — the panel used to sit on "Connecting…"
+  indefinitely, which reads as a failure. It now says up front that the
+  station doesn't support metadata, once that's actually known.
+- Added a **Reload app** button next to the theme toggle, as a quick
+  recovery option if the player ever gets into a stuck state.
+
 ## [1.0.0] - 2026-09-07
 
 First stable release. The app has been running in production

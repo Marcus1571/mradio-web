@@ -18,6 +18,7 @@ const nl: Dict = {
     signOut: 'Afmelden',
     switchToLight: 'Overschakelen naar licht thema',
     switchToDark: 'Overschakelen naar donker thema',
+    reloadApp: 'App opnieuw laden',
   },
   settings: {
     title: 'Instellingen',
@@ -167,6 +168,7 @@ const nl: Dict = {
     pickStation: 'Kies een zender uit favorieten of genres om te beginnen met luisteren.',
     stopped: 'Gestopt — druk op afspelen om opnieuw te verbinden.',
     connecting: 'Verbinden…',
+    noIcySupport: 'Deze zender ondersteunt geen ICY-metadata — trackinformatie is niet beschikbaar.',
     linerNotes: 'Notities',
     askingProvider: 'Vraag aan AI-provider…',
     askingNamedProvider: 'Vraag aan {provider}…',

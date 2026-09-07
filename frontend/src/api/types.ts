@@ -186,6 +186,7 @@ export type WsMessage =
       bitrate: string | null
       sample_rate: string | null
       format: string | null
+      has_icy: boolean
     }
   | { type: 'now_playing'; raw_title: string; artist: string; title: string; performer: string }
   | { type: 'enrichment'; raw_title: string; item: EnrichmentItem }

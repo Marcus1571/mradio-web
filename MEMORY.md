@@ -2279,6 +2279,67 @@ most of the value with none of the licensing/redistribution questions.
 User's call was to leave it as is, which is reasonable: it has held
 across 47 releases.
 
+## Stale metadata on quick station switches + honest "no ICY support" state (fixed 2026-09-07, 1.0.1)
+
+User reported the now-playing panel stuck on "Connecting…" on a station
+(SomaFM Groove Salad) suspected of not sending ICY titles at all, then —
+mid-investigation — reported something worse: switching between several
+*other* stations that normally do show titles left them all stuck too,
+and a full page reload fixed it. That second report changed the
+diagnosis; investigated the race properly before touching any UI copy.
+
+**Root cause**: `usePlayer.ts` reuses one `sid` (`crypto.randomUUID()` in
+a `useRef`) for the entire player session, across every station switch —
+not one per stream connection. `play(station)` reassigns `audio.src`,
+which aborts the old `/api/stream` fetch client-side, but the server only
+learns of that asynchronously (a `GeneratorExit` the old request's
+`finally` handles in a shielded background task, see `stream.py`'s
+existing comment on why that shielding exists). That leaves a real
+window where the old station's proxy connection is still alive and can
+emit one more `title`/`station` event — with nothing in `nowplaying.py`
+to tell it apart from the new connection sharing the same `sid`. A
+reload mints a fresh `sid`, which is why that "fixed" it.
+
+**Fix**: `nowplaying.py` gained `begin_generation(sid)`/
+`is_current_generation(sid, gen)` — a UUID token per `/api/stream`
+connection. `stream.py` mints one at connection start (before publishing
+its own `station` event, so it invalidates any earlier connection for
+the same `sid` still draining) and gates the `title` publish on still
+being current; a straggler from an abandoned connection is dropped
+instead of corrupting the live one's state. `_generation` is cleared
+alongside `_last_station`/`_last_title` in `unsubscribe()`'s existing
+full-cleanup path.
+
+**Separately, the originally-reported issue was real too**: when
+`icy-metaint` is genuinely absent (`parse_metaint()` returns `None`),
+`IcyDemuxer` is never constructed and no `title` event is ever sent — the
+frontend had no way to distinguish "still connecting" from "this station
+will never send a title," so it sat on "Connecting…" forever. Fixed by
+adding `has_icy: metaint is not None` to the `station` WS event;
+`PlayerState.hasIcy: boolean | null` (`null` = not yet known, distinct
+from a confirmed `false`) drives a new message
+(`nowPlaying.noIcySupport`) in `NowPlayingPanel.tsx`, shown only once
+`hasIcy === false` — `null`/`true` both still show "Connecting…", since
+neither has ruled out a title still arriving. Reset to `null` on both
+`play()` and `reconnect()`.
+
+Also added a **Reload app** button in the top bar (reusing the existing
+`RefreshIcon`) as a cheap safety net for any future stuck state — not a
+fix for this bug specifically (the generation-token fix is), just
+good insurance given how bad "stuck until you know to reload" is as a
+user experience.
+
+All 13 locales updated for both new strings (`nowPlaying.noIcySupport`,
+`topbar.reloadApp`). Verified via a temporary throwaway harness
+(`DevHarness.tsx`, mounted in place of `App` in `main.tsx`, screenshotted
+via headless Chrome, then fully reverted — nothing committed) that all
+three `hasIcy` states (`null`, `true`, `false`) render the correct copy.
+`tsc --noEmit`, `oxlint`, and `vite build` all pass clean. No committed
+test suite exists for the backend generation-token logic (see "Gaps"
+above) — verified by hand via a throwaway script confirming
+`begin_generation`/`is_current_generation` invalidate correctly on a
+second call for the same `sid`.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

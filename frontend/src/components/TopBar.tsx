@@ -3,7 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { LANGUAGES } from '../i18n'
 import type { Language, TFunction } from '../i18n'
 import { displayName } from '../utils/format'
-import { ChevronDownIcon, MoonIcon, SunIcon } from './Icons'
+import { ChevronDownIcon, MoonIcon, RefreshIcon, SunIcon } from './Icons'
 
 export type Page =
   | 'dashboard'
@@ -104,6 +104,15 @@ export function TopBar({
           title={theme === 'dark' ? t('topbar.switchToLight') : t('topbar.switchToDark')}
         >
           {theme === 'dark' ? <MoonIcon /> : <SunIcon />}
+        </button>
+        <button
+          className="icon-btn"
+          type="button"
+          onClick={() => window.location.reload()}
+          aria-label={t('topbar.reloadApp')}
+          title={t('topbar.reloadApp')}
+        >
+          <RefreshIcon />
         </button>
         {user?.is_admin && (
           <button className="dropdown-chip" type="button" onClick={() => onNavigate('analytics')}>

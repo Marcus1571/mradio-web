@@ -18,6 +18,7 @@ const de: Dict = {
     signOut: 'Abmelden',
     switchToLight: 'Zum hellen Design wechseln',
     switchToDark: 'Zum dunklen Design wechseln',
+    reloadApp: 'App neu laden',
   },
   settings: {
     title: 'Einstellungen',
@@ -167,6 +168,7 @@ const de: Dict = {
     pickStation: 'Wählen Sie einen Sender aus Favoriten oder Genres, um mit dem Hören zu beginnen.',
     stopped: 'Gestoppt — Wiedergabe drücken, um erneut zu verbinden.',
     connecting: 'Verbindung wird hergestellt…',
+    noIcySupport: 'Dieser Sender unterstützt keine ICY-Metadaten — Titelinformationen sind nicht verfügbar.',
     linerNotes: 'Begleittext',
     askingProvider: 'Anfrage an den KI-Anbieter…',
     askingNamedProvider: 'Anfrage an {provider}…',

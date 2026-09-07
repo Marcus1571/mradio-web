@@ -18,6 +18,7 @@ const pt: Dict = {
     signOut: 'Terminar sessão',
     switchToLight: 'Mudar para tema claro',
     switchToDark: 'Mudar para tema escuro',
+    reloadApp: 'Recarregar aplicação',
   },
   settings: {
     title: 'Definições',
@@ -167,6 +168,7 @@ const pt: Dict = {
     pickStation: 'Escolha uma estação dos favoritos ou géneros para começar a ouvir.',
     stopped: 'Parado — prima reproduzir para reconectar.',
     connecting: 'A conectar…',
+    noIcySupport: 'Esta estação não suporta metadados ICY — não há informação de faixa disponível.',
     linerNotes: 'Notas do disco',
     askingProvider: 'A perguntar ao fornecedor de IA…',
     askingNamedProvider: 'A perguntar a {provider}…',

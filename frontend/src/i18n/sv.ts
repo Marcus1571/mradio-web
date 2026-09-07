@@ -18,6 +18,7 @@ const sv: Dict = {
     signOut: 'Logga ut',
     switchToLight: 'Byt till ljust tema',
     switchToDark: 'Byt till mörkt tema',
+    reloadApp: 'Ladda om appen',
   },
   settings: {
     title: 'Inställningar',
@@ -167,6 +168,7 @@ const sv: Dict = {
     pickStation: 'Välj en station från favoriter eller genrer för att börja lyssna.',
     stopped: 'Stoppad — tryck på spela upp för att återansluta.',
     connecting: 'Ansluter…',
+    noIcySupport: 'Den här stationen stöder inte ICY-metadata — ingen spårinformation är tillgänglig.',
     linerNotes: 'Anteckningar',
     askingProvider: 'Frågar AI-leverantören…',
     askingNamedProvider: 'Frågar {provider}…',

@@ -18,6 +18,7 @@ const ja: Dict = {
     signOut: 'ログアウト',
     switchToLight: 'ライトテーマに切り替え',
     switchToDark: 'ダークテーマに切り替え',
+    reloadApp: 'アプリを再読み込み',
   },
   settings: {
     title: '設定',
@@ -167,6 +168,7 @@ const ja: Dict = {
     pickStation: 'お気に入りまたはジャンルから局を選んで再生を始めてください。',
     stopped: '停止しました — 再生ボタンを押すと再接続します。',
     connecting: '接続中…',
+    noIcySupport: 'この局はICYメタデータに対応していません — 曲情報は取得できません。',
     linerNotes: '解説',
     askingProvider: 'AIプロバイダーに問い合わせ中…',
     askingNamedProvider: '{provider} に問い合わせ中…',

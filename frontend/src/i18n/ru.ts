@@ -18,6 +18,7 @@ const ru: Dict = {
     signOut: 'Выйти',
     switchToLight: 'Светлая тема',
     switchToDark: 'Тёмная тема',
+    reloadApp: 'Перезагрузить приложение',
   },
   settings: {
     title: 'Настройки',
@@ -167,6 +168,7 @@ const ru: Dict = {
     pickStation: 'Выберите станцию из избранного или жанров, чтобы начать слушать.',
     stopped: 'Остановлено — нажмите play, чтобы переподключиться.',
     connecting: 'Подключение…',
+    noIcySupport: 'Эта станция не поддерживает метаданные ICY — информация о треке недоступна.',
     linerNotes: 'Заметки о треке',
     askingProvider: 'Запрос к провайдеру ИИ…',
     askingNamedProvider: 'Запрос к {provider}…',

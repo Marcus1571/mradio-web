@@ -18,6 +18,7 @@ const fr: Dict = {
     signOut: 'Se déconnecter',
     switchToLight: 'Passer au thème clair',
     switchToDark: 'Passer au thème sombre',
+    reloadApp: "Recharger l'application",
   },
   settings: {
     title: 'Paramètres',
@@ -167,6 +168,7 @@ const fr: Dict = {
     pickStation: 'Choisissez une station parmi les favoris ou les genres pour commencer à écouter.',
     stopped: 'Arrêté — appuyez sur lecture pour vous reconnecter.',
     connecting: 'Connexion…',
+    noIcySupport: "Cette station ne prend pas en charge les métadonnées ICY — aucune information sur le morceau n'est disponible.",
     linerNotes: 'Notes de pochette',
     askingProvider: "Interrogation du fournisseur d'IA…",
     askingNamedProvider: 'Interrogation de {provider}…',

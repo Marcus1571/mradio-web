@@ -147,7 +147,13 @@ export function NowPlayingPanel({
           <p className="np-empty">{t('nowPlaying.stopped')}</p>
         )}
 
-        {hasStation && state.status === 'playing' && !hasTrack && <p className="np-empty">{t('nowPlaying.connecting')}</p>}
+        {hasStation && state.status === 'playing' && !hasTrack && state.hasIcy === false && (
+          <p className="np-empty">{t('nowPlaying.noIcySupport')}</p>
+        )}
+
+        {hasStation && state.status === 'playing' && !hasTrack && state.hasIcy !== false && (
+          <p className="np-empty">{t('nowPlaying.connecting')}</p>
+        )}
 
         {hasTrack && state.status === 'playing' && (
           <>

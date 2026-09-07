@@ -82,6 +82,13 @@ async def stream(request: Request,
         "connected sid=%s station=%r bitrate=%s sample_rate=%s format=%s metaint=%s",
         sid, station_name, icy_br, icy_sr, content_type, metaint,
     )
+    # A fresh generation per connection: `sid` is reused across station
+    # switches (see nowplaying.py docstring), and setting it here — before
+    # this connection's own `station` event — invalidates any earlier
+    # connection for the same sid that might still be draining its last
+    # buffered bytes in the background, so a stale title/station event it
+    # emits after this point gets dropped instead of overwriting this one's.
+    gen = nowplaying.begin_generation(sid) if sid else None
     if sid and station_name:
         nowplaying.publish(sid, {
             "type": "station",
@@ -89,6 +96,7 @@ async def stream(request: Request,
             "bitrate": icy_br,
             "sample_rate": icy_sr,
             "format": content_type,
+            "has_icy": metaint is not None,
         })
 
     history_row_id: int | None = None
@@ -119,7 +127,7 @@ async def stream(request: Request,
                 demux = IcyDemuxer(metaint)
                 async for chunk in upstream.aiter_bytes():
                     audio, title = demux.feed(chunk)
-                    if title and sid:
+                    if title and sid and nowplaying.is_current_generation(sid, gen):
                         logger.info("title sid=%s title=%r", sid, title)
                         nowplaying.publish(sid, {"type": "title", "title": title})
                     if audio:

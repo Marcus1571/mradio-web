@@ -7,6 +7,7 @@ export type PlaybackStatus = 'stopped' | 'playing'
 export interface PlayerState {
   station: Station | null
   stationName: string
+  hasIcy: boolean | null
   rawTitle: string
   artist: string
   title: string
@@ -33,6 +34,7 @@ export interface PlayerState {
 const INITIAL_STATE: PlayerState = {
   station: null,
   stationName: '',
+  hasIcy: null,
   rawTitle: '',
   artist: '',
   title: '',
@@ -149,6 +151,7 @@ export function usePlayer(initialVolume?: number) {
             bitrate: msg.bitrate,
             sampleRate: msg.sample_rate,
             format: msg.format,
+            hasIcy: msg.has_icy,
           }))
         } else if (msg.type === 'now_playing') {
           setState((s) => ({
@@ -199,6 +202,7 @@ export function usePlayer(initialVolume?: number) {
         ...s,
         station,
         stationName: station.name,
+        hasIcy: null,
         rawTitle: '',
         artist: '',
         title: '',
@@ -247,6 +251,7 @@ export function usePlayer(initialVolume?: number) {
   const reconnect = useCallback(() => {
     const audio = audioRef.current
     if (!audio || !state.station) return
+    setState((s) => ({ ...s, hasIcy: null, rawTitle: '', artist: '', title: '', performer: '' }))
     audio.src = streamUrl(state.station)
     audio.load()
     void audio.play().catch(() => undefined)
