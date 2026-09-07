@@ -11,7 +11,7 @@ RUN npm run build
 # opens a PR when a newer release is published, instead of the image silently
 # changing between builds.
 FROM node:22-slim AS opencode-build
-ARG OPENCODE_VERSION=1.18.28
+ARG OPENCODE_VERSION=1.18.29
 RUN npm install --global opencode-ai@${OPENCODE_VERSION}
 
 # OpenAI's official Codex CLI — same "real trusted binary" reasoning as
