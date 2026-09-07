@@ -619,7 +619,7 @@ above — this reasoning was wrong.)
 future) favorites change to existing users automatically** — per the
 user's explicit instruction that this is a one-time-only operation.
 
-## Language support (added 2026-09-05, 0.2.0 + 0.2.1 + 0.3.1; Portuguese + pattern cleanup 2026-09-06, 0.3.5; French 2026-09-06, 0.3.10; Russian 2026-09-06, 0.5.8; German 2026-09-06, 0.5.9; Greek 2026-09-06, 0.5.10; Dutch 2026-09-06, 0.5.11; Danish 2026-09-06, 0.5.12; Swedish 2026-09-06, 0.5.13; Norwegian Bokmål 2026-09-06, 0.5.14; Japanese 2026-09-06, 0.5.15; Turkish 2026-09-07, 1.0.3) — fully done
+## Language support (added 2026-09-05, 0.2.0 + 0.2.1 + 0.3.1; Portuguese + pattern cleanup 2026-09-06, 0.3.5; French 2026-09-06, 0.3.10; Russian 2026-09-06, 0.5.8; German 2026-09-06, 0.5.9; Greek 2026-09-06, 0.5.10; Dutch 2026-09-06, 0.5.11; Danish 2026-09-06, 0.5.12; Swedish 2026-09-06, 0.5.13; Norwegian Bokmål 2026-09-06, 0.5.14; Japanese 2026-09-06, 0.5.15; Turkish 2026-09-07, 1.0.3; Hebrew + RTL support 2026-09-07, 1.0.4) — fully done
 
 UI language (English/Spanish/Italian/Portuguese/French/Russian/German/
 Greek/Dutch/Danish/Swedish/Norwegian Bokmål/Japanese, top-bar dropdown,
@@ -687,6 +687,43 @@ for German/Russian/Japanese) — the i18n mechanism itself (TypeScript's
 proven files) is what actually guards those pages, not per-language
 manual checking, so this is a reasonable proportionality call, not a
 skipped step.
+
+**Hebrew (`he`, 1.0.4, 15th) — first RTL language, needed a real code
+change beyond the usual 6-spot pattern.** Every prior language reused
+the document's default `ltr` direction with zero layout changes; Hebrew
+genuinely needs the whole page mirrored (text alignment, the volume
+slider's fill direction, etc.) or it reads backwards. Added `rtl?: true`
+to `LANGUAGES` entries in `i18n/index.ts` (only Hebrew's entry sets it)
+and a new `applyDirection(lang)` helper there that sets
+`document.documentElement.dir` — mirrors the exact existing pattern
+`Dashboard.tsx` already used for `data-theme` (same file, same
+`useEffect`/handler shape), not a new abstraction. Called from both
+spots `language` state changes: the config-load effect (initial page
+load/reload) and `setLanguage()` (live switch from the top bar) — both
+needed it, confirmed by testing: only wiring one of the two would leave
+a stale direction after a reload or after a live switch, respectively.
+`index.html`'s `<html>` tag has no `dir` attribute of its own, so the
+unset/default case (all 14 other languages, plus the pre-auth
+`LoginScreen`/forced-`ChangePasswordScreen` which stay English-only per
+the existing deliberate scope cut above) correctly stays `ltr` with no
+extra code.
+
+Verified via the same throwaway-harness technique as Turkish — this
+time also asserting the actual DOM state (`--dump-dom`, not just a
+screenshot) confirmed `<html lang="en" dir="rtl">` for Hebrew and
+`dir="ltr"` for a same-harness English control render, so the fix is
+confirmed at the attribute level, not just "the text looked
+right-aligned in a screenshot." Screenshots themselves confirmed:
+station name/track/artist/AI-provider chip all correctly right-aligned,
+the volume slider's filled portion flips to the right side (matching
+RTL convention), and — the trickiest case — the liner-notes trivia
+paragraph mixes Hebrew with embedded Latin text ("Kind of Blue") and
+Arabic numerals ("1959") and the browser's bidi algorithm orders it
+correctly with zero special handling needed in this app's own code.
+`tsc --noEmit`, `oxlint`, `vite build` all clean; English (and by
+extension every other existing language) re-screenshotted as an
+explicit before/after control to confirm zero regression to the
+LTR default.
 `Dashboard.tsx`'s config-load fallback chain (previously an `===`
 chain naming each language code, needing an edit per new language) was
 **simplified in 0.3.5** to validate against `LANGUAGES` generically

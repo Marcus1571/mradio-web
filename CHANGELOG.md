@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4] - 2026-09-07
+
+Added Hebrew as the 15th UI/AI-liner-notes language — this app's first
+right-to-left language. The whole interface now mirrors automatically
+(text alignment, the volume slider, everything) when Hebrew is active,
+and switches back instantly for every other language.
+
 ## [1.0.3] - 2026-09-07
 
 Added Turkish as the 14th UI/AI-liner-notes language — same top-bar

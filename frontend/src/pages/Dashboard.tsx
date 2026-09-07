@@ -7,7 +7,7 @@ import { TopBar } from '../components/TopBar'
 import type { Page } from '../components/TopBar'
 import { useInitialConfig } from '../hooks/useConfig'
 import { usePlayer } from '../hooks/usePlayer'
-import { LANGUAGES, useTranslation } from '../i18n'
+import { LANGUAGES, applyDirection, useTranslation } from '../i18n'
 import type { Language } from '../i18n'
 import { ChangePasswordScreen } from './ChangePasswordScreen'
 import { AISettingsPage } from './AISettingsPage'
@@ -35,6 +35,7 @@ export function Dashboard() {
       ? (config.language as Language)
       : 'en'
     setLanguageState(nextLanguage)
+    applyDirection(nextLanguage)
     if (typeof config.volume === 'number') player.applySavedVolume(config.volume)
     if (config.mute) player.toggleMute()
     if (!resumedRef.current && config.last_url) {
@@ -57,6 +58,7 @@ export function Dashboard() {
 
   async function setLanguage(next: Language) {
     setLanguageState(next)
+    applyDirection(next)
     // Awaited (unlike theme's fire-and-forget PATCH): the backend Enricher
     // only picks up the new language once this lands, and re-asking the
     // current track's liner notes right after depends on that having
