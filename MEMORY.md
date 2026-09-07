@@ -2776,6 +2776,41 @@ fragile). README's "AI liner notes are optional" bullet updated to
 cover both providers with an unofficial sign-in option, not just
 ChatGPT.
 
+**Bug, caught by the user immediately in production (fixed 2026-09-07,
+1.1.1)**: connected Grok via Subscription mode, then clicked Test and
+got "No API key configured." — for an account that genuinely was
+connected. Root cause: `grok_mode` is a field in `settings.json`, and
+every settings field except this one is meant to require the main
+**Save** button before it takes effect, by design (matches every other
+provider's field). But selecting **Subscription** and clicking
+**Connect** is a self-contained action from the admin's point of
+view — it completes real OAuth and writes real tokens to
+`grok_settings.json` immediately, with no expectation that Save also
+needs a separate click afterward. Confirmed live on LT:
+`settings.json`'s `grok_mode` was `None` (defaulting to `"api_key"` at
+load time) while `grok_settings.json` showed a genuinely connected
+subscription — `_test_grok()` correctly reads the *saved* mode, saw
+`"api_key"`, and correctly (given that stale input) reported no key
+configured. Fixed by having `connectGrok()` in `AISettingsPage.tsx`
+`PATCH /api/settings/ai` with `{grok_mode: 'subscription'}` immediately
+before starting the OAuth flow — the one deliberate exception to
+"settings fields wait for Save," because Connect/Disconnect already
+write to the server outside the form's own save cycle, same as
+`grok_settings.json`/`codex_settings.json` always have. The
+already-broken production account's `settings.json` was patched
+directly on LT (`grok_mode: "api_key"` → `"subscription"`, the one-line
+fix matching what Connect should have written the first time) since
+the code fix alone only prevents this for future connections, not
+retroactively for an account already stuck in the broken state.
+**Lesson**: when a UI has one field that's genuinely written by two
+different actions (Save button, and Connect/Disconnect elsewhere on
+the same page), decide explicitly which of those actions owns writing
+it — defaulting to "the same rule as every other field" without
+checking is exactly how this slipped through initial testing, since
+the harness used for 1.1.0's own verification stubbed the connect
+flow rather than exercising a real Save-less Connect against a live
+backend.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

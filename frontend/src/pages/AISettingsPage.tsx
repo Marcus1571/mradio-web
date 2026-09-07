@@ -143,6 +143,19 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
     setGrokConnecting(true)
     setGrokPromptResult(null)
     try {
+      // Persist grok_mode: 'subscription' immediately, independent of the
+      // main form's Save button — Connect is a self-contained action from
+      // the admin's point of view (confirmed live: an admin can select
+      // Subscription, click Connect, and complete sign-in without ever
+      // touching Save, leaving settings.json's saved grok_mode at its old
+      // "api_key" value while grok_settings.json shows genuinely
+      // connected — Test then read the stale saved mode and reported "No
+      // API key configured." for an account that was actually connected).
+      // Every other settings field defers to Save on purpose; grok_mode
+      // is the one exception because Connect/Disconnect below already
+      // write directly to the server outside the form's own save cycle.
+      const updated = await api.patch<AISettings>('/api/settings/ai', { grok_mode: 'subscription' })
+      setSettings(updated)
       const res = await api.post<GrokConnectResponse>('/api/settings/grok/connect', {})
       setGrokPromptResult(res)
       await refreshGrokStatus()

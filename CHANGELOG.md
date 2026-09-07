@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1] - 2026-09-07
+
+Fixed Grok's Test button reporting "No API key configured." right
+after a successful subscription sign-in. Connecting a subscription
+wasn't saving that Subscription mode was actually selected unless the
+main Save button was also clicked separately — Connect now persists
+that immediately, the same moment the sign-in itself completes.
+
 ## [1.1.0] - 2026-09-07
 
 Added **Grok (xAI)** as a 5th AI liner-notes provider, with a choice of
