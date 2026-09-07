@@ -2586,6 +2586,97 @@ implemented. Worth checking for the same pattern anywhere else a
 success path and a "already have it" path are expected to converge on
 the same delivery mechanism, not just here.
 
+## Stop→Play left metadata permanently stuck on "Connecting…" — only a page reload fixed it (fixed 2026-09-07, 1.0.7)
+
+User reported this as a major bug, explicitly refusing "just reload the
+page" as an acceptable answer. Investigated against real production
+logs on LT, not assumption — pulled 600+ lines around the actual
+reported sequence (Heart 70s (UK), Stop, Play again) and found the
+concrete evidence for two separate, real bugs, both fixed together.
+
+**Root cause (the actual reported symptom)**: `usePlayer.ts`'s
+WebSocket carries every piece of now-playing metadata (`station`,
+`now_playing`, `enrichment`) completely independently of the audio
+`<audio>` element, which talks to `/api/stream` over its own plain HTTP
+request. `stop()` sets `wantsConnectionRef.current = false` — by
+design, so the WS's own `onclose` handler's reconnect-with-backoff loop
+doesn't fight a deliberate Stop. But if the WebSocket happens to close
+for any *unrelated* reason (reverse-proxy idle timeout, a laptop
+sleep/wake cycle, a brief network blip) while the player is sitting in
+the stopped state, that same guard means **nothing ever reconnects
+it** — the passive backoff loop only fires in response to a *future*
+close event, not one that already happened. Confirmed live in the
+logs: at 18:03:15 a fresh `/api/stream` connection for the same `sid`
+delivered a perfectly good `station`/`title` sequence, all correctly
+cached by `nowplaying.py` for replay — but the WebSocket itself didn't
+accept until 300ms later (`WebSocket /api/ws?sid=... [accepted]` at
+18:03:15.665), meaning it had to reconnect from scratch just to
+receive that replay. `play()` never checked or touched the WS at
+all — it only reset local React state and restarted the `<audio>`
+element, so if the socket was already dead at the moment Play was
+clicked, audio would come back (a fully independent connection) while
+metadata stayed silently broken forever, exactly matching what was
+reported. A page reload "fixed" it only because it constructs a brand
+new `usePlayer()` instance with a brand new socket from scratch.
+
+**Fix**: added `ensureWsConnected()` — checks the WS's actual
+`readyState`, and if it's not `CONNECTING`/`OPEN`, clears any pending
+backoff timer, resets the backoff counter, and calls the same
+`connectWs()` the mount-time effect already uses (hoisted into a ref,
+`connectWsRef`, so it's callable from outside that effect — mirrors
+the existing `audioReconnectRef` pattern used for the audio-stall
+recovery). `connectWs()` itself gained a re-entrancy guard (no-op if a
+socket is already `CONNECTING`/`OPEN`) so calling it from
+`ensureWsConnected()` can never orphan an in-flight handshake. Called
+from both `play()` and `reconnect()` — the two moments the user is
+explicitly asking for a live connection, which is exactly when a dead
+socket needs to be actively revived rather than passively waited on.
+
+**Second, related bug found investigating the same logs**: Heart 70s
+(UK) sends a real title once, then — a few milliseconds later, well
+within the same connection — an empty `StreamTitle='';` on the very
+next metadata block (some encoder buffering/cycling quirk, not a
+station with genuinely no metadata support). `stream.py`'s
+`no_title_reported` flag only prevented *duplicate* `no_title`
+publishes; it never checked whether a real title had *already* been
+seen on that same connection, so this immediately-following empty
+block still fired a `no_title` event right after a perfectly good
+`title` event. `nowplaying.py` caches both for replay (title in
+`_last_title`, no_title in `_last_no_title`) since the `title` branch's
+existing `_last_no_title.pop()` only fires when a *later* title
+supersedes an *earlier* no_title, not the reverse ordering seen here —
+so both ended up cached simultaneously, and a WS reconnect (exactly
+the scenario `ensureWsConnected()` above now triggers more often, by
+design) could replay them in a way that left `hasIcy` incorrectly
+downgraded to `false` for a station that actually does support
+metadata. Fixed with a `saw_real_title` flag in `stream.py`'s `body()`:
+once a real title has been seen on a connection, `no_title` can never
+fire again for the rest of that connection's life, full stop.
+
+**Verified with real functional tests against the actual reproduced
+pattern, not just reading the code**: a throwaway script (temporary
+venv, same technique as 1.0.2's ICY-demuxer verification) fed the real
+`IcyDemuxer` a synthetic byte stream reproducing Heart 70s's exact
+title-then-empty-block pattern and confirmed `no_title` correctly never
+fires once a real title has landed; a second test confirmed a
+genuinely-always-empty station (TSF Jazz's pattern) still correctly
+fires `no_title` exactly once, so the original 1.0.2 fix wasn't
+regressed. `tsc --noEmit`, `oxlint`, `vite build`, and a Python
+`ast.parse` syntax check on `stream.py` all clean.
+
+**Not otherwise fixed, and deliberately left alone**: the same log
+window showed Heart 70s (UK)'s `/api/stream` connection itself
+reconnecting roughly every 1-2 seconds for a stretch (34 reconnects
+inside one ~90-second window) — the existing audio `error`/`stalled`
+auto-reconnect (added 0.1.6) firing repeatedly, most likely because
+this specific station's stream (`media-ssl.musicradio.com/Heart70sMP3`)
+genuinely stalls often from this network path, or the browser's
+`<audio>` element gives up on it quickly for its own reasons. This is
+a separate reliability concern about one station's stream quality, not
+the "stuck after Stop→Play" bug that was reported and fixed here —
+left untouched rather than risking a change to retry cadence/backoff
+that wasn't asked for and isn't the reported symptom.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

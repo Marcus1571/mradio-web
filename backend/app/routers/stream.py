@@ -133,13 +133,32 @@ async def stream(request: Request,
                 # otherwise wait forever for a title that's never coming.
                 # Once we've seen a metadata field with no usable title,
                 # tell the frontend explicitly rather than staying silent.
+                # But only before a real title has ever landed on THIS
+                # connection: confirmed live (Heart 70s (UK)) that a
+                # station can send a genuine title once, then an empty
+                # StreamTitle='' a few milliseconds later on the very next
+                # metadata block (some encoder buffering/cycling quirk,
+                # not a station that "has no metadata" at all) — without
+                # this guard, that immediately following empty block
+                # published a stale no_title right after a good title,
+                # which nowplaying.py cached for replay alongside it, and
+                # the frontend could apply on a WS reconnect (see
+                # ensureWsConnected() in usePlayer.ts) in the wrong
+                # order relative to a fresh title event, leaving hasIcy
+                # incorrectly downgraded. A station that has proven it
+                # CAN send a real title should never be reclassified as
+                # "no track info," period, for the life of this
+                # connection.
                 no_title_reported = False
+                saw_real_title = False
                 async for chunk in upstream.aiter_bytes():
                     audio, title, saw_metadata_field = demux.feed(chunk)
                     if title and sid and nowplaying.is_current_generation(sid, gen):
+                        saw_real_title = True
                         logger.info("title sid=%s title=%r", sid, title)
                         nowplaying.publish(sid, {"type": "title", "title": title})
                     elif (saw_metadata_field and not title and not no_title_reported
+                          and not saw_real_title
                           and sid and nowplaying.is_current_generation(sid, gen)):
                         no_title_reported = True
                         logger.info("no usable title sid=%s station=%r — "

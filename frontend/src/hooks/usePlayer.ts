@@ -78,6 +78,10 @@ export function usePlayer(initialVolume?: number) {
   // changes.
   const audioReconnectRef = useRef<() => void>(() => undefined)
   const audioReconnectTimerRef = useRef<number | null>(null)
+  // connectWsRef always points at the WS effect's own connectWs() (defined
+  // inside that effect, closed over wsRef/reconnectAttemptRef/etc.) — see
+  // ensureWsConnected() below for why play()/reconnect() need this.
+  const connectWsRef = useRef<() => void>(() => undefined)
   const [state, setState] = useState<PlayerState>({
     ...INITIAL_STATE,
     volume: initialVolume ?? INITIAL_STATE.volume,
@@ -126,6 +130,18 @@ export function usePlayer(initialVolume?: number) {
 
   useEffect(() => {
     function connectWs() {
+      // A no-op guard, not just an optimization: without it, calling
+      // connectWs() from ensureWsConnected() (below) while a previous
+      // socket is still mid-handshake would open a second one, and
+      // whichever finishes connecting last silently orphans the other —
+      // wsRef would point at one while messages could still arrive on
+      // the discarded one for a moment. CONNECTING/OPEN both count as
+      // "already have a socket in flight," only CLOSING/CLOSED need a
+      // fresh one.
+      const existing = wsRef.current
+      if (existing && (existing.readyState === WebSocket.CONNECTING || existing.readyState === WebSocket.OPEN)) {
+        return
+      }
       const proto = location.protocol === 'https:' ? 'wss:' : 'ws:'
       const ws = new WebSocket(`${proto}//${location.host}/api/ws?sid=${sidRef.current}`)
       wsRef.current = ws
@@ -185,11 +201,40 @@ export function usePlayer(initialVolume?: number) {
     }
 
     connectWs()
+    connectWsRef.current = connectWs
     return () => {
       unmountedRef.current = true
       if (reconnectTimerRef.current !== null) window.clearTimeout(reconnectTimerRef.current)
       wsRef.current?.close()
     }
+  }, [])
+
+  /** Guards against the actual bug reported live: Stop sets
+   * wantsConnectionRef to false, which makes the WS's own onclose handler
+   * above skip its reconnect-with-backoff entirely (by design — a
+   * deliberate Stop shouldn't fight its own keepalive). But if the socket
+   * happens to die for an unrelated reason (proxy idle timeout, laptop
+   * sleep/wake, a network blip) while stopped, nothing was left to ever
+   * revive it — confirmed live: audio played fine on the next Play click
+   * (a fully independent HTTP request), but station/title/enrichment
+   * never arrived because the WebSocket carrying them was dead and
+   * nothing reconnected it, only recoverable before this fix by a full
+   * page reload (a fresh usePlayer() instance = a fresh socket). Called
+   * from play()/reconnect() — the two moments the user is explicitly
+   * asking for a live connection again — to actively check and, if
+   * needed, kick the socket back open immediately rather than depending
+   * solely on the passive onclose-triggered backoff loop, which only
+   * fires for a close that happens *after* this point, not one that
+   * already happened while stopped. */
+  const ensureWsConnected = useCallback(() => {
+    const ws = wsRef.current
+    if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) return
+    if (reconnectTimerRef.current !== null) {
+      window.clearTimeout(reconnectTimerRef.current)
+      reconnectTimerRef.current = null
+    }
+    reconnectAttemptRef.current = 0
+    connectWsRef.current()
   }, [])
 
   const streamUrl = useCallback(
@@ -204,6 +249,7 @@ export function usePlayer(initialVolume?: number) {
       const audio = audioRef.current
       if (!audio) return
       wantsConnectionRef.current = true
+      ensureWsConnected()
       setState((s) => ({
         ...s,
         station,
@@ -230,7 +276,7 @@ export function usePlayer(initialVolume?: number) {
         last_genre: station.genre,
       })
     },
-    [streamUrl],
+    [streamUrl, ensureWsConnected],
   )
 
   /** A live stream has no meaningful "paused" state — there's nothing to
@@ -257,11 +303,12 @@ export function usePlayer(initialVolume?: number) {
   const reconnect = useCallback(() => {
     const audio = audioRef.current
     if (!audio || !state.station) return
+    ensureWsConnected()
     setState((s) => ({ ...s, hasIcy: null, rawTitle: '', artist: '', title: '', performer: '' }))
     audio.src = streamUrl(state.station)
     audio.load()
     void audio.play().catch(() => undefined)
-  }, [state.station, streamUrl])
+  }, [state.station, streamUrl, ensureWsConnected])
 
   useEffect(() => {
     audioReconnectRef.current = reconnect

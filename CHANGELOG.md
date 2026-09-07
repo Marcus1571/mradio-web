@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.0.7] - 2026-09-07
+
+Fixed a major bug: stopping playback and pressing Play again (same
+station or a different one) could leave the now-playing metadata stuck
+on "Connecting…" forever — audio played fine, but track info, AI liner
+notes, and everything else driven by the metadata socket never came
+back, and only a full page reload fixed it. Root cause: if that socket
+happened to drop while playback was stopped (a proxy idle timeout, a
+laptop sleep/wake cycle, a brief network blip), nothing ever reconnected
+it — pressing Play only restarted the audio, not the metadata
+connection. Play, and the Reconnect button, now actively check and
+revive it if needed.
+
+Also fixed a related bug that could show the "does not support
+metadata" message on a station that actually does, if it happened to
+send a real title once and then an empty one moments later — some
+stations do this as an encoder quirk (confirmed live: Heart 70s (UK)).
+A station that has proven it can send a real title is never reclassified
+as unsupported.
+
 ## [1.0.6] - 2026-09-07
 
 Fixed AI liner notes re-querying the AI provider every time you switched
