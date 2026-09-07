@@ -298,10 +298,16 @@ export function usePlayer(initialVolume?: number) {
     })
   }, [])
 
-  const reenrich = useCallback(() => {
+  /** force=false (default, used for a language/provider switch — see
+   * Dashboard.tsx's setLanguage()/AISettingsPage's provider activation):
+   * prefer an existing cached answer for the new language/provider over
+   * a fresh LLM call. force=true (the "Re-ask AI" button only): always
+   * ask again even if one is cached — see enricher.py's invalidate()
+   * for the full reasoning and the bug this distinction fixes. */
+  const reenrich = useCallback((force = false) => {
     if (!state.rawTitle) return
     setState((s) => ({ ...s, enriching: true }))
-    wsRef.current?.send(JSON.stringify({ type: 'reenrich' }))
+    wsRef.current?.send(JSON.stringify({ type: 'reenrich', force }))
   }, [state.rawTitle])
 
   return { state, play, stop, reconnect, setVolume, applySavedVolume, toggleMute, reenrich }

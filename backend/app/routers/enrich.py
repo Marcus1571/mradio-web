@@ -42,7 +42,10 @@ async def activate_provider(body: ProviderSwitchRequest,
     # Without this, switching providers silently left the panel showing
     # whatever the previous (often failed/empty) result was until a
     # separate manual "Re-ask AI" click — the switch itself should
-    # produce a fresh attempt against the newly-active provider.
+    # produce an attempt against the newly-active provider. force=False
+    # (the default): if that provider already has a cached answer for
+    # this track/language, use it instead of paying for a redundant
+    # LLM call — see invalidate()'s docstring for the full reasoning.
     if enricher.last_key:
         await enricher.invalidate(
             enricher.last_key, enricher.last_artist,

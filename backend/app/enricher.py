@@ -211,7 +211,41 @@ class Enricher:
         self.started[raw_title] = time.time()
         await self.queue.put((raw_title, artist, title, performer))
 
-    async def invalidate(self, raw_title: str, artist: str, title: str, performer: str) -> None:
+    async def invalidate(self, raw_title: str, artist: str, title: str, performer: str,
+                          force: bool = False) -> None:
+        """Two distinct callers share this method with two distinct
+        intents, both keyed off the currently-set self.provider/language:
+        a language switch or a provider switch (force=False, the
+        default) wants whatever's already cached for the *new*
+        provider/language if it exists — re-running the LLM would just
+        reproduce the same cached answer at the cost of a real API call
+        and a long wait. The "Re-ask AI" button (force=True) wants a
+        genuinely fresh answer even if one is cached — that's the whole
+        point of the button.
+
+        Bug fixed here (2026-09-07): force=False used to go straight to
+        submit(), whose own cache check only prevents re-queuing — it
+        silently returns on a cache hit without ever telling the caller,
+        so nothing pushed the cached result to the frontend. The panel
+        was left showing "Asking the AI provider..." forever with no
+        network call ever happening, which from the user's side looked
+        indistinguishable from "it's searching again" (confirmed live:
+        switching en -> he -> en -> he left the panel stuck on the
+        placeholder on the second return to he, despite a real cached
+        he entry already sitting in cache.json for that exact track).
+        """
+        if not force and self.provider and raw_title:
+            cached = await cache_store.get_cached(self.provider, self.language, raw_title)
+            if cached and not cached.get("fail"):
+                self.last_key = raw_title
+                self.last_artist = artist
+                self.last_title = title
+                self.last_performer = performer
+                if self.on_result:
+                    result = self.on_result(raw_title, cached)
+                    if result is not None:
+                        await result
+                return
         # A deliberate re-ask (the "Re-ask AI" button, or a fresh provider
         # switch below) is exactly the case the global offline cooldown
         # shouldn't block — it exists to stop automatic background retries
@@ -222,7 +256,17 @@ class Enricher:
         providers.clear_offline()
         self.epoch += 1
         self.started.pop(raw_title, None)
-        await self.submit(raw_title, artist, title, performer)
+        if force:
+            # Bypass submit()'s own cache check too — force means force,
+            # even if the LLM will (validly) return the same answer again.
+            self.last_key = raw_title
+            self.last_artist = artist
+            self.last_title = title
+            self.last_performer = performer
+            self.started[raw_title] = time.time()
+            await self.queue.put((raw_title, artist, title, performer))
+        else:
+            await self.submit(raw_title, artist, title, performer)
 
     async def _worker(self) -> None:
         while True:

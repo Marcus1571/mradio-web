@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.6] - 2026-09-07
+
+Fixed AI liner notes re-querying the AI provider every time you switched
+back to a language (or provider) you'd already used for the current
+track, even when a cached answer already existed — the panel would sit
+on "Asking the AI provider…" and a real network call would fire, instead
+of instantly showing the cached blurb. Switching languages/providers now
+checks the cache first, the same way playing a fresh track already did;
+the "Re-ask AI" button still always asks fresh, as intended.
+
 ## [1.0.5] - 2026-09-07
 
 Fixed the station logo overlapping the now-playing panel's metrics row

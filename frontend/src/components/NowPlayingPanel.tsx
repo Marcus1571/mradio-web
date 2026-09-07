@@ -102,7 +102,7 @@ export function NowPlayingPanel({
   reconnect: () => void
   setVolume: (v: number) => void
   toggleMute: () => void
-  reenrich: () => void
+  reenrich: (force?: boolean) => void
   t: TFunction
 }) {
   const { providers, active, activate } = useProviders()
@@ -207,7 +207,7 @@ export function NowPlayingPanel({
                       <ExternalLinkIcon />
                     </a>
                   )}
-                  <button className="text-btn" type="button" onClick={reenrich} disabled={state.enriching}>
+                  <button className="text-btn" type="button" onClick={() => reenrich(true)} disabled={state.enriching}>
                     <RefreshIcon />
                     {t('nowPlaying.reAskAi')}
                   </button>

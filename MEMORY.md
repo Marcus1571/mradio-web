@@ -2500,6 +2500,92 @@ actual defect here was backend logic rather than CSS/rendering — the
 verification method (real logs, real upstream bytes, a real demuxer run)
 was the equivalent rigor for a backend-shaped bug.
 
+## Language/provider switch ignored an existing cached AI answer (fixed 2026-09-07, 1.0.6)
+
+User reported building a liner note in Hebrew, switching to English
+(rebuilt), then switching back to Hebrew — instead of instantly
+reusing the Hebrew answer already sitting in `cache.json`, the panel
+sat on "Asking the AI provider…" and a real network call fired again.
+Reported as happening with any language, not just Hebrew.
+
+**Investigated against real production data, not assumption**: pulled
+`cache.json` from LT (`docker exec mradio-web python3 -c "..."`) and
+found the exact Hebrew entry for the exact track already cached, valid,
+non-`fail`, under the correct `codex::he::<raw_title>` key — so the
+cache write path and key format were both already correct (as they
+should be, unchanged from the design docstring in `cache.py`). The bug
+had to be in when/whether the read path was even consulted.
+
+**Root cause**: two call sites — the WS `reenrich` handler (fired by
+every language switch, via `Dashboard.tsx`'s `setLanguage()` calling
+`player.reenrich()`, and separately by the "Re-ask AI" button) and
+`routers/enrich.py`'s `activate_provider()` (fired by every AI-provider
+switch) — both called `Enricher.invalidate()`, which went straight to
+`submit()`. `submit()` does check the cache, but only to silently
+`return` early and skip re-queuing a background LLM call — it never
+notifies anyone a cache hit happened. Contrast with `pump_nowplaying()`'s
+handling of a genuinely new track (`title` WS event): that path
+explicitly calls `enricher.blurb()` *first* and sends an `enrichment`
+message immediately on a hit, only falling through to `submit()` on a
+miss. `invalidate()` never had that first check, so on a cache hit the
+frontend's optimistic `enriching: true` (set by `usePlayer.ts`'s
+`reenrich()` before the WS message is even sent) was never cleared by
+anything — the panel was stuck on the placeholder with zero network
+call ever happening, not literally "re-searching," but indistinguishable
+from it to the user, and confirmed by the logs showing a genuine
+`POST https://chatgpt.com/backend-api/codex/responses` firing around
+the same time (a real, separate 429-rate-limit issue that made the
+*next* switch look even more like "still searching").
+
+**The subtlety that shaped the fix**: `invalidate()` has two genuinely
+different callers with opposite intent. A language/provider switch
+should prefer an existing cached answer for the *new* language/provider
+if one exists — asking again would just reproduce the same cached
+result at the cost of a real API call and a long wait. The "Re-ask AI"
+button, which routes through the exact same WS `reenrich` message and
+therefore the exact same `invalidate()` call, has the opposite intent:
+it exists specifically to force a fresh answer even when one is
+cached — that's the whole point of the button, and a naive "always
+check cache first" fix would have silently broken it (clicking Re-ask
+would just re-show the same cached blurb forever).
+
+**Fix**: `invalidate()` gained a `force: bool = False` parameter.
+`force=False` (the default — both `ws.py`'s automatic-switch path and
+`enrich.py`'s provider-switch path use it) checks the cache first via
+the same `cache_store.get_cached()` call `blurb()`/`submit()` already
+use, and on a hit delivers it straight through `self.on_result` — the
+identical callback `_finish()` already uses to push a fresh LLM answer
+to the WS, so both paths converge on one delivery mechanism rather than
+duplicating it — then returns without touching the offline cooldown or
+enqueueing anything. `force=True` (routed only from the "Re-ask AI"
+button, via a new `force` field on the frontend's `{type: "reenrich"}`
+WS message, plumbed through `usePlayer.ts`'s `reenrich(force = false)`
+and `NowPlayingPanel.tsx`'s button calling `reenrich(true)`) skips the
+cache check entirely and always enqueues a fresh ask, bypassing even
+`submit()`'s own redundant internal cache check (which would otherwise
+still block a forced re-ask that happens to match what's cached).
+
+**Verified with a real functional test, not just reading the code**: a
+throwaway script (temporary venv + `MRADIO_DATA_DIR`, same technique
+used for the 1.0.2 ICY-demuxer verification) seeded a fake
+`codex::he::...` cache entry, then called `invalidate(force=False)` and
+confirmed it delivered the cached item via `on_result` with **zero**
+items enqueued to the worker queue, then called `invalidate(force=True)`
+on the same already-cached track and confirmed the opposite — nothing
+delivered via the shortcut, one item correctly enqueued for a real LLM
+call. `tsc --noEmit`, `oxlint`, `vite build`, and a Python `ast.parse`
+syntax check on all three touched backend files all clean.
+
+**Lesson**: a cache-hit check that silently `return`s without notifying
+its caller is a trap specifically when the caller's job is to *report*
+a result somewhere (a WS push, a UI state update) — it's easy to reason
+"the cache check prevents wasted work" and stop there, missing that
+"prevents wasted work" and "produces the result the caller was waiting
+for" are two different guarantees, and only the first one was actually
+implemented. Worth checking for the same pattern anywhere else a
+success path and a "already have it" path are expected to converge on
+the same delivery mechanism, not just here.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

@@ -103,7 +103,14 @@ async def now_playing_ws(websocket: WebSocket, sid: str = Query(...)):
             if msg.get("type") == "reenrich" and state["raw_title"]:
                 raw = state["raw_title"]
                 artist, title, performer = split_title(raw)
-                await enricher.invalidate(raw, artist, title, performer)
+                # force=True only for the explicit "Re-ask AI" button —
+                # a language/provider switch (the common case this
+                # message is also sent for, see Dashboard.tsx's
+                # setLanguage()) should prefer an existing cached answer
+                # over a fresh, redundant LLM call. See invalidate()'s
+                # own docstring for the full reasoning/bug history.
+                await enricher.invalidate(raw, artist, title, performer,
+                                          force=bool(msg.get("force")))
 
     async def pump_ping() -> None:
         """Keeps the socket looking active to any reverse proxy sitting in
