@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.2] - 2026-09-07
+
+1.0.1 shipped a fix for stations with no ICY metadata support at all, but
+some real stations (confirmed live: TSF Jazz) implement ICY framing fully
+— `icy-metaint` present and correct — yet never actually populate the
+track title (`StreamTitle='';`, always empty). That's indistinguishable
+from "no support" to a listener, but 1.0.1's fix didn't cover it, so
+those stations were still stuck on "Connecting…" forever. The stream
+proxy now recognizes a confirmed-empty title the same way it recognizes
+no metadata support at all, and shows the same explanatory message.
+
 ## [1.0.1] - 2026-09-07
 
 Fixed a real bug and a misleading UI state, both in the now-playing panel:

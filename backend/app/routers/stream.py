@@ -125,11 +125,26 @@ async def stream(request: Request,
         try:
             if metaint:
                 demux = IcyDemuxer(metaint)
+                # Some stations implement full ICY framing (metaint present,
+                # confirmed reachable) but never populate StreamTitle at all
+                # (confirmed live: TSF Jazz always sends `StreamTitle='';`)
+                # — indistinguishable from "no ICY support" to a listener,
+                # but has_icy alone reports true, so the frontend would
+                # otherwise wait forever for a title that's never coming.
+                # Once we've seen a metadata field with no usable title,
+                # tell the frontend explicitly rather than staying silent.
+                no_title_reported = False
                 async for chunk in upstream.aiter_bytes():
-                    audio, title = demux.feed(chunk)
+                    audio, title, saw_metadata_field = demux.feed(chunk)
                     if title and sid and nowplaying.is_current_generation(sid, gen):
                         logger.info("title sid=%s title=%r", sid, title)
                         nowplaying.publish(sid, {"type": "title", "title": title})
+                    elif (saw_metadata_field and not title and not no_title_reported
+                          and sid and nowplaying.is_current_generation(sid, gen)):
+                        no_title_reported = True
+                        logger.info("no usable title sid=%s station=%r — "
+                                    "station sends empty StreamTitle", sid, station_name)
+                        nowplaying.publish(sid, {"type": "no_title"})
                     if audio:
                         yield audio
             else:

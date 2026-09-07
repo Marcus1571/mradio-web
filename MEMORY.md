@@ -2340,6 +2340,76 @@ above) — verified by hand via a throwaway script confirming
 `begin_generation`/`is_current_generation` invalidate correctly on a
 second call for the same `sid`.
 
+## Empty-StreamTitle stations still stuck on "Connecting…" after 1.0.1 (fixed 2026-09-07, 1.0.2)
+
+User caught this live on production immediately after the 1.0.1 deploy: TSF
+Jazz still showed "Connecting…" forever, not the new no-metadata message.
+1.0.1's `has_icy` flag is derived purely from whether `icy-metaint` is
+present in the upstream headers — true for TSF Jazz — so the new message
+never triggered; the panel just fell back to its old default.
+
+**Investigated properly instead of guessing**: pulled the live container
+logs (`docker logs mradio-web`) and found `metaint=16000` for TSF Jazz,
+confirming it really does send ICY framing, and zero `title` log lines for
+it ever, across two separate connection attempts (18s and counting).
+Bypassed the app entirely and `curl`'d the origin
+(`tsfjazz.ice.infomaniak.ch`) directly with `Icy-MetaData: 1`, then
+hand-parsed the raw ICY metadata blocks in a throwaway script: **every
+single block, sampled over ~25s / 20 metadata checks, contains
+`StreamTitle='';`** — an empty but present title field, not a missing
+one. `icy.py`'s `extract_title()` already correctly treats an empty
+capture group as "no title" (falsy check), so nothing there was wrong —
+the gap was that `stream.py`/`nowplaying.py` had no way to tell "haven't
+gotten a title yet, might still come" apart from "this station's title
+field is confirmed to always be empty."
+
+**Fix**: `icy.py` gained `has_stream_title_field()` (true if a
+`StreamTitle=` field exists in the block at all, even empty) and
+`IcyDemuxer.feed()`'s return signature grew a third element,
+`saw_metadata_field: bool`, true whenever a metadata block completed
+during that call regardless of whether it yielded a usable title.
+`stream.py` tracks a per-connection `no_title_reported` flag and
+publishes a new one-shot `{"type": "no_title"}` event (once per
+connection, gated by the same generation-token check the `title` publish
+already uses) the first time it sees a metadata field with no usable
+title. `nowplaying.py` caches this like `station`/`title` for
+subscribe-time replay (`_last_no_title`, cleared whenever a `station` or
+real `title` event for the same sid supersedes it, and on full
+unsubscribe cleanup) — same reasoning as the original replay-on-subscribe
+fix from 0.1.3, since this is genuinely "latest value wins" state, not a
+one-off toast. `ws.py` forwards it to the frontend verbatim.
+
+Frontend: `usePlayer.ts`'s WS handler sets `hasIcy: false` on a `no_title`
+message — collapsing this case onto the exact same UI state/message as
+"no ICY support at all" (`nowPlaying.noIcySupport`), per explicit user
+decision (asked directly rather than assumed): the distinction between
+"header missing" and "header present but always empty" doesn't matter to
+a listener, both mean "no track info, ever," so one message covers both.
+Guarded with `s.rawTitle ? s : ...` so an already-showing real title is
+never downgraded by a stale/reordered `no_title` event.
+
+**Verified against real production data, not synthetic**: captured TSF
+Jazz's actual ICY bytes via `curl` from this dev machine, fed them through
+the real `IcyDemuxer` in a throwaway script (temporary venv, since this
+machine has no backend venv set up — see "Local development" above),
+confirmed it fires exactly one `no_title` and zero `title` events,
+matching production. Separately fed a synthetic real-title stream through
+the same demuxer to confirm normal stations are unaffected (one `title`
+event, zero `no_title` events) — a zero-length metadata block (the
+common "no change this cycle" case on a healthy station) correctly has no
+`StreamTitle` field at all and doesn't count as `saw_metadata_field`.
+`tsc --noEmit`, `oxlint`, `vite build` all clean.
+
+**Lesson**: "the header is present" and "the header carries a real value"
+are different facts, and a station can satisfy the first while never
+satisfying the second, indefinitely — worth remembering for any future
+ICY-adjacent work, not just this one station. Confirmed live in
+production (not just build/lint) before calling this done, consistent
+with [[feedback_verify_ui_visually]]'s standing rule, even though the
+actual defect here was backend logic rather than CSS/rendering — the
+verification method (real logs, real upstream bytes, a real demuxer run)
+was the equivalent rigor for a backend-shaped bug.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

@@ -43,6 +43,7 @@ logger = logging.getLogger("mradio.nowplaying")
 _queues: dict[str, list[asyncio.Queue]] = {}
 _last_station: dict[str, dict] = {}
 _last_title: dict[str, dict] = {}
+_last_no_title: dict[str, dict] = {}
 _generation: dict[str, str] = {}
 
 # Who's actually connected right now, for the admin analytics page's
@@ -106,8 +107,12 @@ def publish(sid: str, event: dict) -> None:
         return
     if event.get("type") == "station":
         _last_station[sid] = event
+        _last_no_title.pop(sid, None)  # a new station connection supersedes any prior no-title notice
     elif event.get("type") == "title":
         _last_title[sid] = event
+        _last_no_title.pop(sid, None)  # a real title arrived — any earlier "no title" notice is stale
+    elif event.get("type") == "no_title":
+        _last_no_title[sid] = event
     subscribers = _queues.get(sid, [])
     if not subscribers:
         logger.info(
@@ -128,6 +133,9 @@ def subscribe(sid: str) -> asyncio.Queue:
     if sid in _last_title:
         q.put_nowait(_last_title[sid])
         replayed.append("title")
+    if sid in _last_no_title:
+        q.put_nowait(_last_no_title[sid])
+        replayed.append("no_title")
     logger.info("subscribe sid=%s replayed=%s", sid, replayed or "none")
     return q
 
@@ -142,5 +150,6 @@ def unsubscribe(sid: str, q: asyncio.Queue) -> None:
         _queues.pop(sid, None)
         _last_station.pop(sid, None)
         _last_title.pop(sid, None)
+        _last_no_title.pop(sid, None)
         _generation.pop(sid, None)
         logger.info("unsubscribe sid=%s — no subscribers left, cache cleared", sid)

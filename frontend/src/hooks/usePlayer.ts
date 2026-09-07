@@ -163,6 +163,12 @@ export function usePlayer(initialVolume?: number) {
             enrichment: null,
             enriching: true,
           }))
+        } else if (msg.type === 'no_title') {
+          // metaint is present (hasIcy was true) but the station never
+          // actually populates StreamTitle (confirmed live: TSF Jazz sends
+          // StreamTitle='' forever) — same dead-end for the listener as no
+          // ICY support at all, so it collapses onto the same UI state.
+          setState((s) => (s.rawTitle ? s : { ...s, hasIcy: false }))
         } else if (msg.type === 'enrichment') {
           setState((s) => {
             if (s.rawTitle !== msg.raw_title) return s

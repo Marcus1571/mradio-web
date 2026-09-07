@@ -20,6 +20,17 @@ from httpx import Headers
 _TITLE_RE = re.compile(rb"StreamTitle='(.*?)';")
 
 
+def has_stream_title_field(metadata_block: bytes) -> bool:
+    """True if the block contains a StreamTitle field at all, even an
+    empty one (`StreamTitle='';`) — some real stations (confirmed live:
+    TSF Jazz) implement full ICY framing but never populate this field,
+    which looks identical to "no ICY support" to a listener even though
+    metaint is genuinely present. Distinguishing the two lets stream.py
+    tell the frontend "this station just never sends a title" instead of
+    leaving it to infer that from an indefinite silence."""
+    return _TITLE_RE.search(metadata_block) is not None
+
+
 def parse_metaint(headers: Headers) -> int | None:
     v = headers.get("icy-metaint")
     if v is None:
@@ -55,9 +66,14 @@ class IcyDemuxer:
         self._meta_buf = bytearray()
         self.last_title: str | None = None
 
-    def feed(self, chunk: bytes) -> tuple[bytes, str | None]:
+    def feed(self, chunk: bytes) -> tuple[bytes, str | None, bool]:
+        """Returns (audio_bytes, title_or_None, saw_metadata_field) — the
+        third element is True exactly when a StreamTitle field (even an
+        empty one) completed during this call, regardless of whether it
+        produced a usable/changed title. See has_stream_title_field()."""
         out = bytearray()
         title = None
+        saw_metadata_field = False
         i, n = 0, len(chunk)
         while i < n:
             if self._audio_left > 0:
@@ -79,6 +95,7 @@ class IcyDemuxer:
             self._meta_buf += chunk[i:i + take]
             i += take
             if len(self._meta_buf) >= self._meta_needed:
+                saw_metadata_field = has_stream_title_field(bytes(self._meta_buf))
                 t = extract_title(bytes(self._meta_buf))
                 if t and t != self.last_title:
                     self.last_title = t
@@ -87,4 +104,4 @@ class IcyDemuxer:
                 self._meta_needed = 0
                 self._audio_left = self.metaint
                 self._reading_length = True
-        return bytes(out), title
+        return bytes(out), title, saw_metadata_field
