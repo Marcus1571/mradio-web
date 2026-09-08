@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.3] - 2026-09-08
+
+Fixed a gap from 1.4.2: after Stop then reload, the panel now correctly
+shows nothing playing at all instead of restoring the station in a
+stopped state. Reloading after Stop now shows the station you had
+selected — name, logo, highlighted in Favorites — in a "Stopped, press
+play to reconnect" state, matching what was on screen before the
+reload. Only actual playback doesn't auto-resume; the selection itself
+does.
+
 ## [1.4.2] - 2026-09-08
 
 Fixed: reloading the app (or reopening it) after pressing Stop

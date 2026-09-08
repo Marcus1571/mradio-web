@@ -3240,6 +3240,51 @@ guessing. Closing the tab/browser while still playing (not via Stop)
 intentionally still resumes on reopen — that's the feature working as
 originally intended, only the Stop case was the bug.
 
+**Follow-up gap (fixed same day, 1.4.3):** 1.4.2 correctly stopped
+audio from auto-resuming, but overcorrected — it stopped calling
+`player.play()` entirely for the `last_status !== 'playing'` case, and
+`state.station` (which drives `hasStation`, the panel's station name/
+logo/live-dot, the Play/Stop button's enabled state, and the favorites
+list's highlighted slot via `currentUrl={player.state.station?.url}`)
+is *only* ever populated by `play()`. So Stop→reload went from "wrongly
+resumes playback" straight past the correct middle state to "wrongly
+shows an empty 'Nothing playing' panel with no station selected at
+all" — confirmed by the user's own before/after screenshots showing
+Swiss Jazz selected-and-playing before reload, then the panel entirely
+empty (no station highlighted in Favorites either) after.
+
+Fixed by splitting "populate the panel with a station's identity" from
+"start playback," which had never been two separate operations before.
+Added `usePlayer.ts`'s `selectStation(station)` — the same state fields
+`play()` sets (station, stationName, hasIcy, rawTitle/artist/title/
+performer, enrichment) minus the parts specific to actually starting
+audio (no `audioRef` touch, no `wantsConnectionRef` flip, no
+`/api/config` PATCH — this is a read-only local reflection of state the
+server already persisted, not a new event to record). `Dashboard.tsx`'s
+mount effect now branches: `last_status === 'playing'` calls
+`player.play(station)` as before; anything else calls
+`player.selectStation(station)` instead of skipping entirely. The
+existing "Stopped — press play to reconnect" UI in
+`NowPlayingPanel.tsx` (already built for the ordinary same-session
+Stop click, `hasStation && status === 'stopped'`) needed zero changes —
+it was already exactly the right state to land in, just unreachable
+after a reload until now.
+
+Verified visually this time (unlike 1.4.1's skip) via the
+throwaway-harness technique, but a heavier version than before: this
+touches `Dashboard.tsx` itself, which needs `AuthProvider` (for
+`TopBar`'s `useAuth()`) plus stubs for `/api/config` (with
+`last_status: 'stopped'`), `/api/favorites`, `/api/stations/genres`,
+`/api/enrich/trivia-history`, `/api/enrich/providers`, `/api/auth/me`,
+`/api/stations/logo`, and a fake `WebSocket` global (real `usePlayer()`
+opens one on mount) — a fully-wired `Dashboard`, not just one page
+component. Screenshotted the reload state (station name, live-dot,
+"Stopped — press play to reconnect.", slot 6 highlighted in Favorites,
+Play icon showing) and then drove a real click on the transport button,
+confirming it flips to "Connecting…" with the Stop icon — exactly the
+same resume path a normal Play click already used, now reachable from a
+restored-but-never-live `state.station`.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

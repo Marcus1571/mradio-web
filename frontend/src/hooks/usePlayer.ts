@@ -244,6 +244,28 @@ export function usePlayer(initialVolume?: number) {
     [],
   )
 
+  /** Populates the panel with a station's identity (name/logo/"Stopped"
+   * state) without starting playback — used only to restore the last
+   * station after a reload that finds last_status: 'stopped', so the
+   * user sees what they had selected instead of an empty "Nothing
+   * playing" panel, without audio starting on its own. Doesn't touch
+   * audioRef, wantsConnectionRef, or persist to /api/config — this is
+   * purely a one-time local reflection of state the server already has. */
+  const selectStation = useCallback((station: Station) => {
+    setState((s) => ({
+      ...s,
+      station,
+      stationName: station.name,
+      hasIcy: null,
+      rawTitle: '',
+      artist: '',
+      title: '',
+      performer: '',
+      enrichment: null,
+      enriching: false,
+    }))
+  }, [])
+
   const play = useCallback(
     (station: Station) => {
       const audio = audioRef.current
@@ -364,5 +386,5 @@ export function usePlayer(initialVolume?: number) {
     wsRef.current?.send(JSON.stringify({ type: 'reenrich', force }))
   }, [state.rawTitle])
 
-  return { state, play, stop, reconnect, setVolume, applySavedVolume, toggleMute, reenrich }
+  return { state, play, stop, reconnect, setVolume, applySavedVolume, toggleMute, reenrich, selectStation }
 }

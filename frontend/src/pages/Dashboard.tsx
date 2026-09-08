@@ -38,13 +38,23 @@ export function Dashboard() {
     applyDirection(nextLanguage)
     if (typeof config.volume === 'number') player.applySavedVolume(config.volume)
     if (config.mute) player.toggleMute()
-    if (!resumedRef.current && config.last_url && config.last_status === 'playing') {
+    if (!resumedRef.current && config.last_url) {
       resumedRef.current = true
-      player.play({
+      const station = {
         name: config.last_name || config.last_url,
         url: config.last_url,
         genre: config.last_genre || 'other',
-      })
+      }
+      // last_status === 'playing': actually resume the stream. Anything
+      // else (including a legacy config with no last_status at all):
+      // still show the last-picked station in the panel, in its
+      // "Stopped" state, rather than either silently auto-playing audio
+      // the user explicitly stopped, or dropping the selection entirely
+      // and showing an empty "Nothing playing" panel — see 1.4.2's
+      // MEMORY.md entry for why last_status exists and 1.4.3 for why
+      // selectStation() exists.
+      if (config.last_status === 'playing') player.play(station)
+      else player.selectStation(station)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config])
