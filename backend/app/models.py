@@ -54,6 +54,8 @@ class AISettingsUpdate(BaseModel):
     grok_api_key: str | None = None
     grok_model: str | None = None
     grok_timeout: int | None = None
+    codex_manually_enabled: bool | None = None
+    grok_manually_enabled: bool | None = None
     gemini_api_base: str | None = None
     gemini_api_key: str | None = None
     gemini_model: str | None = None

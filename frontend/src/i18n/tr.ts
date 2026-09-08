@@ -120,6 +120,9 @@ const tr: Dict = {
     geminiNotePrefix: "Gemini'ye yeni misiniz? KB.md içindeki",
     geminiNoteLink: '"Getting an API key"',
     geminiNoteSuffix: 'bölümüne bakın — ücretsiz API anahtarı nasıl alınır orada anlatılıyor.',
+    providerEnableToggle: '“Oynatıcının yapay zeka menüsünde göster”',
+    providerEnableToggleHint:
+      'Bağlantıyı kesmeden herkesin açılır menüsünden gizlemek için kapatın — bir kullanım kotasına ulaşıldığında kullanışlıdır.',
     errorFallback: 'Ayarlar kaydedilemedi.',
     test: 'Test et',
     testing: 'Test ediliyor…',

@@ -120,6 +120,9 @@ const nb: Dict = {
     geminiNotePrefix: 'Ny på Gemini? Se',
     geminiNoteLink: '"Getting an API key" i KB.md',
     geminiNoteSuffix: 'for hvordan du får en gratis API-nøkkel.',
+    providerEnableToggle: '«Vis i spillerens AI-meny»',
+    providerEnableToggleHint:
+      'Slå av for å skjule den fra alles nedtrekksmeny uten å koble fra — praktisk når en bruksgrense er nådd.',
     errorFallback: 'Kunne ikke lagre innstillingene.',
     test: 'Test',
     testing: 'Tester…',

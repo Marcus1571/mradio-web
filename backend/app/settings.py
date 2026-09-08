@@ -34,6 +34,14 @@ _DEFAULTS = {
     "grok_api_key": "",
     "grok_model": "grok-4.3",
     "grok_timeout": 30,
+    # Manual kill switches for the player dropdown, independent of
+    # whether credentials/OAuth are configured — lets an admin hide a
+    # subscription provider the moment it hits its usage quota, without
+    # disconnecting/losing the saved token, and flip it back on once the
+    # quota resets. Default True: existing installs keep today's
+    # behavior (visible whenever configured) until an admin touches it.
+    "codex_manually_enabled": True,
+    "grok_manually_enabled": True,
     # Google Gemini via its own OpenAI-compatibility endpoint — genuinely
     # free tier (Flash-family models), not admin-only (unlike ChatGPT/
     # Grok) since it isn't tied to anyone's personal paid subscription.

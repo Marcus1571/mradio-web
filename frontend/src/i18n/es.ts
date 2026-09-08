@@ -120,6 +120,9 @@ const es: Dict = {
     geminiNotePrefix: '¿Nuevo en Gemini? Consulta',
     geminiNoteLink: '"Getting an API key" en el KB.md',
     geminiNoteSuffix: 'para obtener una clave API gratuita.',
+    providerEnableToggle: '«Mostrar en el menú de IA del reproductor»',
+    providerEnableToggleHint:
+      'Desactívalo para ocultarlo del menú desplegable de todos sin desconectarlo — útil al alcanzar una cuota de uso.',
     errorFallback: 'No se pudo guardar la configuración.',
     test: 'Probar',
     testing: 'Probando…',

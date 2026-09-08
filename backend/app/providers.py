@@ -88,12 +88,20 @@ def grok_enabled(settings: dict) -> bool:
 
 
 def provider_enabled(name: str, settings: dict) -> bool:
+    # codex/grok also need their manual switch on — an admin can hide a
+    # still-configured subscription provider from the player dropdown
+    # the moment it hits its usage quota (see providers.py's
+    # _format_codex_error), without disconnecting/losing the saved
+    # token, and flip it back on once the quota resets. Defaults to
+    # True, so a provider that's never had the switch touched behaves
+    # exactly as it always has (visible whenever configured).
     probe = {
         "opencode": bool(oc_port(settings)),
         "ollama": bool(settings.get("ollama_url")),
         "openai": bool(settings.get("api_key")),
-        "codex": bool(codex_settings.load().get("access_token")),
-        "grok": grok_enabled(settings),
+        "codex": bool(codex_settings.load().get("access_token"))
+                 and settings.get("codex_manually_enabled", True),
+        "grok": grok_enabled(settings) and settings.get("grok_manually_enabled", True),
         "gemini": bool(settings.get("gemini_api_key")),
     }
     return probe.get(name, False)

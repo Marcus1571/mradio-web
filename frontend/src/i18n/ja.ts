@@ -116,6 +116,9 @@ const ja: Dict = {
     geminiNotePrefix: 'Geminiが初めてですか？',
     geminiNoteLink: 'KB.mdの「Getting an API key」',
     geminiNoteSuffix: 'をご覧ください。無料APIキーの取得方法が書かれています。',
+    providerEnableToggle: '「プレーヤーのAIメニューに表示」',
+    providerEnableToggleHint:
+      'オフにすると接続を切らずに全員のドロップダウンから非表示にできます。利用上限に達したときに便利です。',
     errorFallback: '設定を保存できませんでした。',
     test: 'テスト',
     testing: 'テスト中…',

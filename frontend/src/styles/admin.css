@@ -344,6 +344,25 @@
   opacity: 1;
 }
 
+.provider-enable-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  cursor: pointer;
+  margin-top: var(--space-2xs);
+}
+
+.provider-enable-toggle input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+.admin-note-hint {
+  margin-top: var(--space-3xs);
+  margin-bottom: var(--space-2xs);
+}
+
 .grok-mode-toggle {
   display: flex;
   gap: var(--space-md);

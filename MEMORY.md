@@ -3131,6 +3131,62 @@ confirmed it now returns the specific usage-limit message with the
 correct reset date instead of the old generic string, before doing the
 full rebuild/deploy.
 
+## Manual ENABLE/DISABLE toggle for ChatGPT and Grok's player-dropdown visibility (added 2026-09-08, 1.4.0)
+
+Direct follow-up to the 1.3.2 fix: even with a real error message,
+hitting the Codex usage quota still meant every player still showed
+ChatGPT as pickable in the dropdown, and picking it just failed
+silently in enrichment — the only existing fix was disconnecting
+(losing the saved OAuth token) and reconnecting once the quota reset,
+which the user described as "having to logout everytime I pass the
+quota."
+
+Added `codex_manually_enabled` / `grok_manually_enabled` booleans to
+`settings.py`'s `_DEFAULTS` (both default `True`, so existing installs
+keep today's behavior until an admin touches the new switch) and gated
+`provider_enabled()` in `providers.py` on them for codex/grok only —
+deliberately NOT applied to Ollama/NIM/Gemini, which don't share this
+"connected but temporarily can't be used" failure mode (Gemini's own
+free-tier quota, if hit, would need the same treatment eventually, but
+wasn't asked for and isn't needed yet).
+
+This was the single choke point to change: `enricher.py`'s
+`active_provider()` fallback chain and `switch_provider()` both already
+route through `providers.provider_enabled()` (see the 1.1.2 admin-only
+restriction work for why that choke point exists), so gating it there
+alone was enough — no separate check needed in the dropdown-listing
+endpoint or the fallback logic.
+
+Frontend: added a checkbox (`.provider-enable-toggle`, styled like the
+existing `.grok-mode-option` radio pattern) right under the intro
+paragraph in both the ChatGPT and Grok `ProviderBubble`s. PATCHes
+`/api/settings/ai` immediately on change (same "don't wait for the main
+Save button" pattern as `connectGrok()`'s immediate `grok_mode` PATCH
+from 1.1.1) so flipping it takes effect right away without also having
+to fill in and submit the rest of the form. Unchecking it does NOT
+disconnect/lose the saved token — `codexStatus?.connected` and the
+Disconnect/Test controls are entirely unaffected, confirmed visually
+(see below).
+
+i18n: added `providerEnableToggle` / `providerEnableToggleHint` to all
+15 languages. Caught two real bugs doing this in bulk via a Python
+script: `nl.ts` got literal doubled straight quotes (`''...''`, invalid
+JS) from a translation string mistake, and both `fr.ts` and `it.ts` had
+an unescaped straight apostrophe inside a single-quoted string
+(`d'utilisation`, `d'uso`) that silently passed `tsc --noEmit` in
+isolation but broke the real `vite build` — a reminder that `tsc
+--noEmit` alone isn't sufficient proof of a working build; always run
+the actual `npm run build` before calling a multi-file text change done.
+
+Verified visually via the throwaway-harness technique (temporary
+`DevHarness.tsx` swapped into `main.tsx`, `window.fetch` stubbed for
+`/api/settings/ai`, `/api/enrich/providers`, `/api/settings/codex(grok)/
+status`, screenshotted via headless Chrome, drove a real click on the
+checkbox) — confirmed unchecking it flips the ChatGPT status dot from
+green to gray while "Connected (go)." and the Disconnect/Test buttons
+stay untouched, before fully reverting `main.tsx` and deleting the
+harness file.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

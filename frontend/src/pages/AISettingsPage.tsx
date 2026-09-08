@@ -134,6 +134,23 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
     await refreshProviders()
   }
 
+  // Independent of the main Save button, like connectGrok()'s immediate
+  // grok_mode PATCH below — an admin flipping this needs it to take
+  // effect right away (e.g. hiding a provider the moment it hits its
+  // usage quota), not only after also filling in and submitting the
+  // rest of the form.
+  async function setCodexManuallyEnabled(value: boolean) {
+    const res = await api.patch<AISettings>('/api/settings/ai', { codex_manually_enabled: value })
+    setSettings(res)
+    await refreshProviders()
+  }
+
+  async function setGrokManuallyEnabled(value: boolean) {
+    const res = await api.patch<AISettings>('/api/settings/ai', { grok_manually_enabled: value })
+    setSettings(res)
+    await refreshProviders()
+  }
+
   async function testGrok() {
     setGrokTest({ status: 'testing' })
     try {
@@ -202,6 +219,15 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               defaultOpen={isEnabled('codex') || codexStatus?.pending === true}
             >
               <p className="admin-note">{t('aiSettings.codexIntro')}</p>
+              <label className="provider-enable-toggle">
+                <input
+                  type="checkbox"
+                  checked={settings.codex_manually_enabled}
+                  onChange={(e) => void setCodexManuallyEnabled(e.target.checked)}
+                />
+                {t('aiSettings.providerEnableToggle')}
+              </label>
+              <p className="admin-note admin-note-hint">{t('aiSettings.providerEnableToggleHint')}</p>
               {codexStatus?.connected ? (
                 <>
                   <p className="admin-note">
@@ -255,6 +281,15 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               defaultOpen={isEnabled('grok') || grokStatus?.pending === true}
             >
               <p className="admin-note">{t('aiSettings.grokIntro')}</p>
+              <label className="provider-enable-toggle">
+                <input
+                  type="checkbox"
+                  checked={settings.grok_manually_enabled}
+                  onChange={(e) => void setGrokManuallyEnabled(e.target.checked)}
+                />
+                {t('aiSettings.providerEnableToggle')}
+              </label>
+              <p className="admin-note admin-note-hint">{t('aiSettings.providerEnableToggleHint')}</p>
 
               <div className="grok-mode-toggle" role="radiogroup" aria-label={t('aiSettings.grokModeLabel')}>
                 <label className="grok-mode-option">

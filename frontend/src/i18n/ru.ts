@@ -120,6 +120,9 @@ const ru: Dict = {
     geminiNotePrefix: 'Впервые с Gemini? См.',
     geminiNoteLink: '«Getting an API key» в KB.md',
     geminiNoteSuffix: 'о том, как получить бесплатный API-ключ.',
+    providerEnableToggle: '«Показывать в ИИ-меню плеера»',
+    providerEnableToggleHint:
+      'Отключите, чтобы скрыть из выпадающего меню у всех, не отключая — удобно при достижении лимита использования.',
     errorFallback: 'Не удалось сохранить настройки.',
     test: 'Проверить',
     testing: 'Проверка…',

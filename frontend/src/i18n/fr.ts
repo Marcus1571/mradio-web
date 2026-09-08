@@ -120,6 +120,9 @@ const fr: Dict = {
     geminiNotePrefix: 'Nouveau sur Gemini ? Consultez',
     geminiNoteLink: '« Getting an API key » dans le KB.md',
     geminiNoteSuffix: 'pour obtenir une clé API gratuite.',
+    providerEnableToggle: '« Afficher dans le menu IA du lecteur »',
+    providerEnableToggleHint:
+      'Désactivez pour le masquer du menu déroulant de tout le monde sans le déconnecter — pratique en cas de quota d’utilisation atteint.',
     errorFallback: "Impossible d'enregistrer les paramètres.",
     test: 'Tester',
     testing: 'Test…',

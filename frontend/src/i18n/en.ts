@@ -118,6 +118,9 @@ const en = {
     geminiNotePrefix: 'New to Gemini? See',
     geminiNoteLink: '"Getting an API key" in KB.md',
     geminiNoteSuffix: 'for how to get a free API key.',
+    providerEnableToggle: 'Show in the player’s AI menu',
+    providerEnableToggleHint:
+      'Turn this off to hide it from everyone’s dropdown without disconnecting — handy once you’ve hit a usage quota.',
     errorFallback: 'Could not save settings.',
     test: 'Test',
     testing: 'Testing…',

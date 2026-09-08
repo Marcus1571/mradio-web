@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.0] - 2026-09-08
+
+Added a "Show in the player's AI menu" toggle to the ChatGPT and Grok
+bubbles on the AI providers settings page.
+
+Both are subscription-based, so they can hit an external usage quota
+that has nothing to do with mradio-web itself (see 1.3.2) — until now,
+the only way to stop everyone seeing a provider that's temporarily
+exhausted was to fully disconnect it, losing the saved sign-in and
+having to redo the OAuth flow once the quota reset. The toggle just
+hides the provider from the player's dropdown for everyone while
+leaving the connection intact — flip it back on the moment the quota
+clears. Ollama, NIM, and Gemini don't get this toggle: they don't share
+this "connected but temporarily can't be used" failure mode.
+
 ## [1.3.2] - 2026-09-08
 
 Fixed the ChatGPT/Codex Test button showing a generic "ChatGPT/Codex did

@@ -120,6 +120,9 @@ const da: Dict = {
     geminiNotePrefix: 'Ny til Gemini? Se',
     geminiNoteLink: '„Getting an API key" i KB.md',
     geminiNoteSuffix: 'for hvordan du får en gratis API-nøgle.',
+    providerEnableToggle: '„Vis i afspillerens AI-menu“',
+    providerEnableToggleHint:
+      'Slå fra for at skjule den fra alles dropdown uden at afbryde forbindelsen — praktisk, når en brugskvote er nået.',
     errorFallback: 'Kunne ikke gemme indstillinger.',
     test: 'Test',
     testing: 'Tester…',

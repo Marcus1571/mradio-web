@@ -116,6 +116,9 @@ const he: Dict = {
     geminiNotePrefix: 'חדש ב-Gemini? ראה',
     geminiNoteLink: '"Getting an API key" ב-KB.md',
     geminiNoteSuffix: 'להוראות קבלת מפתח API בחינם.',
+    providerEnableToggle: '״הצג בתפריט ה-AI של הנגן״',
+    providerEnableToggleHint:
+      'כבה כדי להסתיר מהתפריט הנפתח של כולם בלי להתנתק — שימושי כשמגיעים למכסת שימוש.',
     errorFallback: 'לא ניתן היה לשמור את ההגדרות.',
     test: 'בדוק',
     testing: 'בודק…',

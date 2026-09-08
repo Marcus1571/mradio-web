@@ -226,6 +226,15 @@ only if you're comfortable with that risk.
    token is deleted and the provider goes back to "not configured" for
    everyone.
 
+**Hit your usage limit?** ChatGPT/Codex subscriptions have their own
+usage quota, separate from the ChatGPT app/website's own usage graph —
+the Test button shows the exact reset date when this happens. Rather
+than disconnecting (which loses the sign-in and means redoing the OAuth
+flow later), use the **"Show in the player's AI menu"** toggle in this
+same section to hide the provider from everyone's dropdown while
+keeping the connection intact, then switch it back on once the quota
+resets. Grok's section has the same toggle for the same reason.
+
 This provider is bundled the same way `opencode` is (§ above): the real
 `codex` CLI binary ships inside the Docker image (`Dockerfile`'s
 `codex-build` stage, `ARG CODEX_VERSION`), used only to perform the

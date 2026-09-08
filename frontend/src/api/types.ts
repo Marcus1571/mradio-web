@@ -73,6 +73,8 @@ export interface AISettings {
   grok_api_key: string
   grok_model: string
   grok_timeout: number
+  codex_manually_enabled: boolean
+  grok_manually_enabled: boolean
   gemini_api_base: string
   gemini_api_key: string
   gemini_model: string

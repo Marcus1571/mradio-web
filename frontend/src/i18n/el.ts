@@ -120,6 +120,9 @@ const el: Dict = {
     geminiNotePrefix: 'Νέος/α στο Gemini; Δείτε',
     geminiNoteLink: '«Getting an API key» στο KB.md',
     geminiNoteSuffix: 'για το πώς να αποκτήσετε ένα δωρεάν κλειδί API.',
+    providerEnableToggle: '«Εμφάνιση στο μενού AI του player»',
+    providerEnableToggleHint:
+      'Απενεργοποιήστε το για να το κρύψετε από το αναπτυσσόμενο μενού όλων χωρίς αποσύνδεση — χρήσιμο όταν εξαντληθεί το όριο χρήσης.',
     errorFallback: 'Δεν ήταν δυνατή η αποθήκευση των ρυθμίσεων.',
     test: 'Δοκιμή',
     testing: 'Δοκιμή…',
