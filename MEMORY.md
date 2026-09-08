@@ -3339,13 +3339,26 @@ Mac dev machine — see the network-flakiness note below):
   asymmetry easy to miss without testing both paths, handled in
   `_gemini_error_message()`.
 
-**Real, unrelated finding surfaced during this verification**: requests
-to `generativelanguage.googleapis.com` timed out intermittently from
-the Mac dev machine but were reliable from LT — not a code bug, just
-network flakiness on this specific path from this specific network at
-this specific time. Test any external-API integration from the actual
-deploy target (LT), not just the dev machine, when something seems to
-hang — the dev machine's network isn't necessarily representative.
+**Apparent "network flakiness" during this verification, corrected**:
+`POST /v1beta/interactions` intermittently hung for 20-60s (both from
+the Mac dev machine and, later, from inside the LT container) while
+`GET /v1beta/models` on the same hostname and other HTTPS hosts (x.ai,
+google.com) all returned in under 0.5s. First assumed to be generic
+network flakiness — wrong. Root cause, found by testing the same POST
+without the `Api-Revision` header and getting an immediate clean `429`:
+this free-tier project's rate limit is only **20 requests total** for
+`gemini-3.8-flash` (`generate_content_free_tier_requests` metric) — the
+repeated live-verification calls in this same debugging session burned
+through it, and Google's edge/proxy layer evidently sometimes turns an
+over-quota request into a multi-second hang rather than an immediate
+429 under sustained retry pressure, rather than always failing fast.
+Once the quota was confirmed exhausted, every subsequent request
+returned a fast, clean 429 with the real reason — proving
+`_gemini_error_message()`'s formatting works correctly. Lesson: a
+"hang" against a real external API can be a disguised rate limit, not
+just a connectivity problem — check for a fast-vs-slow response pattern
+across different endpoints on the same host before concluding it's
+generic flakiness.
 
 Removed the `gemini_api_base` setting/field entirely (backend
 `_DEFAULTS`/`AISettingsUpdate`, frontend `Config` type and the "API
