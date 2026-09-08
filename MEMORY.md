@@ -3064,6 +3064,32 @@ genuinely documented first-party API, unlike ChatGPT/Grok's caveats)
 with a one-line note up front that this one is NOT admin-only.
 README's provider-list bullet updated to include Gemini.
 
+**Gap caught by the user immediately (fixed 2026-09-08, 1.3.1)**:
+Ollama and NIM's bubbles both have a `KbNote` deep link ("New to
+Ollama/NIM? See '...' in KB.md") pointing admins at the detailed setup
+walkthrough; the initial Gemini build only got a plain one-line intro
+sentence, no link — the exact `KbNote` component already existed and
+was already imported in this file, it just wasn't used for the new
+bubble. Same root cause as the earlier "aiDescription/aiSettings.intro
+missed ChatGPT" lesson from 0.5.28: adding a new provider is easy to
+under-apply consistently across every existing pattern the other
+providers already follow, not just the structural ones (fields,
+dispatch, i18n keys) but the softer UX ones too (this deep-link
+convention). Fixed by adding the same three-key `geminiNotePrefix`/
+`geminiNoteLink`/`geminiNoteSuffix` pattern (mirroring NIM's exact
+"Getting an API key" wording, since both are external-key-signup flows
+in the same shape, unlike Ollama's local-install flow) across all 15
+languages, and wiring a `<KbNote anchor="google-gemini" .../>` into the
+Gemini bubble right after its intro paragraph. Confirmed the anchor
+slug resolves correctly on the live GitHub-rendered KB.md before
+shipping (GitHub's lowercase/hyphenate heading-slug rule, same
+verification method used for every prior KB.md deep link in this
+project) — `google-gemini` for the `### Google Gemini` heading.
+Verified visually via a driven click on the real component (the bubble
+starts collapsed since Gemini isn't configured in the test harness, so
+the harness auto-clicked its header before screenshotting) rather than
+just reading the JSX.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

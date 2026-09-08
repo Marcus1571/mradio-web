@@ -380,6 +380,12 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               defaultOpen={isEnabled('gemini')}
             >
               <p className="admin-note">{t('aiSettings.geminiIntro')}</p>
+              <KbNote
+                prefix={t('aiSettings.geminiNotePrefix')}
+                linkLabel={t('aiSettings.geminiNoteLink')}
+                anchor="google-gemini"
+                suffix={t('aiSettings.geminiNoteSuffix')}
+              />
               <div className="settings-row">
                 <label htmlFor="gemini_api_base">{t('aiSettings.apiBaseUrl')}</label>
                 <input

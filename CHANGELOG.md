@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1] - 2026-09-08
+
+Added a "New to Gemini? See 'Getting an API key' in KB.md" link to the
+Gemini section of the AI providers page — it was missing the same
+deep-link Ollama and NIM already have, so getting a Gemini API key had
+no in-app guidance beyond a one-line intro.
+
 ## [1.3.0] - 2026-09-08
 
 Added **Google Gemini** as a 6th AI liner-notes provider — free (no

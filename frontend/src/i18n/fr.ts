@@ -117,6 +117,9 @@ const fr: Dict = {
     geminiIntro:
       "Modèles Gemini de Google via leur offre API gratuite — aucune carte bancaire requise, disponible pour " +
       "tout le monde une fois configuré, pas réservé aux administrateurs comme ChatGPT ou Grok.",
+    geminiNotePrefix: 'Nouveau sur Gemini ? Consultez',
+    geminiNoteLink: '« Getting an API key » dans le KB.md',
+    geminiNoteSuffix: 'pour obtenir une clé API gratuite.',
     errorFallback: "Impossible d'enregistrer les paramètres.",
     test: 'Tester',
     testing: 'Test…',

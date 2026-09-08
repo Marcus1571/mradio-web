@@ -117,6 +117,9 @@ const tr: Dict = {
     geminiIntro:
       "Google'ın ücretsiz API katmanı üzerinden Gemini modelleri — kredi kartı gerekmez, yapılandırıldıktan " +
       'sonra ChatGPT veya Grok gibi yalnızca yöneticilere özel değil, herkes kullanabilir.',
+    geminiNotePrefix: "Gemini'ye yeni misiniz? KB.md içindeki",
+    geminiNoteLink: '"Getting an API key"',
+    geminiNoteSuffix: 'bölümüne bakın — ücretsiz API anahtarı nasıl alınır orada anlatılıyor.',
     errorFallback: 'Ayarlar kaydedilemedi.',
     test: 'Test et',
     testing: 'Test ediliyor…',

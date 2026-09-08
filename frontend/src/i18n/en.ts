@@ -115,6 +115,9 @@ const en = {
     geminiIntro:
       "Google's Gemini models via their free API tier — no credit card required, available to everyone " +
       'once configured, not admin-only like ChatGPT or Grok.',
+    geminiNotePrefix: 'New to Gemini? See',
+    geminiNoteLink: '"Getting an API key" in KB.md',
+    geminiNoteSuffix: 'for how to get a free API key.',
     errorFallback: 'Could not save settings.',
     test: 'Test',
     testing: 'Testing…',

@@ -117,6 +117,9 @@ const nl: Dict = {
     geminiIntro:
       'Gemini-modellen van Google via hun gratis API-niveau — geen creditcard nodig, beschikbaar voor ' +
       'iedereen zodra ingesteld, niet alleen voor beheerders zoals bij ChatGPT of Grok.',
+    geminiNotePrefix: 'Nieuw met Gemini? Zie',
+    geminiNoteLink: '„Getting an API key" in KB.md',
+    geminiNoteSuffix: 'om een gratis API-sleutel te krijgen.',
     errorFallback: 'Instellingen opslaan mislukt.',
     test: 'Testen',
     testing: 'Testen…',

@@ -117,6 +117,9 @@ const el: Dict = {
     geminiIntro:
       'Μοντέλα Gemini της Google μέσω του δωρεάν επιπέδου API — δεν απαιτείται πιστωτική κάρτα, διαθέσιμο σε ' +
       'όλους μόλις ρυθμιστεί, όχι μόνο για διαχειριστές όπως το ChatGPT ή το Grok.',
+    geminiNotePrefix: 'Νέος/α στο Gemini; Δείτε',
+    geminiNoteLink: '«Getting an API key» στο KB.md',
+    geminiNoteSuffix: 'για το πώς να αποκτήσετε ένα δωρεάν κλειδί API.',
     errorFallback: 'Δεν ήταν δυνατή η αποθήκευση των ρυθμίσεων.',
     test: 'Δοκιμή',
     testing: 'Δοκιμή…',

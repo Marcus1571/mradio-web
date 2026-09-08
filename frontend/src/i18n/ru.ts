@@ -117,6 +117,9 @@ const ru: Dict = {
     geminiIntro:
       'Модели Gemini от Google по бесплатному тарифу API — банковская карта не нужна, доступно всем после ' +
       'настройки, а не только администраторам, как ChatGPT или Grok.',
+    geminiNotePrefix: 'Впервые с Gemini? См.',
+    geminiNoteLink: '«Getting an API key» в KB.md',
+    geminiNoteSuffix: 'о том, как получить бесплатный API-ключ.',
     errorFallback: 'Не удалось сохранить настройки.',
     test: 'Проверить',
     testing: 'Проверка…',
