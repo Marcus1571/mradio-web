@@ -163,6 +163,19 @@ which of these they want active, but nobody enters their own key. Matches
 how mradio itself was configured (env vars / a single settings file), just
 editable from the app instead of only at container start.
 
+**ChatGPT and Grok are admin-only to use, not just to configure.**
+Every other provider (OpenCode, Ollama, NIM/OpenAI-compatible) is
+available to every account once an admin sets it up, same as always.
+ChatGPT and Grok are different: since both ultimately spend a real
+personal subscription or paid API budget (Grok's API-key mode
+included, since it's still billed to the admin's own xAI account),
+non-admin accounts never see them as options in the player's AI
+provider dropdown, can't select them even by calling the API directly,
+and the app's automatic fallback chain (used when the currently-active
+provider fails) will never silently fall through to one of these two
+on a non-admin's behalf either — it skips straight to the next
+available free/self-hosted provider instead.
+
 ### OpenCode
 
 **Bundled in the image already — nothing to configure.** The Dockerfile

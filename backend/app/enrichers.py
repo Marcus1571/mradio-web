@@ -9,12 +9,17 @@ from .enricher import Enricher
 _enrichers: dict[int, Enricher] = {}
 
 
-async def get_enricher(user_id: int) -> Enricher:
-    e = _enrichers.get(user_id)
+async def get_enricher(user: dict) -> Enricher:
+    e = _enrichers.get(user["id"])
     if e is None:
-        e = Enricher(user_id)
+        e = Enricher(user["id"])
         await e.start()
-        _enrichers[user_id] = e
+        _enrichers[user["id"]] = e
+    # Refresh on every call (not just at creation) so a mid-session
+    # admin promotion/demotion takes effect immediately — every caller
+    # already has a freshly-loaded `user` dict from get_active_user's
+    # dependency, so this is free, not an extra DB round-trip.
+    e.is_admin = bool(user["is_admin"])
     return e
 
 

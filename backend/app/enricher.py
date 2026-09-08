@@ -153,12 +153,25 @@ class Enricher:
         self.epoch = 0
         self.provider = ""
         self.language = "en"
+        # Set by enrichers.get_enricher() on every fetch (creation and
+        # every subsequent call), never guessed here — Enricher itself
+        # has no way to look up admin status on its own, and re-querying
+        # the DB here would risk going stale between requests anyway.
+        self.is_admin = False
         self._task: asyncio.Task | None = None
         self.on_result: Callable[[str, dict], Awaitable[None] | None] | None = None
 
     async def start(self) -> None:
         cfg = await load_cfg(self.user_id)
         p = cfg.get("provider", "")
+        # A non-admin's persisted `provider` choice could be one of
+        # ADMIN_ONLY_PROVIDERS from before this restriction existed (or
+        # from being demoted after picking it) — is_admin isn't known
+        # yet at this point (set right after get_enricher() constructs
+        # this instance), so this can't filter admin-only providers out
+        # yet. _usable_provider_order() below is what actually enforces
+        # the restriction on every real use; this just seeds a sane
+        # starting value.
         self.provider = p if p in PROVIDERS else ""
         lang = cfg.get("language", "en")
         self.language = lang if lang in _LANGUAGE_INSTRUCTIONS else "en"
@@ -168,16 +181,28 @@ class Enricher:
         if self._task is not None:
             self._task.cancel()
 
+    def _usable_providers(self) -> tuple[str, ...]:
+        """PROVIDERS, minus admin-only ones for a non-admin user — the
+        single choke point every provider-order computation (active_provider,
+        switch_provider, _llm's fallback chain) goes through, so a
+        regular user can never end up on ChatGPT/Grok via any path,
+        including automatic fallback when their own pick fails."""
+        if self.is_admin:
+            return PROVIDERS
+        return tuple(n for n in PROVIDERS if n not in providers.ADMIN_ONLY_PROVIDERS)
+
     async def active_provider(self) -> str:
         settings = settings_store.load()
-        order = ([self.provider] if providers.provider_enabled(self.provider, settings)
-                 else []) + [n for n in PROVIDERS if n != self.provider
-                             and providers.provider_enabled(n, settings)]
+        usable = self._usable_providers()
+        order = ([self.provider] if self.provider in usable
+                 and providers.provider_enabled(self.provider, settings)
+                 else []) + [n for n in usable
+                             if n != self.provider and providers.provider_enabled(n, settings)]
         return order[0] if order else ""
 
     async def switch_provider(self, name: str) -> bool:
         settings = settings_store.load()
-        if name not in PROVIDERS or not providers.provider_enabled(name, settings):
+        if name not in self._usable_providers() or not providers.provider_enabled(name, settings):
             return False
         self.provider = name
         providers.clear_offline()
@@ -323,9 +348,11 @@ class Enricher:
         return item
 
     async def _llm(self, settings: dict, prompt: str) -> str | None:
-        order = ([self.provider] if providers.provider_enabled(self.provider, settings)
-                 else []) + [n for n in PROVIDERS if n != self.provider
-                             and providers.provider_enabled(n, settings)]
+        usable = self._usable_providers()
+        order = ([self.provider] if self.provider in usable
+                 and providers.provider_enabled(self.provider, settings)
+                 else []) + [n for n in usable
+                             if n != self.provider and providers.provider_enabled(n, settings)]
         for name in order:
             if name == "ollama":
                 out = await providers.llm_ollama(settings, prompt)

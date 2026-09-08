@@ -15,6 +15,18 @@ from . import codex_oauth, codex_settings, grok_oauth, grok_settings
 
 PROVIDERS = ("codex", "grok", "opencode", "ollama", "openai")
 
+# Providers that use a real personal/paid subscription rather than a
+# self-hosted (Ollama) or bundled-free (opencode) mechanism or a
+# generic bring-your-own-key endpoint (openai/NIM) — restricted to
+# admins only (2026-09-07, user's explicit request), since a regular
+# user picking one would otherwise be spending the admin's real money
+# with no visibility into it. Both of Grok's modes are included, not
+# just its subscription mode: the user explicitly chose "all of Grok"
+# over "only Grok's subscription mode" when asked, since Grok's
+# API-key mode is still tied to the admin's own paid xAI account, same
+# as ChatGPT.
+ADMIN_ONLY_PROVIDERS = frozenset({"codex", "grok"})
+
 _OC_ONPATH: bool | None = None
 
 # Global "all providers just failed" cooldown, shared across every user's

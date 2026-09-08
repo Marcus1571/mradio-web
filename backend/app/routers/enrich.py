@@ -18,7 +18,14 @@ async def get_trivia_history(user: dict = Depends(get_active_user)):
 @router.get("/providers")
 async def list_providers(user: dict = Depends(get_active_user)):
     settings = settings_store.load()
-    enricher = await get_enricher(user["id"])
+    enricher = await get_enricher(user)
+    # Admin-only providers (ChatGPT, Grok — see providers.py's
+    # ADMIN_ONLY_PROVIDERS) are omitted entirely for a non-admin, not
+    # just shown disabled — a regular user shouldn't see them as
+    # options at all, since picking one would spend the admin's own
+    # real subscription/API budget with no visibility into it.
+    visible = providers.PROVIDERS if user["is_admin"] else [
+        n for n in providers.PROVIDERS if n not in providers.ADMIN_ONLY_PROVIDERS]
     return {
         # The user's own pick (enricher.provider) can be empty/disabled
         # while enrichment still succeeds via the fallback chain — show
@@ -27,7 +34,7 @@ async def list_providers(user: dict = Depends(get_active_user)):
         "active": await enricher.active_provider(),
         "providers": [
             {"name": name, "enabled": providers.provider_enabled(name, settings)}
-            for name in providers.PROVIDERS
+            for name in visible
         ],
     }
 
@@ -35,7 +42,10 @@ async def list_providers(user: dict = Depends(get_active_user)):
 @router.post("/providers/activate")
 async def activate_provider(body: ProviderSwitchRequest,
                             user: dict = Depends(get_active_user)):
-    enricher = await get_enricher(user["id"])
+    if body.name in providers.ADMIN_ONLY_PROVIDERS and not user["is_admin"]:
+        raise HTTPException(status.HTTP_403_FORBIDDEN,
+                            f"provider {body.name!r} is admin-only")
+    enricher = await get_enricher(user)
     if not await enricher.switch_provider(body.name):
         raise HTTPException(status.HTTP_400_BAD_REQUEST,
                             f"provider {body.name!r} is not configured")

@@ -128,13 +128,17 @@ were reviewed and left alone on purpose, not overlooked.
   below) — the user asked for it explicitly to follow their standard
   governance playbook across future projects too, so consistency across
   the user's projects won out over "commit messages already say this."
-  `BEHAVIOR.md` / `findings.md` are still skipped: `BEHAVIOR.md`'s main
-  rule ("commit and push by default") is enforced one layer up by
-  whatever harness/session is driving the work, not something the repo
-  itself needs to restate; `findings.md` was built for a different kind
-  of work (vetting radio station candidates) that doesn't exist in this
-  project. `KB.md`, `MEMORY.md`, and now `CHANGELOG.md` are the pieces
-  that map onto mradio-web's needs.
+  `BEHAVIOR.md` is still skipped — its main rule ("commit and push by
+  default") is enforced one layer up by whatever harness/session is
+  driving the work, not something the repo itself needs to restate.
+  `findings.md` was originally skipped too (built for a different kind
+  of work, vetting radio station candidates, that didn't exist in this
+  project yet) but **adopted 2026-09-07** once a real matching use case
+  showed up: researching additional free AI provider options without
+  committing to building any of them yet. `KB.md`, `MEMORY.md`,
+  `CHANGELOG.md`, and now `findings.md` are the pieces that map onto
+  mradio-web's needs — re-evaluate this list per-project rather than
+  assuming it's fixed forever.
 - **No DB migration tooling yet.** The SQLite schema has only grown
   additively so far (`backend/app/db.py`); revisit if a column ever needs
   to change shape, not before.
@@ -2810,6 +2814,100 @@ checking is exactly how this slipped through initial testing, since
 the harness used for 1.1.0's own verification stubbed the connect
 flow rather than exercising a real Save-less Connect against a live
 backend.
+
+**User-reported real-production timing (2026-09-07)**: Grok (subscription
+mode) responds in under 10 seconds — faster than every other provider
+on record. For comparison, from the 0.5.23-era 4-way comparison and
+subsequent live data: ChatGPT/Codex 23-70s, opencode had 100+s
+outliers, Ollama/NIM's usual range was 5-20s. Grok is at or ahead of
+the fastest provider previously measured. Not yet acted on (no request
+to reorder the provider preference/fallback chain based on this) — just
+recorded as a data point in case speed becomes a deciding factor later,
+the same way the original 4-way comparison's timing data drove the
+ChatGPT/opencode/Ollama/NIM preference order in `PROVIDERS`/the
+settings-page card order.
+
+No way to check Grok's subscription usage/quota remaining from within
+mradio-web — confirmed when asked directly: xAI's API has no documented
+usage-quota endpoint the app could query (unlike, say, a hypothetical
+built-in dashboard), and the OAuth chat/completions call doesn't return
+usage data in its response. The only place to check is xAI's own
+side (console.x.ai for API-key mode, or wherever SuperGrok/X Premium+
+surfaces subscription usage). mradio's own signal is reactive only:
+a failing Test button or a silent fallback to the next configured
+provider, not a predictive quota view.
+
+## Subscription-based AI providers (ChatGPT, Grok) restricted to admins only (2026-09-07, 1.1.2)
+
+User's explicit request: "the AI agents that are with subscription
+(non free) as ONLY available to admins." Clarified scope before
+building — asked whether Grok's API-key mode (metered but not tied to
+anyone's *personal* subscription the way Subscription mode is) should
+be exempt; user chose the simpler, broader rule: **both of Grok's
+modes, entirely**, same as ChatGPT — since API-key mode is still
+billed to the admin's own xAI account, not free either way.
+
+This was previously enforced at configuration time only
+(`routers/codex.py`/`routers/grok.py` already required
+`require_admin` to set up credentials) but NOT at use time — any
+regular account could still select ChatGPT/Grok from the player's own
+AI-provider dropdown once an admin had configured them, or receive
+them via the automatic fallback chain with zero visibility into whose
+budget was being spent.
+
+**New single source of truth**: `providers.py`'s
+`ADMIN_ONLY_PROVIDERS = frozenset({"codex", "grok"})`. Every place that
+computes which provider to actually use routes through one new choke
+point, `Enricher._usable_providers()` — returns the full `PROVIDERS`
+tuple for an admin, or `PROVIDERS` minus `ADMIN_ONLY_PROVIDERS` for
+everyone else. `active_provider()`, `switch_provider()`, and `_llm()`'s
+automatic fallback chain all call it, so a non-admin can never reach
+ChatGPT/Grok through any path — explicit selection, a stale
+pre-restriction persisted choice, or silent fallback when their actual
+pick fails — not just the obvious "block the dropdown" case.
+
+**`Enricher` needed to learn admin status**, which it didn't track
+before. `enrichers.get_enricher()` changed signature from `(user_id:
+int)` to `(user: dict)` — refreshes `enricher.is_admin` on *every*
+call, not just at creation, so a mid-session promotion/demotion (an
+admin changing another admin's role while they're actively connected)
+takes effect immediately without a reconnect. All 4 call sites
+(`routers/ws.py`, `routers/enrich.py` ×2, `routers/config.py`) already
+had the full `user` dict in scope from `get_active_user`'s dependency,
+so this was a pure signature change, no new DB lookups added.
+
+**Two enforcement layers in `routers/enrich.py`**, both required —
+neither alone is sufficient: `list_providers()` omits admin-only
+providers from the response entirely for a non-admin (not just marks
+them disabled — they shouldn't see "ChatGPT"/"Grok" as options in the
+list at all), and `activate_provider()` separately returns 403 if a
+non-admin's request names one directly, defense against calling the
+API without going through the UI. The frontend needed zero changes:
+`NowPlayingPanel.tsx`'s provider dropdown already just renders
+whatever `providers` array the backend returns, so filtering
+server-side was sufficient on its own.
+
+**Verified with real functional tests, not just reading the code**: a
+throwaway script confirmed `_usable_providers()` correctly excludes
+`codex`/`grok` for `is_admin=False` and includes both for
+`is_admin=True`; confirmed `switch_provider('codex')`/`switch_provider('grok')`
+both return `False` for a non-admin even when otherwise valid;
+confirmed `active_provider()` never resolves to an admin-only provider
+for a non-admin even when `self.provider` is a stale pre-restriction
+`"codex"` pick and no other provider happens to be configured except
+one that IS admin-only-adjacent (it correctly fell through to
+`opencode`, which happened to be enabled on this dev machine, not
+`codex`). Inspected the actual route source via `inspect.getsource()`
+to confirm the 403 guard and the list-filtering logic are really wired
+into the live route functions, not just present somewhere in the
+file. `tsc --noEmit`, `oxlint`, `vite build`, and a Python syntax check
+across every touched backend file all clean.
+
+**KB.md** gained a note in §6's intro (before the per-provider
+sections) explaining this is enforced at *use* time, not just
+*configuration* time, and that it covers explicit selection, stale
+persisted picks, and automatic fallback alike — not just "hidden from
+the dropdown."
 
 ## Known unknowns
 

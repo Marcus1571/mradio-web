@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.2] - 2026-09-07
+
+**ChatGPT and Grok are now admin-only to use**, not just to configure.
+Every other AI provider (OpenCode, Ollama, NIM/OpenAI-compatible) stays
+available to every account. Regular accounts no longer see ChatGPT or
+Grok as options in the player's AI provider dropdown, can't select
+them directly, and will never receive them via automatic fallback if
+their own pick fails — since both ultimately spend a real personal
+subscription or paid API budget that belongs to the admin.
+
 ## [1.1.1] - 2026-09-07
 
 Fixed Grok's Test button reporting "No API key configured." right

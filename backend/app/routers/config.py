@@ -36,6 +36,6 @@ async def update_config(body: ConfigUpdate, user: dict = Depends(get_active_user
     # a WS "reenrich" for the current track right after — re-submitting
     # here too would double the outbound AI request for no benefit.
     if "language" in fields and fields["language"] in _VALID_LANGUAGES:
-        enricher = await get_enricher(user["id"])
+        enricher = await get_enricher(user)
         enricher.language = fields["language"]
     return await load_cfg(user["id"])

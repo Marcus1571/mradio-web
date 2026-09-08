@@ -43,7 +43,7 @@ async def now_playing_ws(websocket: WebSocket, sid: str = Query(...)):
         return
 
     await websocket.accept()
-    enricher = await get_enricher(user["id"])
+    enricher = await get_enricher(user)
     queue = nowplaying.subscribe(sid)
     logger.info("connected sid=%s user_id=%s", sid, user["id"])
     state = {"raw_title": "", "station_name": "", "artist": "", "title": "", "performer": ""}
