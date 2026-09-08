@@ -76,7 +76,6 @@ export interface AISettings {
   grok_timeout: number
   codex_manually_enabled: boolean
   grok_manually_enabled: boolean
-  gemini_api_base: string
   gemini_api_key: string
   gemini_model: string
   gemini_timeout: number

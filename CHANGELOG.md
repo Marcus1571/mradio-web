@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.5.0] - 2026-09-08
+
+Fixed Gemini's Test button showing "Connected, but model
+'gemini-3.8-flash' was not found on this endpoint." even with a valid
+key and a real, working model. Root cause: Gemini was calling Google's
+older OpenAI-compatibility endpoint, whose own model listing turned out
+to be stale — the model works fine, it just wasn't showing up there.
+Switched to Google's own Interactions API instead (confirmed live,
+including the exact response shape), which is what Google's current
+docs recommend. The "API base URL" field is gone from Gemini's
+settings — the new endpoint isn't swappable like Ollama's/NIM's, so
+there was nothing left for that field to do.
+
+Also bumped Gemini's request timeout (30s → 45s) after confirming live
+that its "thinking" mode can genuinely take that long to reply.
+
 ## [1.4.3] - 2026-09-08
 
 Fixed a gap from 1.4.2: after Stop then reload, the panel now correctly

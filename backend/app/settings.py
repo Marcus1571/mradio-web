@@ -42,13 +42,21 @@ _DEFAULTS = {
     # behavior (visible whenever configured) until an admin touches it.
     "codex_manually_enabled": True,
     "grok_manually_enabled": True,
-    # Google Gemini via its own OpenAI-compatibility endpoint — genuinely
-    # free tier (Flash-family models), not admin-only (unlike ChatGPT/
-    # Grok) since it isn't tied to anyone's personal paid subscription.
-    "gemini_api_base": "https://generativelanguage.googleapis.com/v1beta/openai",
+    # Google Gemini via its Interactions API (v1beta/interactions, see
+    # providers.py's llm_gemini) — genuinely free tier (Flash-family
+    # models), not admin-only (unlike ChatGPT/Grok) since it isn't tied
+    # to anyone's personal paid subscription. No api_base field: unlike
+    # Ollama/NIM, this endpoint isn't user-swappable, so there's nothing
+    # meaningful to configure there.
     "gemini_api_key": "",
     "gemini_model": "gemini-3.8-flash",
-    "gemini_timeout": 30,
+    # 45s, not the 30s other providers default to — confirmed live that
+    # gemini-3.8-flash's reasoning ("thinking") tokens can push a simple
+    # reply's latency well past 30s, and a request that times out here
+    # just silently falls through llm_gemini()'s except clause to the
+    # next provider in the fallback chain (or fails outright if Gemini
+    # is the only one configured) rather than erroring loudly.
+    "gemini_timeout": 45,
 }
 
 _SECRET_FIELDS = {"api_key", "grok_api_key", "gemini_api_key"}

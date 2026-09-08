@@ -3285,6 +3285,87 @@ confirming it flips to "Connecting…" with the Stop icon — exactly the
 same resume path a normal Play click already used, now reachable from a
 restored-but-never-live `state.station`.
 
+## Gemini switched from the OpenAI-compat shim to the real Interactions API (fixed 2026-09-08, 1.5.0)
+
+User hit "Connected, but model 'gemini-3.8-flash' was not found on this
+endpoint." on the Test button — with a genuinely valid key and a real,
+current model. First hypothesis (wrong, corrected below) was that
+`gemini-3.8-flash` itself was a hallucinated/bad model name from
+whichever earlier session picked it as the default; public docs/
+pricing pages both independently confirmed it's real, current, and
+free-tier eligible, so that theory didn't hold.
+
+User then pasted the actual current Gemini docs (`aistudio.google.com/
+docs/api-key`), which revealed two things `mradio-web`'s Gemini
+integration had gotten wrong from the start:
+
+1. **Wrong API surface entirely.** `llm_gemini()`/`_test_gemini()` both
+   called Google's OpenAI-*compatibility* shim
+   (`v1beta/openai/chat/completions` + `GET .../models`), not Google's
+   own native API. Google's current docs exclusively show a different,
+   newer surface: the **Interactions API**
+   (`POST v1beta/interactions`, `client.interactions.create()`).
+2. **Key type mismatch, unconfirmed but plausible.** The user's key
+   turned out to be a new-style "auth key" (bound to a service account,
+   `AQ.` prefix) rather than a legacy "standard" key — Google's docs say
+   these behave differently and that ALL new AI-Studio keys are auth
+   keys by default as of this docs revision. Never definitively proved
+   this was *the* reason the compat shim's `/models` omitted the model,
+   but it's a believable contributing factor either way.
+
+**Verified everything live before writing any code** (per this
+project's standing rule against shipping unverified external-API
+integrations) — a real curl round-trip against
+`https://generativelanguage.googleapis.com/v1beta/interactions` using
+the user's actual key, run from inside the LT container (not the
+Mac dev machine — see the network-flakiness note below):
+- Success: `200`, `gemini-3.8-flash` genuinely works — confirming the
+  compat shim's stale `/models` listing was the real bug, not the model
+  name or (as far as could be proven) the key type.
+- Response shape: `steps[]`, mixing `type: "thought"` (reasoning, no
+  visible text — matches `usage.total_thought_tokens`) and
+  `type: "model_output"` (`content[].text`, the real reply) — a shape
+  Google changed in a documented May 2026 breaking change, gated by the
+  `Api-Revision: 2026-05-20` header. Skip thought steps, concatenate
+  model_output text.
+- The system-prompt field is `system_instruction`, not `instructions` —
+  caught by testing it live: a first draft copied `instructions` from
+  `llm_codex()`'s unrelated OpenAI Responses-API shape, which returned a
+  clean `400 "Unknown parameter 'instructions'."` immediately, before
+  this ever reached committed code.
+- Error shapes differ by status, also confirmed live: a bad model is a
+  flat `{"error": {"message": ...}}` (404); a bad key is that same
+  object *wrapped in a JSON array* (`[{"error": {...}}]`, 400) — an
+  asymmetry easy to miss without testing both paths, handled in
+  `_gemini_error_message()`.
+
+**Real, unrelated finding surfaced during this verification**: requests
+to `generativelanguage.googleapis.com` timed out intermittently from
+the Mac dev machine but were reliable from LT — not a code bug, just
+network flakiness on this specific path from this specific network at
+this specific time. Test any external-API integration from the actual
+deploy target (LT), not just the dev machine, when something seems to
+hang — the dev machine's network isn't necessarily representative.
+
+Removed the `gemini_api_base` setting/field entirely (backend
+`_DEFAULTS`/`AISettingsUpdate`, frontend `Config` type and the "API
+base URL" row in the Gemini bubble) — the Interactions endpoint isn't
+swappable the way Ollama's/NIM's genuinely-configurable base URLs are,
+so an editable field there was actively misleading (a user could type
+something and it would silently do nothing). Bumped `gemini_timeout`'s
+default 30s → 45s after directly observing the "thinking" model's
+latency in these live tests (one test burned 364 reasoning tokens
+before replying) — a request that times out currently fails silently
+through `llm_gemini()`'s `except` clause into the provider fallback
+chain rather than erroring loudly, so a too-tight default would look
+like a flaky/broken provider rather than what it actually is.
+
+`_test_gemini()` now makes a real generation call (matching what
+`llm_gemini()` actually does) instead of the old `GET /models` probe,
+so it gets its own 45s timeout rather than sharing the other
+providers' 10s `_TEST_TIMEOUT` — those are all fast, lightweight
+listing calls; Gemini's test genuinely can't be.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

@@ -339,10 +339,6 @@ it, same as OpenCode/Ollama/NIM.
 
 **Fields:**
 
-- **API base URL**: defaults to
-  `https://generativelanguage.googleapis.com/v1beta/openai` on a fresh
-  install — Google's own OpenAI-compatibility endpoint for Gemini, a
-  real documented API (not a workaround), confirmed reachable directly.
 - **Model**: defaults to `gemini-3.8-flash` on a fresh install — the
   current Flash-family model on Google's free tier. Only Flash/
   Flash-Lite models remain free as of April 2026; Pro models moved
@@ -351,6 +347,14 @@ it, same as OpenCode/Ollama/NIM.
   for the current free-tier model name if this one stops working.
 - **API key**: paste the key from step 2 above. Stored server side; the
   settings page only ever shows it redacted after saving.
+
+**Under the hood:** talks to Google's Interactions API
+(`v1beta/interactions`), not the older OpenAI-compatibility shim —
+confirmed live that the compat shim's own model listing didn't include
+`gemini-3.8-flash` even though the model works fine directly, which
+produced a false "model not found" Test failure early on. The
+Interactions endpoint isn't user-configurable (no base URL field),
+since there's only the one real endpoint to point at.
 
 Free-tier rate limits are modest (roughly 10-15 requests/minute, up to
 1,000/day on Flash) but comfortable for this app's one-track-at-a-time

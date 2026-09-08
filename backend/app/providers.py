@@ -186,16 +186,59 @@ async def llm_openai(settings: dict, prompt: str) -> str | None:
     )
 
 
+_GEMINI_INTERACTIONS_URL = "https://generativelanguage.googleapis.com/v1beta/interactions"
+_GEMINI_API_REVISION = "2026-05-20"
+
+
+def _gemini_output_text(data: dict) -> str | None:
+    """Extracts the model's reply from an Interactions API response.
+    Confirmed live (2026-09-08): steps is a list mixing "thought" steps
+    (reasoning tokens, no visible text — see usage.total_thought_tokens)
+    and "model_output" steps (the actual reply, as content[].text) — skip
+    the former, concatenate the latter. Google changed this response
+    shape in a May 2026 breaking change (previously a flat "outputs"
+    list); this reads the current shape only, gated by Api-Revision."""
+    parts: list[str] = []
+    for step in data.get("steps") or []:
+        if step.get("type") != "model_output":
+            continue
+        for block in step.get("content") or []:
+            if block.get("type") == "text" and block.get("text"):
+                parts.append(block["text"])
+    return "".join(parts).strip() or None
+
+
 async def llm_gemini(settings: dict, prompt: str) -> str | None:
-    if not settings.get("gemini_api_key"):
+    """Uses Google's Interactions API (v1beta/interactions), not the
+    OpenAI-compatibility shim — confirmed live that the compat shim's own
+    GET /models listing omits gemini-3.8-flash even though the model
+    works fine on this endpoint, which is what produced the "model not
+    found on this endpoint" Test failure this replaces. See
+    _gemini_output_text()'s docstring for the response shape."""
+    api_key = settings.get("gemini_api_key")
+    if not api_key:
         return None
-    return await _llm_openai_compatible(
-        settings.get("gemini_api_base") or "https://generativelanguage.googleapis.com/v1beta/openai",
-        settings.get("gemini_model") or "gemini-3.8-flash",
-        settings["gemini_api_key"],
-        float(settings.get("gemini_timeout", 30)),
-        prompt,
-    )
+    payload = {
+        "model": settings.get("gemini_model") or "gemini-3.8-flash",
+        "input": prompt,
+        # Confirmed live: "system_instruction" is the real field name on
+        # this API (not "instructions", the OpenAI Responses API's name
+        # for the same concept, wrongly copied from llm_codex() at
+        # first) — a request with "instructions" gets a 400
+        # "Unknown parameter" error.
+        "system_instruction": "You are a helpful classical-music metadata assistant. "
+                              "Reply ONLY with the requested JSON, no markdown.",
+    }
+    headers = {"x-goog-api-key": api_key, "Api-Revision": _GEMINI_API_REVISION}
+    timeout = float(settings.get("gemini_timeout", 30))
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            r = await client.post(_GEMINI_INTERACTIONS_URL, json=payload, headers=headers)
+            r.raise_for_status()
+            data = r.json()
+    except (httpx.HTTPError, ValueError):
+        return None
+    return _gemini_output_text(data)
 
 
 async def llm_grok(settings: dict, prompt: str) -> str | None:
@@ -540,13 +583,59 @@ async def _test_openai(settings: dict) -> tuple[bool, str]:
     )
 
 
+def _gemini_error_message(status_code: int, body: bytes) -> str:
+    """Extracts Google's own error message from an Interactions API
+    error body — confirmed live (2026-09-08) the shape differs by
+    status: a 404 (bad model) is a flat {"error": {"message": ...}},
+    a 400 (bad key) is [{"error": {"message": ...}}] (wrapped in an
+    array, unlike every other status seen)."""
+    try:
+        data = json.loads(body)
+        if isinstance(data, list) and data:
+            data = data[0]
+        message = ((data.get("error") or {}).get("message") or "").strip()
+    except (ValueError, AttributeError, IndexError):
+        message = ""
+    if message:
+        return f"Gemini rejected the request: {message}"
+    return f"Gemini returned an error ({status_code})."
+
+
 async def _test_gemini(settings: dict) -> tuple[bool, str]:
-    return await _test_openai_compatible(
-        settings.get("gemini_api_base") or "https://generativelanguage.googleapis.com/v1beta/openai",
-        settings.get("gemini_api_key") or "",
-        settings.get("gemini_model") or "gemini-3.8-flash",
-        key_rejected_statuses=(400, 401, 403),
-    )
+    """Makes a real request against the Interactions API (the same one
+    llm_gemini() uses) rather than probing GET /models — confirmed live
+    that the OpenAI-compat shim's /models listing omits gemini-3.8-flash
+    even though the model works fine, which is exactly what produced the
+    "model not found on this endpoint" false failure this replaces."""
+    api_key = settings.get("gemini_api_key")
+    if not api_key:
+        return False, "No API key configured."
+    payload = {
+        "model": settings.get("gemini_model") or "gemini-3.8-flash",
+        "input": 'Reply with exactly: {"trivia": "pong"}',
+    }
+    headers = {"x-goog-api-key": api_key, "Api-Revision": _GEMINI_API_REVISION}
+    try:
+        # Unlike every other provider's Test button (a lightweight GET
+        # /models probe), this makes a real generation call — Gemini's
+        # "thinking" models can take noticeably longer than the shared
+        # 10s _TEST_TIMEOUT (confirmed live: one test request burned
+        # 364 reasoning tokens before replying), so this gets its own
+        # longer budget rather than raising the shared constant for
+        # every provider's test.
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            r = await client.post(_GEMINI_INTERACTIONS_URL, json=payload, headers=headers)
+            if r.status_code != 200:
+                return False, _gemini_error_message(r.status_code, r.content)
+            data = r.json()
+    except httpx.HTTPError as exc:
+        return False, f"Could not reach Gemini: {_exc_reason(exc)}"
+    except ValueError:
+        return False, "Gemini returned an unreadable response."
+    text = _gemini_output_text(data)
+    if not text:
+        return False, "Gemini returned an empty response."
+    return True, "Connected."
 
 
 async def _test_opencode(settings: dict) -> tuple[bool, str]:

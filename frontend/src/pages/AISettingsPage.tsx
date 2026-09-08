@@ -422,14 +422,6 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                 suffix={t('aiSettings.geminiNoteSuffix')}
               />
               <div className="settings-row">
-                <label htmlFor="gemini_api_base">{t('aiSettings.apiBaseUrl')}</label>
-                <input
-                  id="gemini_api_base"
-                  value={settings.gemini_api_base}
-                  onChange={(e) => field('gemini_api_base', e.target.value)}
-                />
-              </div>
-              <div className="settings-row">
                 <label htmlFor="gemini_model">{t('aiSettings.model')}</label>
                 <input
                   id="gemini_model"
@@ -456,7 +448,6 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                     void testProvider(
                       'gemini',
                       {
-                        gemini_api_base: settings.gemini_api_base,
                         gemini_model: settings.gemini_model,
                         gemini_timeout: settings.gemini_timeout,
                         ...(geminiApiKeyInput ? { gemini_api_key: geminiApiKeyInput } : {}),
