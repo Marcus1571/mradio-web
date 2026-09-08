@@ -14,6 +14,7 @@ const tr: Dict = {
     backToPlayer: 'Oynatıcıya dön',
     settings: 'Ayarlar',
     dashboard: 'Panel',
+    githubProject: 'GitHub proje sayfası',
     changePassword: 'Şifreyi değiştir',
     signOut: 'Çıkış yap',
     switchToLight: 'Açık temaya geç',

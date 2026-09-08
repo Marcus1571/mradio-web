@@ -14,6 +14,7 @@ const el: Dict = {
     backToPlayer: 'Πίσω στον player',
     settings: 'Ρυθμίσεις',
     dashboard: 'Πίνακας',
+    githubProject: 'Σελίδα έργου στο GitHub',
     changePassword: 'Αλλαγή κωδικού',
     signOut: 'Αποσύνδεση',
     switchToLight: 'Μετάβαση σε ανοιχτό θέμα',

@@ -12,6 +12,7 @@ const en = {
     backToPlayer: 'Back to player',
     settings: 'Settings',
     dashboard: 'Dashboard',
+    githubProject: 'GitHub project page',
     changePassword: 'Change password',
     signOut: 'Sign out',
     switchToLight: 'Switch to light theme',

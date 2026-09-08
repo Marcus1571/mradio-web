@@ -14,6 +14,7 @@ const nl: Dict = {
     backToPlayer: 'Terug naar speler',
     settings: 'Instellingen',
     dashboard: 'Dashboard',
+    githubProject: 'GitHub-projectpagina',
     changePassword: 'Wachtwoord wijzigen',
     signOut: 'Afmelden',
     switchToLight: 'Overschakelen naar licht thema',

@@ -14,6 +14,7 @@ const he: Dict = {
     backToPlayer: 'חזרה לנגן',
     settings: 'הגדרות',
     dashboard: 'לוח בקרה',
+    githubProject: 'דף הפרויקט ב-GitHub',
     changePassword: 'שינוי סיסמה',
     signOut: 'התנתקות',
     switchToLight: 'עבור לערכת נושא בהירה',

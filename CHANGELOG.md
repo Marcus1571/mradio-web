@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0] - 2026-09-08
+
+Added a "GitHub project page" link to the user menu (avatar → dropdown),
+between Settings and Change password — opens
+[github.com/Marcus1571/mradio-web](https://github.com/Marcus1571/mradio-web/tree/main)
+in a new tab. Visible to every account, not just admins.
+
 ## [1.5.1] - 2026-09-08
 
 Changed Gemini's default model from `gemini-3.8-flash` to

@@ -135,6 +135,10 @@ export function TopBar({
                   <hr />
                 </>
               )}
+              <a href="https://github.com/Marcus1571/mradio-web/tree/main" target="_blank" rel="noopener noreferrer">
+                {t('topbar.githubProject')}
+              </a>
+              <hr />
               <button type="button" onClick={() => { onNavigate('change-password'); setMenuOpen(false) }}>
                 {t('topbar.changePassword')}
               </button>

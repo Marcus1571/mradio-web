@@ -14,6 +14,7 @@ const sv: Dict = {
     backToPlayer: 'Tillbaka till spelaren',
     settings: 'Inställningar',
     dashboard: 'Översikt',
+    githubProject: 'GitHub-projektsida',
     changePassword: 'Byt lösenord',
     signOut: 'Logga ut',
     switchToLight: 'Byt till ljust tema',

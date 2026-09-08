@@ -14,6 +14,7 @@ const nb: Dict = {
     backToPlayer: 'Tilbake til spilleren',
     settings: 'Innstillinger',
     dashboard: 'Oversikt',
+    githubProject: 'GitHub-prosjektside',
     changePassword: 'Bytt passord',
     signOut: 'Logg ut',
     switchToLight: 'Bytt til lyst tema',

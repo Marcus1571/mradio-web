@@ -14,6 +14,7 @@ const it: Dict = {
     backToPlayer: 'Torna al lettore',
     settings: 'Impostazioni',
     dashboard: 'Pannello',
+    githubProject: 'Pagina del progetto GitHub',
     changePassword: 'Cambia password',
     signOut: 'Esci',
     switchToLight: 'Passa al tema chiaro',

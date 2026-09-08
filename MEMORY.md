@@ -3426,6 +3426,30 @@ switch itself both stay correct regardless of which specific model is
 selected — this fix only concerns which model name ships as the
 out-of-the-box default, not the request/response mechanics.
 
+## GitHub project page link added to the user menu (added 2026-09-08, 1.6.0)
+
+Simple addition — an `<a>` element between Settings and Change password
+in `TopBar.tsx`'s user dropdown, linking to
+`github.com/Marcus1571/mradio-web/tree/main`, `target="_blank"` +
+`rel="noopener noreferrer"`. Visible to every account (not gated behind
+`user?.is_admin` like Settings is) since it's informational, not an
+admin action. `.user-dropdown a` was already styled identically to
+`.user-dropdown button` (a pre-existing shared CSS rule), so no new CSS
+was needed.
+
+Added the `topbar.githubProject` i18n key to all 15 languages.
+
+Verified visually via the throwaway-harness technique — this time
+against `TopBar` directly rather than the full `Dashboard` (needs only
+`AuthProvider` for `useAuth()`, no station/config/WebSocket stubbing).
+Screenshotted the opened dropdown (confirmed placement, divider
+styling, correct English text) and inspected the actual rendered `<a>`
+element's `href`/`target`/`rel` attributes via Puppeteer's `$eval`
+rather than trusting the JSX alone. Also screenshotted with `dir="rtl"`
+forced (a fast layout-only check, not a real Hebrew-locale load) to
+confirm the new item doesn't break Hebrew's right-to-left dropdown
+alignment — it didn't.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

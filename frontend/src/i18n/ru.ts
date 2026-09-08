@@ -14,6 +14,7 @@ const ru: Dict = {
     backToPlayer: 'Назад к плееру',
     settings: 'Настройки',
     dashboard: 'Панель',
+    githubProject: 'Страница проекта на GitHub',
     changePassword: 'Сменить пароль',
     signOut: 'Выйти',
     switchToLight: 'Светлая тема',

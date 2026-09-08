@@ -14,6 +14,7 @@ const ja: Dict = {
     backToPlayer: 'プレーヤーに戻る',
     settings: '設定',
     dashboard: 'ダッシュボード',
+    githubProject: 'GitHubプロジェクトページ',
     changePassword: 'パスワードを変更',
     signOut: 'ログアウト',
     switchToLight: 'ライトテーマに切り替え',
