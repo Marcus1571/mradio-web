@@ -2909,6 +2909,73 @@ sections) explaining this is enforced at *use* time, not just
 persisted picks, and automatic fallback alike — not just "hidden from
 the dropdown."
 
+## Rename a favorite, in place (added 2026-09-08, 1.2.0)
+
+User asked for a third edit-mode action alongside delete/move,
+explicitly requesting an in-place inline edit rather than a popup, and
+asked directly how to do it "elegantly" — offered a design choice
+(pencil icon next to trash vs. tap-the-name-itself) before building;
+user picked the explicit pencil icon for discoverability.
+
+**Confirmed the scope question before implementing, by reading the
+data model rather than assuming**: favorites are entirely per-user
+(`userdata.py`'s `load_favorites(user_id)`, one JSON file per account),
+keyed by URL, holding `{name, url, genre}`. Renaming here only ever
+edits the calling user's own favorite entry — never the shared curated
+catalogue (`stations.py`) and never another user's favorites, even for
+the exact same station URL. `genre` is deliberately left untouched by
+rename (still derived from the station's real identity via
+`genre_of()`, not tied to whatever label the user prefers).
+
+**Backend**: new `userdata.rename_favorite(favs, url, name)` — same
+find-by-URL-preserve-slot-position shape as the existing
+`delete_favorite()`, blank names are a no-op rather than silently
+saving an empty label. New `PATCH /api/favorites` (REST-appropriate
+verb for a partial update of an existing resource, distinct from the
+existing POST=add/DELETE=remove/POST /move=reorder shape).
+
+**Frontend**: new `PencilIcon`/`CheckIcon`/`XIcon` in `Icons.tsx`.
+`StationBrowserPanel.tsx` gained `renaming`/`renameValue` state and a
+`onStartRename`/`onSaveRename`/`onRenameKeyDown` trio. The trickiest
+part was structural, not visual: a filled favorite slot in its normal
+display state is a `<button>` (so clicking it plays the station or
+marks it for move), but a `<button>` can't cleanly contain a real
+`<input>` (nested interactive elements, and the input's own clicks
+would bubble into the button's onClick) — so a slot in rename mode
+renders as a plain `<div>` instead, swapped in only for that one slot
+via `renaming === i`, with the input, a check (save), and an X
+(cancel) icon inside it directly. Save fires on Enter, on blur (click
+away — the "in place, elegant" behavior explicitly asked for), or on
+clicking the check icon; Escape or the X icon cancels without saving.
+`onMouseDown={(e) => e.preventDefault()}` on both the check and cancel
+icon spans stops the input's own `onBlur` from firing (and
+saving/racing) before the click's own handler runs — without it,
+clicking either icon would blur-save first, defeating Escape/cancel's
+own icon-click equivalent. `onSlotClick` gained an early return when
+`renaming !== null`, so clicking a different slot while a rename is
+in-flight can't accidentally trigger play/mark-for-move underneath it.
+Also fixed a small pre-existing sloppiness while touching this file:
+`.fav-delete:hover` unconditionally turned every icon in that shared
+class red on hover, including the new pencil/check icons where red
+reads as "destructive" incorrectly — split into `.fav-rename`/
+`.fav-rename-save` hover variants using the accent color instead,
+trash/cancel keep the red.
+
+**Verified with real interaction tests, not a hand-assembled mockup**:
+a throwaway harness rendered the real `StationBrowserPanel` (with
+`window.fetch` stubbed to serve/mutate an in-memory favorites array,
+including a working fake `PATCH` handler) and drove actual DOM clicks
+— click "Edit favorites," click the real `.fav-rename` pencil element,
+confirmed via `--dump-dom` that the `renaming`/`fav-rename-input`
+classes appear in the live DOM (not just asserted from reading the
+JSX) — then a second pass typed a new value via a real `input` event
+and clicked the real save button, screenshotted the result, and
+confirmed the panel returned to its normal display state showing the
+new name. Backend: a throwaway script called `rename_favorite()`
+directly and confirmed a matching-URL rename, a non-matching URL
+no-op, and a blank-name no-op all behave correctly. `tsc --noEmit`,
+`oxlint`, `vite build`, and a Python syntax check both clean.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

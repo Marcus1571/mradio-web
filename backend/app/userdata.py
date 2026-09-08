@@ -113,6 +113,28 @@ def delete_favorite(favs: list, url: str) -> tuple[list, bool]:
     return out, removed
 
 
+def rename_favorite(favs: list, url: str, name: str) -> tuple[list, bool]:
+    """Return (list, renamed) — the favorite whose URL matches gets its
+    display name replaced, in place, same slot. Purely a per-user label:
+    the shared curated catalogue (stations.py) and every other user's own
+    favorites are untouched — this only ever edits the caller's own
+    favorites.json entry. genre is deliberately left alone (it's derived
+    from the station's real identity via genre_of(), not tied to
+    whatever label the user prefers to see)."""
+    name = (name or "").strip()
+    if not name:
+        return list(favs or []), False
+    out = []
+    renamed = False
+    for x in favs or []:
+        if not is_empty_slot(x) and str(x.get("url") or "").strip() == url and not renamed:
+            renamed = True
+            out.append({**x, "name": name})
+        else:
+            out.append(x)
+    return out, renamed
+
+
 def move_favorite(favs: list, src: int, dst: int) -> list:
     """Move the favorite at slot src into slot dst, sliding the rest down."""
     favs = list(favs or [])

@@ -37,5 +37,14 @@ export function useFavorites() {
     setFavorites(res.favorites)
   }, [])
 
-  return { favorites, loading, add, remove, move, refresh }
+  const rename = useCallback(async (url: string, name: string) => {
+    const res = await api.patch<{ favorites: FavoriteSlot[]; renamed: boolean }>('/api/favorites', {
+      url,
+      name,
+    })
+    setFavorites(res.favorites)
+    return res.renamed
+  }, [])
+
+  return { favorites, loading, add, remove, move, rename, refresh }
 }

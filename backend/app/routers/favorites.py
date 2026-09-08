@@ -17,6 +17,11 @@ class FavoriteMoveRequest(BaseModel):
     dst: int
 
 
+class FavoriteRenameRequest(BaseModel):
+    url: str
+    name: str
+
+
 def _validate_url(url: str) -> str:
     url = (url or "").strip()
     if not url.startswith(("http://", "https://")):
@@ -47,6 +52,16 @@ async def remove_favorite(url: str = Query(...), user: dict = Depends(get_active
     if removed:
         await userdata.save_favorites(user["id"], favs2)
     return {"favorites": favs2, "removed": removed}
+
+
+@router.patch("")
+async def rename_favorite(body: FavoriteRenameRequest, user: dict = Depends(get_active_user)):
+    url = _validate_url(body.url)
+    favs = await userdata.load_favorites(user["id"])
+    favs2, renamed = userdata.rename_favorite(favs, url, body.name)
+    if renamed:
+        await userdata.save_favorites(user["id"], favs2)
+    return {"favorites": favs2, "renamed": renamed}
 
 
 @router.post("/move")

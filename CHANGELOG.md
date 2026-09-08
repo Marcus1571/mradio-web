@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.0] - 2026-09-08
+
+Added the ability to **rename a favorite**, right in place. In Edit
+favorites mode, each station now has a pencil icon next to the trash
+icon — tap it to turn the name into an editable field, press Enter (or
+tap away) to save, Escape to cancel. This only changes your own label
+for that slot; the station's genre and everything else about it stay
+as-is.
+
 ## [1.1.2] - 2026-09-07
 
 **ChatGPT and Grok are now admin-only to use**, not just to configure.

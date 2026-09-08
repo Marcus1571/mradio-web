@@ -170,6 +170,10 @@ const fr: Dict = {
     editHintDrop: 'Touchez un emplacement pour l\'y déposer — touchez-le à nouveau pour annuler.',
     footer: '{label} · {count} stations · favoris affichés en premier',
     removeFavoriteConfirm: 'Retirer ce favori ?',
+    renameFavorite: 'Renommer',
+    deleteFavorite: 'Supprimer',
+    saveRename: 'Enregistrer le nom',
+    cancelRename: 'Annuler',
   },
   nowPlaying: {
     ariaLabel: 'En cours de lecture',

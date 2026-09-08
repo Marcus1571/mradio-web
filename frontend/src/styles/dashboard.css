@@ -922,14 +922,46 @@
   transition: color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
 }
 
+/* Only the trash/cancel icons read as destructive on hover — the
+   pencil (rename) and check (save rename) actions are neutral/positive,
+   so they get their own hover treatment below instead of inheriting
+   the shared .fav-delete class's red. */
 .fav-delete:hover {
   color: var(--danger);
   background: var(--danger-soft);
 }
 
+.fav-rename:hover,
+.fav-rename-save:hover {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
 .fav-delete svg {
   width: 14px;
   height: 14px;
+}
+
+.fav-slot.renaming {
+  background: var(--paper-3);
+}
+
+.fav-rename-input {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-2xs);
+}
+
+.fav-rename-input:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 .edit-hint {

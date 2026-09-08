@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import type { FormEvent, MouseEvent } from 'react'
+import { useRef, useState } from 'react'
+import type { FormEvent, KeyboardEvent, MouseEvent } from 'react'
 import { useFavorites } from '../hooks/useFavorites'
 import { useGenres } from '../hooks/useGenres'
 import type { Station } from '../api/types'
 import type { TFunction } from '../i18n'
-import { MoveIcon, StarIcon, TrashIcon } from './Icons'
+import { CheckIcon, MoveIcon, PencilIcon, StarIcon, TrashIcon, XIcon } from './Icons'
 
 export function StationBrowserPanel({
   currentUrl,
@@ -16,11 +16,14 @@ export function StationBrowserPanel({
   t: TFunction
 }) {
   const [tab, setTab] = useState<'favorites' | 'genres'>('favorites')
-  const { favorites, add, remove, move } = useFavorites()
+  const { favorites, add, remove, move, rename } = useFavorites()
   const { genres, active, stations, selectGenre } = useGenres()
 
   const [editing, setEditing] = useState(false)
   const [marked, setMarked] = useState<number | null>(null)
+  const [renaming, setRenaming] = useState<number | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+  const renameInputRef = useRef<HTMLInputElement | null>(null)
 
   const [addUrl, setAddUrl] = useState('')
   const [addBusy, setAddBusy] = useState(false)
@@ -32,6 +35,7 @@ export function StationBrowserPanel({
   }
 
   function onSlotClick(index: number, station: Station | null) {
+    if (renaming !== null) return // a rename in progress owns clicks until saved/cancelled
     if (!editing) {
       if (station) onPlay(station)
       return
@@ -46,6 +50,33 @@ export function StationBrowserPanel({
     }
     void move(marked, index)
     setMarked(null)
+  }
+
+  function onStartRename(e: MouseEvent, index: number, currentName: string) {
+    e.stopPropagation()
+    setMarked(null)
+    setRenaming(index)
+    setRenameValue(currentName)
+    // Autofocus once the input actually mounts (it doesn't exist yet
+    // during this same click's render) — a microtask via requestAnimationFrame
+    // is enough since React commits synchronously in the same tick.
+    requestAnimationFrame(() => renameInputRef.current?.focus())
+  }
+
+  async function onSaveRename(url: string) {
+    const name = renameValue.trim()
+    if (name) await rename(url, name)
+    setRenaming(null)
+  }
+
+  function onRenameKeyDown(e: KeyboardEvent<HTMLInputElement>, url: string) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      void onSaveRename(url)
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      setRenaming(null)
+    }
   }
 
   async function onDelete(e: MouseEvent, url: string) {
@@ -117,6 +148,7 @@ export function StationBrowserPanel({
               onClick={() => {
                 setEditing((v) => !v)
                 setMarked(null)
+                setRenaming(null)
               }}
             >
               {editing ? t('stationBrowser.doneEditing') : t('stationBrowser.editFavorites')}
@@ -135,6 +167,42 @@ export function StationBrowserPanel({
                   </button>
                 )
               }
+              if (editing && renaming === i) {
+                return (
+                  <div key={i} className="fav-slot renaming">
+                    <span className="fav-num">{i === 9 ? '0' : i + 1}</span>
+                    <input
+                      ref={renameInputRef}
+                      className="fav-rename-input"
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onKeyDown={(e) => onRenameKeyDown(e, fav.url)}
+                      onBlur={() => void onSaveRename(fav.url)}
+                      maxLength={80}
+                    />
+                    <span
+                      className="fav-delete fav-rename-save"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => void onSaveRename(fav.url)}
+                      role="button"
+                      tabIndex={-1}
+                      aria-label={t('stationBrowser.saveRename')}
+                    >
+                      <CheckIcon />
+                    </span>
+                    <span
+                      className="fav-delete"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setRenaming(null)}
+                      role="button"
+                      tabIndex={-1}
+                      aria-label={t('stationBrowser.cancelRename')}
+                    >
+                      <XIcon />
+                    </span>
+                  </div>
+                )
+              }
               return (
                 <button
                   key={i}
@@ -148,9 +216,26 @@ export function StationBrowserPanel({
                     <span className="fav-genre">{fav.genre}</span>
                   </span>
                   {editing && !isMarked && (
-                    <span className="fav-delete" onClick={(e) => void onDelete(e, fav.url)} role="button" tabIndex={-1}>
-                      <TrashIcon />
-                    </span>
+                    <>
+                      <span
+                        className="fav-delete fav-rename"
+                        onClick={(e) => onStartRename(e, i, fav.name)}
+                        role="button"
+                        tabIndex={-1}
+                        aria-label={t('stationBrowser.renameFavorite')}
+                      >
+                        <PencilIcon />
+                      </span>
+                      <span
+                        className="fav-delete"
+                        onClick={(e) => void onDelete(e, fav.url)}
+                        role="button"
+                        tabIndex={-1}
+                        aria-label={t('stationBrowser.deleteFavorite')}
+                      >
+                        <TrashIcon />
+                      </span>
+                    </>
                   )}
                   {editing && isMarked && <MoveIcon className="fav-delete" />}
                 </button>
