@@ -17,6 +17,7 @@ class ConfigUpdate(BaseModel):
     last_url: str | None = None
     last_name: str | None = None
     last_genre: str | None = None
+    last_status: str | None = None
     language: str | None = None
 
 

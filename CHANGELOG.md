@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.2] - 2026-09-08
+
+Fixed: reloading the app (or reopening it) after pressing Stop
+auto-resumed playback anyway. The "resume last station" feature only
+checked whether a last-played station existed at all, not whether
+playback had actually been left running — so a deliberate Stop never
+stuck across a reload. Now persists whether you were playing or
+stopped, and only auto-resumes if you were still playing.
+
 ## [1.4.1] - 2026-09-08
 
 Fixed the player's AI provider dropdown: a disabled provider (either

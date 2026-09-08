@@ -3215,6 +3215,31 @@ list-filter with no new branching (`.filter(p => p.enabled)` before an
 existing `.map()`), not a new interactive element. If a future dropdown
 change in this area turns out subtly wrong, re-check this call.
 
+## Stop then reload/reopen auto-resumed playback anyway (fixed 2026-09-08, 1.4.2)
+
+`usePlayer.ts`'s `play()` persists `last_url`/`last_name`/`last_genre`
+to `/api/config` (a real "resume last station" feature), and
+`Dashboard.tsx`'s mount effect auto-calls `player.play()` if
+`config.last_url` is set. But `stop()` never touched that same config
+— it only flipped local React state (`status: 'stopped'`), so the
+persisted `last_url` from the most recent `play()` call stayed put
+regardless of whether the user later pressed Stop. Reloading or
+reopening the app after Stop still saw a populated `last_url` and
+resumed playback, since the mount effect had no way to tell "was left
+playing" apart from "was played at some point, then stopped."
+
+Fixed by adding a `last_status: 'playing' | 'stopped'` field
+(`config.py`'s `ConfigUpdate`, `types.ts`'s `Config`) — `play()` now
+also PATCHes `last_status: 'playing'`, `stop()` PATCHes
+`last_status: 'stopped'`, and `Dashboard.tsx`'s auto-resume condition
+gained `&& config.last_status === 'playing'`. A missing/legacy
+`last_status` (any existing user's config predating this fix) reads as
+`undefined`, which fails that check and correctly does NOT auto-resume
+— matches the safer default (don't surprise-play audio) rather than
+guessing. Closing the tab/browser while still playing (not via Stop)
+intentionally still resumes on reopen — that's the feature working as
+originally intended, only the Stop case was the bug.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

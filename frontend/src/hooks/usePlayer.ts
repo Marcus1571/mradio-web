@@ -274,6 +274,7 @@ export function usePlayer(initialVolume?: number) {
         last_url: station.url,
         last_name: station.name,
         last_genre: station.genre,
+        last_status: 'playing',
       })
     },
     [streamUrl, ensureWsConnected],
@@ -295,6 +296,12 @@ export function usePlayer(initialVolume?: number) {
     audio.removeAttribute('src')
     audio.load()
     setState((s) => ({ ...s, status: 'stopped' }))
+    // Without this, a reload/app-reopen after Stop still auto-resumed
+    // playback — Dashboard.tsx's mount effect only checked whether a
+    // last_url existed at all, not whether the user had actually left
+    // it playing, since play() always persists last_url regardless of
+    // how the session later ends.
+    void api.patch('/api/config', { last_status: 'stopped' })
   }, [])
 
   /** Re-establish the connection to the current station — the web

@@ -38,7 +38,7 @@ export function Dashboard() {
     applyDirection(nextLanguage)
     if (typeof config.volume === 'number') player.applySavedVolume(config.volume)
     if (config.mute) player.toggleMute()
-    if (!resumedRef.current && config.last_url) {
+    if (!resumedRef.current && config.last_url && config.last_status === 'playing') {
       resumedRef.current = true
       player.play({
         name: config.last_name || config.last_url,
