@@ -363,6 +363,51 @@ produced a false "model not found" Test failure early on. The
 Interactions endpoint isn't user-configurable (no base URL field),
 since there's only the one real endpoint to point at.
 
+### OpenRouter
+
+Not admin-only — same as Gemini/OpenCode/Ollama/NIM, once configured
+every account can use it. One API key routes to whichever model you
+name, across many underlying providers.
+
+**Getting an API key:**
+
+1. Go to [openrouter.ai/keys](https://openrouter.ai/keys) and sign up
+   with email or GitHub — no credit card needed.
+2. Create an API key and copy it.
+3. Paste it into mradio-web's **AI providers** page (user menu →
+   Settings → AI providers, admin only), in the OpenRouter section's
+   API key field, then **Save**.
+
+**Fields:**
+
+- **Model**: defaults to `openrouter/free` — OpenRouter's own router
+  that auto-picks among whichever models are currently free, rather
+  than one pinned model ID. Deliberate choice: OpenRouter's free-model
+  lineup rotates over time (confirmed live via `GET /v1/models`: ~19
+  models tagged `:free` with genuinely zero-cost pricing at the time of
+  writing), so pinning to a specific one (e.g.
+  `nvidia/nemotron-3-super-120b-a12b:free`) risks it later being pulled
+  from the free tier. To pin a specific free model instead, use its
+  exact `:free`-suffixed ID from
+  [openrouter.ai/models](https://openrouter.ai/models) (filter by
+  "Free").
+- **API key**: paste the key from step 1 above. Stored server side; the
+  settings page only ever shows it redacted after saving.
+
+**Free-tier limits**: confirmed live — 50 requests/day if you've never
+added credit to the account, rising to 1,000/day (permanently) the
+first time you ever spend $10, whether or not you use paid models
+day-to-day. Both figures reset daily.
+
+**Under the hood:** standard OpenAI-compatible
+`chat/completions` shape (confirmed live) — reuses the same shared
+request/response code NIM and the generic OpenAI-compatible bubble
+already use. One real gotcha found during setup: `GET /v1/models` is
+public and unauthenticated (returns 200 even with an invalid or no
+key), so unlike NIM's Test button, OpenRouter's Test makes a real
+`chat/completions` call to actually verify the key — a bad key only
+ever surfaces as a `401` on that call, never on the models listing.
+
 ### Ollama
 
 **Setting up Ollama:**

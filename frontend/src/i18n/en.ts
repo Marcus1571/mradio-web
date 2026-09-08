@@ -119,6 +119,13 @@ const en = {
     geminiNotePrefix: 'New to Gemini? See',
     geminiNoteLink: '"Getting an API key" in KB.md',
     geminiNoteSuffix: 'for how to get a free API key.',
+    openrouterGroup: 'OpenRouter',
+    openrouterIntro:
+      "One key, a free-model router — no credit card required, available to everyone once configured, not " +
+      "admin-only. Defaults to OpenRouter's own auto-router, which always picks a currently-free model.",
+    openrouterNotePrefix: 'New to OpenRouter? See',
+    openrouterNoteLink: '"Getting an API key" in KB.md',
+    openrouterNoteSuffix: 'for how to get a free API key.',
     providerEnableToggle: 'Show in the player’s AI menu',
     providerEnableToggleHint:
       'Turn this off to hide it from everyone’s dropdown without disconnecting — handy once you’ve hit a usage quota.',

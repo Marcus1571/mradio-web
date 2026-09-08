@@ -79,6 +79,9 @@ export interface AISettings {
   gemini_api_key: string
   gemini_model: string
   gemini_timeout: number
+  openrouter_api_key: string
+  openrouter_model: string
+  openrouter_timeout: number
 }
 
 export interface AITestResult {

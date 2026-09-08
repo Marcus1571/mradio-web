@@ -4,20 +4,21 @@ import { ApiError, api } from '../api/client'
 import type { AISettings, AITestResult, CodexConnectResponse, GrokConnectResponse } from '../api/types'
 import { IDLE_TEST, KbNote, ProviderBubble, TestBadge } from '../components/AdminSettingsShared'
 import type { TestState } from '../components/AdminSettingsShared'
-import { ChatGPTIcon, GeminiIcon, GrokIcon, NimIcon, OllamaIcon, OpenCodeIcon } from '../components/Icons'
+import { ChatGPTIcon, GeminiIcon, GrokIcon, NimIcon, OllamaIcon, OpenCodeIcon, OpenRouterIcon } from '../components/Icons'
 import { useCodexStatus } from '../hooks/useCodexStatus'
 import { useGrokStatus } from '../hooks/useGrokStatus'
 import { useProviders } from '../hooks/useProviders'
 import type { TFunction } from '../i18n'
 import '../styles/admin.css'
 
-type Provider = 'ollama' | 'openai' | 'opencode' | 'codex' | 'grok' | 'gemini'
+type Provider = 'ollama' | 'openai' | 'opencode' | 'codex' | 'grok' | 'gemini' | 'openrouter'
 
 export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunction }) {
   const [settings, setSettings] = useState<AISettings | null>(null)
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [grokApiKeyInput, setGrokApiKeyInput] = useState('')
   const [geminiApiKeyInput, setGeminiApiKeyInput] = useState('')
+  const [openrouterApiKeyInput, setOpenrouterApiKeyInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
@@ -27,6 +28,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
   const [codexTest, setCodexTest] = useState<TestState>(IDLE_TEST)
   const [grokTest, setGrokTest] = useState<TestState>(IDLE_TEST)
   const [geminiTest, setGeminiTest] = useState<TestState>(IDLE_TEST)
+  const [openrouterTest, setOpenrouterTest] = useState<TestState>(IDLE_TEST)
   const { status: codexStatus, refresh: refreshCodexStatus } = useCodexStatus()
   const [codexConnecting, setCodexConnecting] = useState(false)
   const [codexPromptResult, setCodexPromptResult] = useState<CodexConnectResponse | null>(null)
@@ -74,11 +76,14 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
       else delete body.grok_api_key
       if (geminiApiKeyInput) body.gemini_api_key = geminiApiKeyInput
       else delete body.gemini_api_key
+      if (openrouterApiKeyInput) body.openrouter_api_key = openrouterApiKeyInput
+      else delete body.openrouter_api_key
       const res = await api.patch<AISettings>('/api/settings/ai', body)
       setSettings(res)
       setApiKeyInput('')
       setGrokApiKeyInput('')
       setGeminiApiKeyInput('')
+      setOpenrouterApiKeyInput('')
       setSaved(true)
       await refreshProviders()
       window.setTimeout(() => setSaved(false), 2500)
@@ -459,6 +464,60 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                   {geminiTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
                 </button>
                 <TestBadge state={geminiTest} t={t} />
+              </div>
+            </ProviderBubble>
+
+            <ProviderBubble
+              icon={<OpenRouterIcon className="provider-mark" />}
+              name={t('aiSettings.openrouterGroup')}
+              enabled={isEnabled('openrouter')}
+              defaultOpen={isEnabled('openrouter')}
+            >
+              <p className="admin-note">{t('aiSettings.openrouterIntro')}</p>
+              <KbNote
+                prefix={t('aiSettings.openrouterNotePrefix')}
+                linkLabel={t('aiSettings.openrouterNoteLink')}
+                anchor="openrouter"
+                suffix={t('aiSettings.openrouterNoteSuffix')}
+              />
+              <div className="settings-row">
+                <label htmlFor="openrouter_model">{t('aiSettings.model')}</label>
+                <input
+                  id="openrouter_model"
+                  value={settings.openrouter_model}
+                  onChange={(e) => field('openrouter_model', e.target.value)}
+                />
+              </div>
+              <div className="settings-row">
+                <label htmlFor="openrouter_api_key">{t('aiSettings.apiKey')}</label>
+                <input
+                  id="openrouter_api_key"
+                  type="password"
+                  placeholder={settings.openrouter_api_key || t('aiSettings.apiKeyNotSet')}
+                  value={openrouterApiKeyInput}
+                  onChange={(e) => setOpenrouterApiKeyInput(e.target.value)}
+                />
+              </div>
+              <div className="test-actions">
+                <button
+                  className="test-btn"
+                  type="button"
+                  disabled={openrouterTest.status === 'testing'}
+                  onClick={() =>
+                    void testProvider(
+                      'openrouter',
+                      {
+                        openrouter_model: settings.openrouter_model,
+                        openrouter_timeout: settings.openrouter_timeout,
+                        ...(openrouterApiKeyInput ? { openrouter_api_key: openrouterApiKeyInput } : {}),
+                      },
+                      setOpenrouterTest,
+                    )
+                  }
+                >
+                  {openrouterTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
+                </button>
+                <TestBadge state={openrouterTest} t={t} />
               </div>
             </ProviderBubble>
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.7.0] - 2026-09-08
+
+Added **OpenRouter** as a 7th AI liner-notes provider — genuinely free
+(no credit card needed to sign up), available to every account once
+configured, not admin-only. Defaults to `openrouter/free`,
+OpenRouter's own router that always picks a currently-free model
+rather than pinning to one specific model ID that could later be
+pulled from the free lineup.
+
+While researching this, checked Groq and Cerebras (also on the
+candidate list) against their real, current APIs — both turned out not
+to actually be free anymore (Groq's free models were pulled from
+self-serve access; Cerebras now requires a card on file to activate
+API access at all), so neither was built. Findings recorded in
+`findings.md`.
+
 ## [1.6.0] - 2026-09-08
 
 Added a "GitHub project page" link to the user menu (avatar → dropdown),

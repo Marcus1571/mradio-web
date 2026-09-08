@@ -121,6 +121,13 @@ const el: Dict = {
     geminiNotePrefix: 'Νέος/α στο Gemini; Δείτε',
     geminiNoteLink: '«Getting an API key» στο KB.md',
     geminiNoteSuffix: 'για το πώς να αποκτήσετε ένα δωρεάν κλειδί API.',
+    openrouterGroup: 'OpenRouter',
+    openrouterIntro:
+      'Ένα κλειδί, ένας δρομολογητής δωρεάν μοντέλων — δεν απαιτείται πιστωτική κάρτα, διαθέσιμο σε όλους μόλις ' +
+      'ρυθμιστεί, όχι μόνο για διαχειριστές. Χρησιμοποιεί εξ ορισμού τον δικό του αυτόματο δρομολογητή του OpenRouter, ο οποίος πάντα επιλέγει ένα μοντέλο που είναι δωρεάν εκείνη τη στιγμή.',
+    openrouterNotePrefix: 'Νέοι στο OpenRouter; Δείτε',
+    openrouterNoteLink: '«Getting an API key» στο KB.md',
+    openrouterNoteSuffix: 'για το πώς να αποκτήσετε ένα δωρεάν κλειδί API.',
     providerEnableToggle: '«Εμφάνιση στο μενού AI του player»',
     providerEnableToggleHint:
       'Απενεργοποιήστε το για να το κρύψετε από το αναπτυσσόμενο μενού όλων χωρίς αποσύνδεση — χρήσιμο όταν εξαντληθεί το όριο χρήσης.',

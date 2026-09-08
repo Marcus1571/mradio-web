@@ -3450,6 +3450,78 @@ forced (a fast layout-only check, not a real Hebrew-locale load) to
 confirm the new item doesn't break Hebrew's right-to-left dropdown
 alignment — it didn't.
 
+## OpenRouter added as 7th AI provider; Groq and Cerebras struck from findings.md (added 2026-09-08, 1.7.0)
+
+User asked to build "the next one on the list" from `findings.md`'s
+researched-but-unbuilt free-AI-provider candidates (Groq → Cerebras →
+OpenRouter, in that order). Checked each live before building anything
+— the same discipline the Gemini work established, and it caught two
+real problems the original research (blog/doc summaries, not live
+checks) had gotten wrong:
+
+- **Groq**: user's own screenshot of `console.groq.com/docs/models`
+  showed `llama-3.3-70b-versatile`/`llama-3.1-8b-instant` (the models
+  the "free tier" claims were based on) marked "Enterprise"/
+  "ContactSales" — pulled from self-serve access. Confirmed via a real
+  API key's `GET /v1/models`: every model actually available now has
+  real, non-zero per-token pricing. Not free anymore. Struck.
+- **Cerebras**: confirmed the "possible payment-method requirement"
+  flag the original findings.md entry had already hedged on — as of
+  August 2026, Cerebras requires a verified card on file just to
+  activate API access at all, even though the $5 starter credit itself
+  doesn't cost anything. Breaks the whole "no card needed" premise this
+  list was built on. Struck without getting a key (would have required
+  adding a card, defeating the point).
+- **OpenRouter**: checked live, held up. `GET /v1/models` is public and
+  unauthenticated (works with no key at all) — confirmed ~19 models
+  tagged `:free` with genuinely `"prompt": "0", "completion": "0"`
+  pricing. Signup confirmed no-card (multiple independent sources +
+  the user's own successful signup). A real authenticated
+  `POST /chat/completions` against `openrouter/free` (OpenRouter's own
+  free-model auto-router, not one pinned model) returned the exact
+  requested JSON, `cost: 0`, standard `choices[0].message.content`
+  shape.
+
+**One real gotcha found while verifying**: `_test_openai_compatible()`
+(the shared test helper NIM/OpenAI use, which validates a key via
+`GET /models`) doesn't work for OpenRouter — its `/models` endpoint
+returns `200` even with an invalid or missing key, since it's a public
+listing, not an authenticated one. Confirmed live: only the real
+`POST /chat/completions` call rejects a bad key (`401`). Wrote a
+dedicated `_test_openrouter()` instead of reusing the shared helper —
+the same category of "the generic helper's assumption doesn't hold for
+this provider" lesson `_test_gemini()` already taught, just a different
+specific reason (auth-not-required-for-listing vs. stale-model-listing).
+
+Backend: `llm_openrouter()` itself needed **zero new request/response
+handling** — confirmed live that OpenRouter matches the standard OpenAI
+`chat/completions` shape exactly, so it reuses `_llm_openai_compatible()`
+unmodified (the same helper NIM/OpenAI/Gemini's predecessor share).
+Registered in `PROVIDERS` (not `ADMIN_ONLY_PROVIDERS` — free tier, not
+a personal subscription, same treatment as Gemini) and
+`enricher.py`'s `_llm()` dispatch chain.
+
+Default model `openrouter/free` (not a pinned specific `:free` model)
+is a deliberate choice: OpenRouter's free-model roster is explicitly
+documented as rotating over time (a real, cited risk — see
+`findings.md`'s original OpenRouter entry from before this was built),
+so the router auto-adapts as the free lineup changes instead of
+silently breaking when one specific free model gets pulled.
+
+Frontend: new `OpenRouterIcon` (three lines converging on a center
+node/circle, echoing "routing" — distinct from `GeminiIcon`'s diamond
+and `GrokIcon`'s crossing strokes). Own `ProviderBubble`, own i18n keys
+across all 15 languages (careful with apostrophes this time — no
+repeat of the `nl.ts`/`fr.ts`/`it.ts` quoting bugs from the 1.4.0
+build).
+
+Verified visually: screenshotted the new bubble (icon, green status
+dot since a fake key was pre-filled, intro text, KB.md link, Model/API
+key fields, auto-expanded since it was the "active" provider in the
+stub) and drove a real click on its Test button, confirming the
+"Working" badge renders — the same harness technique as every prior UI
+verification this session, `DevHarness.tsx` fully reverted after.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

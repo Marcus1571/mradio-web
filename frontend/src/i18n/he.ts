@@ -117,6 +117,13 @@ const he: Dict = {
     geminiNotePrefix: 'חדש ב-Gemini? ראה',
     geminiNoteLink: '"Getting an API key" ב-KB.md',
     geminiNoteSuffix: 'להוראות קבלת מפתח API בחינם.',
+    openrouterGroup: 'OpenRouter',
+    openrouterIntro:
+      'מפתח אחד, נתב למודלים חינמיים — אין צורך בכרטיס אשראי, זמין לכולם לאחר ההגדרה, לא רק למנהלים. ' +
+      'כברירת מחדל משתמש בנתב האוטומטי של OpenRouter עצמו, שתמיד בוחר מודל שחינמי כרגע.',
+    openrouterNotePrefix: 'חדש ב-OpenRouter? ראה',
+    openrouterNoteLink: '״Getting an API key״ ב-KB.md',
+    openrouterNoteSuffix: 'להוראות קבלת מפתח API בחינם.',
     providerEnableToggle: '״הצג בתפריט ה-AI של הנגן״',
     providerEnableToggleHint:
       'כבה כדי להסתיר מהתפריט הנפתח של כולם בלי להתנתק — שימושי כשמגיעים למכסת שימוש.',

@@ -121,6 +121,13 @@ const it: Dict = {
     geminiNotePrefix: 'Nuovo a Gemini? Vedi',
     geminiNoteLink: '"Getting an API key" nel KB.md',
     geminiNoteSuffix: 'per ottenere una chiave API gratuita.',
+    openrouterGroup: 'OpenRouter',
+    openrouterIntro:
+      'Una chiave, un router di modelli gratuiti — nessuna carta di credito richiesta, disponibile per tutti una ' +
+      'volta configurato, non riservato agli admin. Per impostazione predefinita usa il router automatico di OpenRouter, che sceglie sempre un modello attualmente gratuito.',
+    openrouterNotePrefix: 'Nuovo su OpenRouter? Consulta',
+    openrouterNoteLink: '«Getting an API key» nel KB.md',
+    openrouterNoteSuffix: 'per ottenere una chiave API gratuita.',
     providerEnableToggle: '«Mostra nel menu AI del player»',
     providerEnableToggleHint:
       'Disattivalo per nasconderlo dal menu a tendina di tutti senza disconnettere — utile quando raggiungi una quota d’uso.',

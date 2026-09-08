@@ -121,6 +121,13 @@ const sv: Dict = {
     geminiNotePrefix: 'Ny på Gemini? Se',
     geminiNoteLink: '"Getting an API key" i KB.md',
     geminiNoteSuffix: 'för hur du får en gratis API-nyckel.',
+    openrouterGroup: 'OpenRouter',
+    openrouterIntro:
+      'En nyckel, en router för gratis modeller — inget betalkort krävs, tillgänglig för alla när den är ' +
+      'konfigurerad, inte bara för administratörer. Använder som standard OpenRouters egen auto-router, som alltid väljer en modell som är gratis just nu.',
+    openrouterNotePrefix: 'Ny med OpenRouter? Se',
+    openrouterNoteLink: '”Getting an API key” i KB.md',
+    openrouterNoteSuffix: 'för hur du får en gratis API-nyckel.',
     providerEnableToggle: '”Visa i spelarens AI-meny”',
     providerEnableToggleHint:
       'Stäng av för att dölja den från allas rullgardinsmeny utan att koppla från — praktiskt när en användningskvot nåtts.',

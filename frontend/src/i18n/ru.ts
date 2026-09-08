@@ -121,6 +121,13 @@ const ru: Dict = {
     geminiNotePrefix: 'Впервые с Gemini? См.',
     geminiNoteLink: '«Getting an API key» в KB.md',
     geminiNoteSuffix: 'о том, как получить бесплатный API-ключ.',
+    openrouterGroup: 'OpenRouter',
+    openrouterIntro:
+      'Один ключ, маршрутизатор бесплатных моделей — банковская карта не требуется, доступен всем после ' +
+      'настройки, не только администраторам. По умолчанию используется собственный авто-маршрутизатор OpenRouter, который всегда выбирает модель, бесплатную на данный момент.',
+    openrouterNotePrefix: 'Впервые на OpenRouter? См.',
+    openrouterNoteLink: '«Getting an API key» в KB.md',
+    openrouterNoteSuffix: 'о том, как получить бесплатный API-ключ.',
     providerEnableToggle: '«Показывать в ИИ-меню плеера»',
     providerEnableToggleHint:
       'Отключите, чтобы скрыть из выпадающего меню у всех, не отключая — удобно при достижении лимита использования.',

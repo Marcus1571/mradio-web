@@ -13,7 +13,7 @@ import httpx
 
 from . import codex_oauth, codex_settings, grok_oauth, grok_settings
 
-PROVIDERS = ("codex", "grok", "opencode", "ollama", "openai", "gemini")
+PROVIDERS = ("codex", "grok", "opencode", "ollama", "openai", "gemini", "openrouter")
 
 # Providers that use a real personal/paid subscription rather than a
 # self-hosted (Ollama) or bundled-free (opencode) mechanism or a
@@ -103,6 +103,7 @@ def provider_enabled(name: str, settings: dict) -> bool:
                  and settings.get("codex_manually_enabled", True),
         "grok": grok_enabled(settings) and settings.get("grok_manually_enabled", True),
         "gemini": bool(settings.get("gemini_api_key")),
+        "openrouter": bool(settings.get("openrouter_api_key")),
     }
     return probe.get(name, False)
 
@@ -110,7 +111,8 @@ def provider_enabled(name: str, settings: dict) -> bool:
 def ai_configured(settings: dict) -> bool:
     return bool(settings.get("ollama_url")) or bool(settings.get("api_key")) \
         or bool(oc_port(settings)) or bool(codex_settings.load().get("access_token")) \
-        or grok_enabled(settings) or bool(settings.get("gemini_api_key"))
+        or grok_enabled(settings) or bool(settings.get("gemini_api_key")) \
+        or bool(settings.get("openrouter_api_key"))
 
 
 def api_endpoint(base: str, suffix: str) -> str:
@@ -241,6 +243,29 @@ async def llm_gemini(settings: dict, prompt: str) -> str | None:
     except (httpx.HTTPError, ValueError):
         return None
     return _gemini_output_text(data)
+
+
+_OPENROUTER_BASE = "https://openrouter.ai/api/v1"
+
+
+async def llm_openrouter(settings: dict, prompt: str) -> str | None:
+    """OpenRouter is genuinely OpenAI-compatible in the standard
+    choices[0].message.content shape (confirmed live) — unlike Gemini,
+    no dedicated request/response handling needed, just the existing
+    shared helper. Default model "openrouter/free" is OpenRouter's own
+    router that auto-picks among whichever models are currently free,
+    rather than pinning to one specific free model ID that could be
+    pulled from the free lineup later (a real, observed risk — see
+    findings.md's notes on how often the free-model roster changes)."""
+    if not settings.get("openrouter_api_key"):
+        return None
+    return await _llm_openai_compatible(
+        _OPENROUTER_BASE,
+        settings.get("openrouter_model") or "openrouter/free",
+        settings["openrouter_api_key"],
+        float(settings.get("openrouter_timeout", 30)),
+        prompt,
+    )
 
 
 async def llm_grok(settings: dict, prompt: str) -> str | None:
@@ -640,6 +665,48 @@ async def _test_gemini(settings: dict) -> tuple[bool, str]:
     return True, "Connected."
 
 
+async def _test_openrouter(settings: dict) -> tuple[bool, str]:
+    """Makes a real chat/completions call rather than probing GET
+    /models — confirmed live that OpenRouter's /models listing is
+    public and unauthenticated (returns 200 even with an invalid key),
+    so it can't validate a key the way _test_openai_compatible() relies
+    on for NIM/OpenAI. A bad key only surfaces as a 401 on the actual
+    completions call."""
+    api_key = settings.get("openrouter_api_key")
+    if not api_key:
+        return False, "No API key configured."
+    model = settings.get("openrouter_model") or "openrouter/free"
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": 'Reply with exactly: {"trivia": "pong"}'}],
+        "temperature": 0.1,
+        "max_tokens": 1200,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=_TEST_TIMEOUT) as client:
+            r = await client.post(
+                api_endpoint(_OPENROUTER_BASE, "chat/completions"),
+                json=payload, headers={"Authorization": f"Bearer {api_key}"})
+            if r.status_code != 200:
+                try:
+                    message = (r.json().get("error") or {}).get("message") or ""
+                except ValueError:
+                    message = ""
+                if r.status_code in (401, 403):
+                    return False, "OpenRouter rejected the API key."
+                return False, (f"OpenRouter returned an error ({r.status_code}"
+                               f"{': ' + message if message else ''}).")
+            data = r.json()
+    except httpx.HTTPError as exc:
+        return False, f"Could not reach OpenRouter: {_exc_reason(exc)}"
+    except ValueError:
+        return False, "OpenRouter returned an unreadable response."
+    content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
+    if not content.strip():
+        return False, "OpenRouter returned an empty response."
+    return True, "Connected."
+
+
 async def _test_opencode(settings: dict) -> tuple[bool, str]:
     from . import enricher  # local import: avoids a circular import at module load
 
@@ -682,4 +749,6 @@ async def run_provider_test(provider: str, settings: dict) -> tuple[bool, str]:
         return await _test_grok(settings)
     if provider == "gemini":
         return await _test_gemini(settings)
+    if provider == "openrouter":
+        return await _test_openrouter(settings)
     return False, "Unknown provider."

@@ -117,6 +117,13 @@ const ja: Dict = {
     geminiNotePrefix: 'Geminiが初めてですか？',
     geminiNoteLink: 'KB.mdの「Getting an API key」',
     geminiNoteSuffix: 'をご覧ください。無料APIキーの取得方法が書かれています。',
+    openrouterGroup: 'OpenRouter',
+    openrouterIntro:
+      '1つのキーで無料モデルへのルーターを利用できます — クレジットカード不要、設定すれば管理者以外も全員利用可能です。' +
+      'デフォルトではOpenRouter自身の自動ルーター「openrouter/free」を使用し、常にその時点で無料のモデルを選択します。',
+    openrouterNotePrefix: 'OpenRouterが初めてですか？KB.mdの',
+    openrouterNoteLink: '「Getting an API key」',
+    openrouterNoteSuffix: 'をご覧ください。無料APIキーの取得方法が書かれています。',
     providerEnableToggle: '「プレーヤーのAIメニューに表示」',
     providerEnableToggleHint:
       'オフにすると接続を切らずに全員のドロップダウンから非表示にできます。利用上限に達したときに便利です。',

@@ -26,8 +26,8 @@ This page is just the overview.
 - **AI liner notes** — a short, factual write-up about the piece and its
   composer/artist, generated on the fly and cached (shared across
   everyone, so the same track is never re-queried twice) via OpenCode,
-  Ollama, Google Gemini, ChatGPT, Grok, or any OpenAI-compatible
-  endpoint (e.g. NVIDIA NIM). See
+  Ollama, Google Gemini, OpenRouter, ChatGPT, Grok, or any
+  OpenAI-compatible endpoint (e.g. NVIDIA NIM). See
   [KB §6 — Configuring AI providers](KB.md#6-configuring-ai-providers).
   A "recently played" trivia history keeps the last 10 blurbs per
   account, re-readable while something else plays.
@@ -103,11 +103,11 @@ but they're the ones that catch people out:
   walkthrough.
 - **AI liner notes are optional, and two providers have an unofficial
   sign-in option.** OpenCode is bundled and works out of the box;
-  Ollama, NIM, and Grok's API-key mode just need a URL or key. ChatGPT,
-  and Grok's subscription mode, sign in via an unofficial device-code
-  flow using a real chat subscription instead of a documented,
-  first-party API — see [KB §6](KB.md#6-configuring-ai-providers)
-  before enabling either.
+  Ollama, NIM, Gemini, OpenRouter, and Grok's API-key mode just need a
+  URL or key. ChatGPT, and Grok's subscription mode, sign in via an
+  unofficial device-code flow using a real chat subscription instead of
+  a documented, first-party API — see
+  [KB §6](KB.md#6-configuring-ai-providers) before enabling either.
   The app works fine with no AI provider at all.
 - **It's built for a household, not the public internet.** Accounts are
   admin-created (no sign-up), AI credentials are shared across everyone

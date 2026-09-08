@@ -64,9 +64,23 @@ _DEFAULTS = {
     # next provider in the fallback chain (or fails outright if Gemini
     # is the only one configured) rather than erroring loudly.
     "gemini_timeout": 45,
+    # OpenRouter — genuinely free tier (its own :free-suffixed models,
+    # confirmed live cost: 0), not admin-only, no credit card needed to
+    # sign up. Default model is "openrouter/free", OpenRouter's own
+    # router that auto-picks among whichever models are currently free
+    # rather than pinning to one model ID — see providers.py's
+    # llm_openrouter() for why that matters (the free-model roster
+    # changes over time; Groq and Cerebras were both struck from
+    # findings.md's candidate list for reasons unrelated to this, but
+    # OpenRouter's own free lineup is explicitly documented as
+    # rotating). Free tier: 50 requests/day (no spend), 1,000/day once
+    # $10 has ever been spent on the account (doesn't expire).
+    "openrouter_api_key": "",
+    "openrouter_model": "openrouter/free",
+    "openrouter_timeout": 30,
 }
 
-_SECRET_FIELDS = {"api_key", "grok_api_key", "gemini_api_key"}
+_SECRET_FIELDS = {"api_key", "grok_api_key", "gemini_api_key", "openrouter_api_key"}
 
 
 def _seed_from_env() -> dict:

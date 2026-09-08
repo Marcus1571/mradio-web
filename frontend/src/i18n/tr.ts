@@ -121,6 +121,13 @@ const tr: Dict = {
     geminiNotePrefix: "Gemini'ye yeni misiniz? KB.md içindeki",
     geminiNoteLink: '"Getting an API key"',
     geminiNoteSuffix: 'bölümüne bakın — ücretsiz API anahtarı nasıl alınır orada anlatılıyor.',
+    openrouterGroup: 'OpenRouter',
+    openrouterIntro:
+      'Tek anahtar, ücretsiz modeller için bir yönlendirici — kredi kartı gerekmez, yapılandırıldıktan sonra ' +
+      'herkes kullanabilir, sadece yöneticilere özel değil. Varsayılan olarak OpenRouter’ın kendi otomatik yönlendiricisini kullanır; bu da her zaman o an ücretsiz olan bir modeli seçer.',
+    openrouterNotePrefix: 'OpenRouter’a yeni misiniz? Bakın:',
+    openrouterNoteLink: 'KB.md içindeki "Getting an API key"',
+    openrouterNoteSuffix: 'bölümüne bakın — ücretsiz API anahtarı nasıl alınır orada anlatılıyor.',
     providerEnableToggle: '“Oynatıcının yapay zeka menüsünde göster”',
     providerEnableToggleHint:
       'Bağlantıyı kesmeden herkesin açılır menüsünden gizlemek için kapatın — bir kullanım kotasına ulaşıldığında kullanışlıdır.',

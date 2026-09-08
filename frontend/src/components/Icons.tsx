@@ -185,6 +185,17 @@ export function GeminiIcon({ className }: IconProps) {
   )
 }
 
+export function OpenRouterIcon({ className }: IconProps) {
+  // Three paths converging into one node, echoing "routing" — distinct
+  // from GeminiIcon's diamond and NimIcon's/OpenCodeIcon's marks.
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <circle cx="8" cy="8" r="1.6" />
+      <path d="M8 6.4V2.5M8 9.6V13.5M6.6 8.8 3.2 11.3M9.4 8.8l3.4 2.5M6.6 7.2 3.2 4.7M9.4 7.2l3.4-2.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function OllamaIcon({ className }: IconProps) {
   // A llama silhouette abstracted to two ears and a muzzle.
   return (

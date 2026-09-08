@@ -32,38 +32,69 @@ Candidates found:
   limits are modest (roughly 10-15 RPM, up to 1,000 RPD on Flash) but
   comfortably enough for this app's one-track-at-a-time enrichment
   pattern.
-- **Groq** — free tier, ~1,000 requests/day, no credit card. Notably
-  fast (300+ tokens/sec, hardware-accelerated inference). OpenAI-
-  compatible.
-- **Cerebras** — free tier, ~1M tokens/day, very fast. Email-only
-  signup reported by most sources, though at least one source flagged
-  a possible payment-method requirement at signup — verify before
-  committing to it as the "no card needed" pick.
-- **OpenRouter** — one API key routes to 20+ free-tier models across
-  multiple underlying providers via one OpenAI-compatible endpoint.
-  Convenient for trying several models without separate signups per
-  provider, at the cost of being a proxy layer (adds a hop, and free-
-  model availability on OpenRouter can change without notice).
+- **Groq** — **checked live 2026-09-08, NOT actually free — struck
+  from consideration.** Widely-repeated "free tier, ~1,000 req/day"
+  claims (including this entry's own original wording) turned out to
+  be stale/wrong. A real API key's `GET /v1/models` response shows
+  every currently-available model with real, non-zero per-token
+  pricing (e.g. `openai/gpt-oss-120b` at $0.15/$0.60 per 1M tokens).
+  The models the free-tier claims were actually based on
+  (`llama-3.3-70b-versatile`, `llama-3.1-8b-instant`) aren't in the
+  live model list at all anymore — Groq's own docs page
+  (console.groq.com/docs/models) now marks both "Enterprise"/
+  "ContactSales", i.e. pulled from self-serve/free access entirely.
+  Groq is a real, fast, OpenAI-compatible **paid, metered** API (same
+  shape as NIM) — not a free-for-everyone option like Gemini. Could
+  still be added the way NIM/OpenAI are (admin brings their own paid
+  key, not admin-only-restricted since it's not a personal
+  subscription) if ever wanted, but doesn't belong on this "free
+  providers" list.
+- **Cerebras** — **checked 2026-09-08, disqualified — struck from
+  consideration.** The earlier "possible payment-method requirement"
+  flag turned out correct: as of August 2026, Cerebras ended its
+  no-card free tier. New accounts get $5 in free credits, but only
+  after adding a **verified payment method** — API access stays
+  inactive without one. Breaks this list's whole premise ("no credit
+  card needed"), so not pursued further (would need a real card on
+  file just to get a key to verify, defeating the point). Otherwise a
+  real, fast, OpenAI-compatible API (`https://api.cerebras.ai/v1`) —
+  same category as NIM/Groq (paid/metered with a trial credit), not a
+  free-for-everyone option.
+- **OpenRouter** — **built 2026-09-08, see MEMORY.md's "OpenRouter
+  added as 7th AI provider" section.** Checked live before building
+  (unlike the Groq research this session corrected): `GET /v1/models`
+  is public/unauthenticated and shows ~19 genuinely free (`:free`
+  suffix, `"prompt": "0", "completion": "0"`) models; no card needed to
+  sign up (confirmed via the user's own successful signup); a real
+  authenticated `POST /chat/completions` against `openrouter/free`
+  (OpenRouter's own free-model auto-router) returned the correct JSON
+  at `cost: 0` in the standard `choices[0].message.content` shape — no
+  new request/response code needed, reuses the existing
+  `_llm_openai_compatible()` helper unmodified. One real gotcha: unlike
+  NIM/OpenAI, OpenRouter's `GET /models` doesn't validate the key (it's
+  public), so the shared `_test_openai_compatible()` test helper
+  doesn't work here — needed a dedicated `_test_openrouter()` that
+  makes a real completion call instead. Free tier: 50 requests/day (no
+  spend), 1,000/day permanently once $10 has ever been spent.
 
 **Verdict**: Gemini built 2026-09-08 (own dedicated bubble, not
-admin-only). Groq, Cerebras, and OpenRouter remain unbuilt — presented
-as options only, none independently verified yet against this app's
-actual liner-notes prompt/JSON-schema requirement (the same
-verification every shipped provider got via `run_provider_test()`
-and/or a live timing comparison). Do that before adding any of the
-remaining three, or before recommending one as a default the way the
-0.5.25 comparison drove the ChatGPT/opencode/Ollama/NIM preference
-order.
+admin-only). Groq checked live 2026-09-08 and struck — not actually
+free anymore (models pulled from self-serve, real per-token pricing on
+everything left). Cerebras checked 2026-09-08 and struck — now
+requires a card on file to activate API access at all, breaking the
+"no card needed" premise. OpenRouter checked live 2026-09-08 and
+built — genuinely free, no card, verified end-to-end before shipping.
+This list is now fully resolved: 1 of 3 remaining candidates (Groq,
+Cerebras, OpenRouter) actually qualified.
 
-**How to apply if revisited**: for a quick try of Groq/Cerebras/
-OpenRouter, just repoint the existing NIM/OpenAI-compatible bubble's
-base URL + key at one of these and use the Test button — no code
-change needed. For a permanent, side-by-side-with-NIM addition (own
-dedicated bubble, available to everyone), follow the Gemini build's
-pattern (`MEMORY.md`'s "Google Gemini added as 6th AI provider"
-section, itself built on `providers.py`'s shared
-`_llm_openai_compatible()`/`_test_openai_compatible()` helpers — a
-new fully-OpenAI-compatible provider needs only ~10 lines of backend
-dispatch, not a full new request/response implementation) as the
-template rather than Grok's (which is dual-mode and OAuth-capable,
-overkill for a plain API-key-only provider).
+**How to apply if revisited**: NIM's OpenAI-compatible bubble can still
+be repointed at Groq's or Cerebras's paid endpoints directly (base URL
++ key, Test button, no code change) if a metered/paid provider is ever
+wanted alongside the free ones — they just don't belong on *this* free-
+providers list. For any future free-tier candidate, follow the
+OpenRouter/Gemini build pattern: verify live with a real key (`GET
+/models` + at least one real completion) before writing any code, not
+just a docs/blog-summary pass — that live-check step is what caught
+Groq's and Cerebras's status changes this session, which the original
+research (written from summaries, not live checks) had gotten wrong or
+only half-flagged.

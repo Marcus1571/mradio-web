@@ -364,6 +364,8 @@ class Enricher:
                 out = await providers.llm_grok(settings, prompt)
             elif name == "gemini":
                 out = await providers.llm_gemini(settings, prompt)
+            elif name == "openrouter":
+                out = await providers.llm_openrouter(settings, prompt)
             elif name == "opencode":
                 out = await _opencode.ask(settings, prompt)
             else:

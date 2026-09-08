@@ -121,6 +121,13 @@ const nl: Dict = {
     geminiNotePrefix: 'Nieuw met Gemini? Zie',
     geminiNoteLink: '„Getting an API key" in KB.md',
     geminiNoteSuffix: 'om een gratis API-sleutel te krijgen.',
+    openrouterGroup: 'OpenRouter',
+    openrouterIntro:
+      'Eén sleutel, een router voor gratis modellen — geen creditcard nodig, beschikbaar voor iedereen zodra ' +
+      'ingesteld, niet alleen voor beheerders. Gebruikt standaard OpenRouters eigen auto-router, die altijd een op dat moment gratis model kiest.',
+    openrouterNotePrefix: 'Nieuw met OpenRouter? Zie',
+    openrouterNoteLink: '„Getting an API key" in KB.md',
+    openrouterNoteSuffix: 'om een gratis API-sleutel te krijgen.',
     providerEnableToggle: '‘Weergeven in het AI-menu van de speler’',
     providerEnableToggleHint:
       'Zet uit om het voor iedereen uit het dropdownmenu te verbergen zonder te verbreken — handig zodra een gebruikslimiet is bereikt.',
