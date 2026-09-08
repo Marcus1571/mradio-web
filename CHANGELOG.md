@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.3.2] - 2026-09-08
+
+Fixed the ChatGPT/Codex Test button showing a generic "ChatGPT/Codex did
+not respond." for every failure, including genuine usage-limit
+exhaustion — you couldn't tell a real quota problem from a network
+hiccup or an expired token.
+
+Confirmed live: Codex enforces its own 30-day rolling usage quota that's
+separate from the ChatGPT app/CLI's own token-usage graph — a plan can
+show plenty of headroom there and still get a `usage_limit_reached` 429
+from the Codex API specifically. The Test button now parses that error
+and shows the real reason with the reset date, e.g. "Codex usage limit
+reached (separate from your ChatGPT app's own usage — resets 2026-10-06
+16:28 UTC)."
+
 ## [1.3.1] - 2026-09-08
 
 Added a "New to Gemini? See 'Getting an API key' in KB.md" link to the

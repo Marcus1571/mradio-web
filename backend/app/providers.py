@@ -248,14 +248,7 @@ _CODEX_MODEL = "gpt-5.6-terra"
 _CODEX_TIMEOUT = 180
 
 
-async def llm_codex(settings: dict, prompt: str) -> str | None:
-    """Calls OpenAI's internal Codex backend using a ChatGPT/Codex
-    subscription's OAuth token instead of an API key — see codex_oauth.py
-    for the important caveats about this being an unofficial mechanism."""
-    token = await codex_oauth.ensure_fresh_token()
-    if not token:
-        return None
-    cfg = codex_settings.load()
+def _codex_request_payload(prompt: str, account_id: str, token: str) -> tuple[dict, dict]:
     payload = {
         "model": _CODEX_MODEL,
         "instructions": "You are a helpful classical-music metadata assistant. "
@@ -270,8 +263,20 @@ async def llm_codex(settings: dict, prompt: str) -> str | None:
         "Content-Type": "application/json",
         "Accept": "text/event-stream",
     }
-    if cfg.get("account_id"):
-        headers["ChatGPT-Account-Id"] = cfg["account_id"]
+    if account_id:
+        headers["ChatGPT-Account-Id"] = account_id
+    return payload, headers
+
+
+async def llm_codex(settings: dict, prompt: str) -> str | None:
+    """Calls OpenAI's internal Codex backend using a ChatGPT/Codex
+    subscription's OAuth token instead of an API key — see codex_oauth.py
+    for the important caveats about this being an unofficial mechanism."""
+    token = await codex_oauth.ensure_fresh_token()
+    if not token:
+        return None
+    cfg = codex_settings.load()
+    payload, headers = _codex_request_payload(prompt, cfg.get("account_id", ""), token)
     text_parts: list[str] = []
     try:
         async with httpx.AsyncClient(timeout=_CODEX_TIMEOUT) as client:
@@ -298,6 +303,78 @@ async def llm_codex(settings: dict, prompt: str) -> str | None:
         return None
     text = "".join(text_parts).strip()
     return text or None
+
+
+def _format_codex_error(status_code: int, body: bytes) -> str:
+    """Turn Codex's structured error body into a real, specific message
+    instead of the generic "did not respond" the Test button used to show
+    for every failure alike. Confirmed live (2026-09-08): a plan's
+    Codex-specific usage limit (x-codex-primary-used-percent header /
+    error.type "usage_limit_reached" in the body) is a SEPARATE quota
+    from the ChatGPT app/CLI's own token-usage graph — a user can see
+    plenty of headroom there and still get a 429 here, because this hits
+    a distinct Codex-API allowance on the subscription. resets_at is a
+    Unix timestamp telling the user exactly when it clears."""
+    try:
+        data = json.loads(body)
+        err = data.get("error") or {}
+    except ValueError:
+        err = {}
+    err_type = err.get("type") or ""
+    message = err.get("message") or ""
+    if err_type == "usage_limit_reached":
+        resets_at = err.get("resets_at")
+        if isinstance(resets_at, (int, float)):
+            reset_str = time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(resets_at))
+            return (f"Codex usage limit reached (separate from your ChatGPT app's own usage — "
+                    f"resets {reset_str}).")
+        return "Codex usage limit reached (separate from your ChatGPT app's own usage)."
+    if status_code == 429:
+        return f"Rate limited by ChatGPT/Codex ({message or 'too many requests'})."
+    if status_code in (401, 403):
+        return "ChatGPT/Codex rejected the connection — try Disconnect and Connect again."
+    return f"ChatGPT/Codex returned an error ({status_code}{': ' + message if message else ''})."
+
+
+async def _test_codex_call(prompt: str) -> tuple[bool, str]:
+    """Makes the real request (unlike llm_codex, doesn't discard the
+    error body on failure) so the Test button can show the actual reason
+    instead of a generic failure — see _format_codex_error()."""
+    token = await codex_oauth.ensure_fresh_token()
+    if not token:
+        return False, "Not connected — use the Connect button above."
+    cfg = codex_settings.load()
+    payload, headers = _codex_request_payload(prompt, cfg.get("account_id", ""), token)
+    try:
+        async with httpx.AsyncClient(timeout=_TEST_TIMEOUT) as client:
+            async with client.stream("POST", _CODEX_API_URL, json=payload, headers=headers) as r:
+                if r.status_code != 200:
+                    body = await r.aread()
+                    return False, _format_codex_error(r.status_code, body)
+                event = ""
+                text_parts: list[str] = []
+                async for line in r.aiter_lines():
+                    if line.startswith("event:"):
+                        event = line[len("event:"):].strip()
+                    elif line.startswith("data:"):
+                        raw = line[len("data:"):].strip()
+                        if raw == "[DONE]" or not raw:
+                            continue
+                        try:
+                            data = json.loads(raw)
+                        except ValueError:
+                            continue
+                        if event == "response.output_text.delta":
+                            delta = data.get("delta")
+                            if delta:
+                                text_parts.append(delta)
+    except httpx.HTTPError as exc:
+        return False, f"Could not reach ChatGPT/Codex: {_exc_reason(exc)}"
+    text = "".join(text_parts).strip()
+    if not text:
+        return False, "ChatGPT/Codex returned an empty response."
+    plan = cfg.get("chatgpt_plan_type")
+    return True, f"Connected ({plan})." if plan else "Connected."
 
 
 class OpencodeSession:
@@ -477,14 +554,7 @@ async def _test_opencode(settings: dict) -> tuple[bool, str]:
 
 
 async def _test_codex(settings: dict) -> tuple[bool, str]:
-    cfg = codex_settings.load()
-    if not cfg.get("access_token"):
-        return False, "Not connected — use the Connect button above."
-    reply = await llm_codex(settings, 'Reply with exactly: {"trivia": "pong"}')
-    if not reply:
-        return False, "ChatGPT/Codex did not respond."
-    plan = cfg.get("chatgpt_plan_type")
-    return True, f"Connected ({plan})." if plan else "Connected."
+    return await _test_codex_call('Reply with exactly: {"trivia": "pong"}')
 
 
 async def _test_grok(settings: dict) -> tuple[bool, str]:

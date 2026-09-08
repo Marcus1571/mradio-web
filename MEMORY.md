@@ -3090,6 +3090,47 @@ starts collapsed since Gemini isn't configured in the test harness, so
 the harness auto-clicked its header before screenshotting) rather than
 just reading the JSX.
 
+## ChatGPT/Codex Test button showed generic "did not respond" for real quota exhaustion (fixed 2026-09-08, 1.3.2)
+
+`_test_codex()` in `providers.py` called `llm_codex()`, which discards
+the HTTP response body/headers on any non-200 status
+(`if r.status_code != 200: return None`) — so the Test button's failure
+message was always the same generic string no matter what actually went
+wrong (expired token, network error, rate limit, real quota exhaustion).
+
+User reported the Test button failing ("ChatGPT/Codex did not respond.")
+while their own check of the real Codex CLI's `/usage` screen showed
+quota was fine. Root-caused by replicating the exact request
+`llm_codex()` makes directly inside the LT container and inspecting the
+full response for once: a genuine `429` with
+`error.type: "usage_limit_reached"`, `plan_type: "go"`, and a
+`resets_at` Unix timestamp ~28 days out. Confirmed via response headers
+(`x-codex-primary-used-percent: 100`, `x-codex-primary-window-minutes:
+43200` — a 30-day rolling window) that **Codex enforces its own
+usage meter, separate from the ChatGPT app/CLI's own token-usage graph**
+— a plan can show headroom there and still 429 here. This is real
+OpenAI-side quota exhaustion, not a bug in mradio-web's request logic;
+the bug was purely that the true reason never reached the UI.
+
+Fix: factored the request-building into `_codex_request_payload()`
+(shared by both `llm_codex()` and the new path) and added
+`_test_codex_call()` + `_format_codex_error()`, which reads the real
+status code and error body on failure. `_test_codex()` now delegates to
+`_test_codex_call()` instead of `llm_codex()`. `usage_limit_reached`
+renders as "Codex usage limit reached (separate from your ChatGPT app's
+own usage — resets YYYY-MM-DD HH:MM UTC)."; 429/401/403 get their own
+specific messages; anything else still falls back to a status-code-based
+message rather than pure silence. `llm_codex()` itself (the enrichment
+fallback-chain path) is untouched — it still just returns `None` on
+failure, since that path only needs pass/fail, not a human message.
+
+Verified live before release: hot-patched the fixed `providers.py` into
+the running LT container (`docker cp` to a differently-named module,
+imported and called directly) against the real, still-exhausted quota —
+confirmed it now returns the specific usage-limit message with the
+correct reset date instead of the old generic string, before doing the
+full rebuild/deploy.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
