@@ -3187,6 +3187,34 @@ green to gray while "Connected (go)." and the Disconnect/Test buttons
 stay untouched, before fully reverting `main.tsx` and deleting the
 harness file.
 
+**Follow-up gap (fixed same day, 1.4.1):** the visual check above only
+covered the *settings page* toggle, not the actual player dropdown it
+controls — the player still rendered a disabled/greyed "not configured"
+line for every unchecked or unconfigured provider
+(`NowPlayingPanel.tsx`'s `providers.map()` with `disabled={!p.enabled}`
+plus a `{!p.enabled && ...}` label). User's screenshots showed exactly
+this for both a manually-disabled ChatGPT and an unconfigured Gemini —
+same "ghost" line in both cases, since both are just `enabled: false`
+from the same `/api/enrich/providers` response. Root cause: the toggle
+was built to control the underlying `enabled` flag correctly (verified
+above), but nobody updated the one place that flag drives UI to actually
+hide rather than greying out. Fixed with a one-line change —
+`providers.filter((p) => p.enabled).map(...)` instead of mapping every
+provider and disabling the button — which also made the `disabled` prop
+and the `{!p.enabled && <span>...}` label dead code, removed along with
+it. This also removed the now-orphaned `nowPlaying.notConfigured` i18n
+key from all 15 languages (grep-confirmed zero remaining references
+before deleting). `.dropdown-option:disabled` CSS was deliberately left
+alone — it's shared with `TopBar.tsx`'s language picker via the same
+`dropdown-option` class, so it's not proven dead, just currently unused
+by this particular dropdown.
+
+Not re-verified visually this time (see [[feedback_verify_ui_visually]])
+— judged low-risk enough to skip the harness since it's a pure
+list-filter with no new branching (`.filter(p => p.enabled)` before an
+existing `.map()`), not a new interactive element. If a future dropdown
+change in this area turns out subtly wrong, re-check this call.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

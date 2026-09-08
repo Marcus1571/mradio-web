@@ -207,7 +207,6 @@ const es: Dict = {
     unmute: 'Activar sonido',
     volume: 'Volumen',
     aiProvider: 'Proveedor de IA',
-    notConfigured: 'no configurado',
     none: 'ninguno',
     historyTitle: 'Reproducido recientemente',
   },

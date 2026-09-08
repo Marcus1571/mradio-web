@@ -207,7 +207,6 @@ const el: Dict = {
     unmute: 'Κατάργηση σίγασης',
     volume: 'Ένταση',
     aiProvider: 'Πάροχος AI',
-    notConfigured: 'δεν έχει ρυθμιστεί',
     none: 'κανένας',
     historyTitle: 'Πρόσφατη αναπαραγωγή',
   },

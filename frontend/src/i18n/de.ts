@@ -207,7 +207,6 @@ const de: Dict = {
     unmute: 'Ton an',
     volume: 'Lautstärke',
     aiProvider: 'KI-Anbieter',
-    notConfigured: 'nicht konfiguriert',
     none: 'keiner',
     historyTitle: 'Zuletzt gehört',
   },

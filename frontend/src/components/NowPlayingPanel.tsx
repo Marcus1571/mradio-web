@@ -269,19 +269,17 @@ export function NowPlayingPanel({
           </button>
           {providerOpen && (
             <div className="dropdown-menu dropdown-menu--up">
-              {providers.map((p) => (
+              {providers.filter((p) => p.enabled).map((p) => (
                 <button
                   key={p.name}
                   className={`dropdown-option ${p.name === active ? 'active' : ''}`}
                   type="button"
-                  disabled={!p.enabled}
                   onClick={() => {
                     void activate(p.name)
                     setProviderOpen(false)
                   }}
                 >
                   <span>{_PROVIDER_LABEL[p.name]}</span>
-                  {!p.enabled && <span>{t('nowPlaying.notConfigured')}</span>}
                 </button>
               ))}
             </div>

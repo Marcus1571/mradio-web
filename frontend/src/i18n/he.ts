@@ -203,7 +203,6 @@ const he: Dict = {
     unmute: 'בטל השתקה',
     volume: 'עוצמת קול',
     aiProvider: 'ספק AI',
-    notConfigured: 'לא מוגדר',
     none: 'ללא',
     historyTitle: 'הושמעו לאחרונה',
   },

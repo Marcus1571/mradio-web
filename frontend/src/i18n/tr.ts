@@ -207,7 +207,6 @@ const tr: Dict = {
     unmute: 'Sesi aç',
     volume: 'Ses düzeyi',
     aiProvider: 'AI sağlayıcısı',
-    notConfigured: 'yapılandırılmadı',
     none: 'yok',
     historyTitle: 'Son çalınanlar',
   },

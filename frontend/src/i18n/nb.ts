@@ -207,7 +207,6 @@ const nb: Dict = {
     unmute: 'Slå på lyd',
     volume: 'Volum',
     aiProvider: 'AI-leverandør',
-    notConfigured: 'ikke konfigurert',
     none: 'ingen',
     historyTitle: 'Sist spilt',
   },

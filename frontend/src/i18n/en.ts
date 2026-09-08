@@ -205,7 +205,6 @@ const en = {
     unmute: 'Unmute',
     volume: 'Volume',
     aiProvider: 'AI provider',
-    notConfigured: 'not configured',
     none: 'none',
     historyTitle: 'Recently played',
   },

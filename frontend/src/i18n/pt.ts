@@ -207,7 +207,6 @@ const pt: Dict = {
     unmute: 'Ativar som',
     volume: 'Volume',
     aiProvider: 'Fornecedor de IA',
-    notConfigured: 'não configurado',
     none: 'nenhum',
     historyTitle: 'Reproduzidos recentemente',
   },

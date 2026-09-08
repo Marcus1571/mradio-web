@@ -207,7 +207,6 @@ const sv: Dict = {
     unmute: 'Slå på ljud',
     volume: 'Volym',
     aiProvider: 'AI-leverantör',
-    notConfigured: 'inte konfigurerad',
     none: 'ingen',
     historyTitle: 'Senast spelat',
   },

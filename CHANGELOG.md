@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.1] - 2026-09-08
+
+Fixed the player's AI provider dropdown: a disabled provider (either
+unconfigured or hidden via the new 1.4.0 "Show in the player's AI menu"
+toggle) still appeared as a greyed-out "not configured" line — now it's
+omitted from the list entirely, matching how the toggle was meant to
+work. Also removed the now-unused `notConfigured` i18n string from all
+15 languages.
+
 ## [1.4.0] - 2026-09-08
 
 Added a "Show in the player's AI menu" toggle to the ChatGPT and Grok

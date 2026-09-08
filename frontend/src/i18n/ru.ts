@@ -207,7 +207,6 @@ const ru: Dict = {
     unmute: 'Включить звук',
     volume: 'Громкость',
     aiProvider: 'Провайдер ИИ',
-    notConfigured: 'не настроен',
     none: 'нет',
     historyTitle: 'Недавно прослушано',
   },

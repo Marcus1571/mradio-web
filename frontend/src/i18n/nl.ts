@@ -207,7 +207,6 @@ const nl: Dict = {
     unmute: 'Dempen opheffen',
     volume: 'Volume',
     aiProvider: 'AI-provider',
-    notConfigured: 'niet geconfigureerd',
     none: 'geen',
     historyTitle: 'Onlangs afgespeeld',
   },

@@ -203,7 +203,6 @@ const ja: Dict = {
     unmute: 'ミュート解除',
     volume: '音量',
     aiProvider: 'AIプロバイダー',
-    notConfigured: '未設定',
     none: 'なし',
     historyTitle: '再生履歴',
   },
