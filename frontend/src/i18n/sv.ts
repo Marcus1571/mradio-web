@@ -113,6 +113,10 @@ const sv: Dict = {
     grokModeSubscription: 'Prenumeration',
     grokConnect: 'Anslut med Grok',
     grokConnected: 'Ansluten till din Grok-prenumeration.',
+    geminiGroup: 'Gemini',
+    geminiIntro:
+      'Googles Gemini-modeller via deras gratis API-nivå — inget kreditkort krävs, tillgängligt för alla när ' +
+      'det är konfigurerat, inte bara för administratörer som ChatGPT eller Grok.',
     errorFallback: 'Det gick inte att spara inställningarna.',
     test: 'Testa',
     testing: 'Testar…',

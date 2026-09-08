@@ -113,6 +113,10 @@ const nl: Dict = {
     grokModeSubscription: 'Abonnement',
     grokConnect: 'Verbinden met Grok',
     grokConnected: 'Verbonden met je Grok-abonnement.',
+    geminiGroup: 'Gemini',
+    geminiIntro:
+      'Gemini-modellen van Google via hun gratis API-niveau — geen creditcard nodig, beschikbaar voor ' +
+      'iedereen zodra ingesteld, niet alleen voor beheerders zoals bij ChatGPT of Grok.',
     errorFallback: 'Instellingen opslaan mislukt.',
     test: 'Testen',
     testing: 'Testen…',

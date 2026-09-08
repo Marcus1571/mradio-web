@@ -2,21 +2,22 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError, api } from '../api/client'
 import type { AISettings, AITestResult, CodexConnectResponse, GrokConnectResponse } from '../api/types'
-import { IDLE_TEST, KbNote, TestBadge } from '../components/AdminSettingsShared'
+import { IDLE_TEST, KbNote, ProviderBubble, TestBadge } from '../components/AdminSettingsShared'
 import type { TestState } from '../components/AdminSettingsShared'
-import { ChatGPTIcon, GrokIcon, NimIcon, OllamaIcon, OpenCodeIcon } from '../components/Icons'
+import { ChatGPTIcon, GeminiIcon, GrokIcon, NimIcon, OllamaIcon, OpenCodeIcon } from '../components/Icons'
 import { useCodexStatus } from '../hooks/useCodexStatus'
 import { useGrokStatus } from '../hooks/useGrokStatus'
 import { useProviders } from '../hooks/useProviders'
 import type { TFunction } from '../i18n'
 import '../styles/admin.css'
 
-type Provider = 'ollama' | 'openai' | 'opencode' | 'codex' | 'grok'
+type Provider = 'ollama' | 'openai' | 'opencode' | 'codex' | 'grok' | 'gemini'
 
 export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunction }) {
   const [settings, setSettings] = useState<AISettings | null>(null)
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [grokApiKeyInput, setGrokApiKeyInput] = useState('')
+  const [geminiApiKeyInput, setGeminiApiKeyInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
@@ -25,6 +26,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
   const [opencodeTest, setOpencodeTest] = useState<TestState>(IDLE_TEST)
   const [codexTest, setCodexTest] = useState<TestState>(IDLE_TEST)
   const [grokTest, setGrokTest] = useState<TestState>(IDLE_TEST)
+  const [geminiTest, setGeminiTest] = useState<TestState>(IDLE_TEST)
   const { status: codexStatus, refresh: refreshCodexStatus } = useCodexStatus()
   const [codexConnecting, setCodexConnecting] = useState(false)
   const [codexPromptResult, setCodexPromptResult] = useState<CodexConnectResponse | null>(null)
@@ -70,10 +72,13 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
       else delete body.api_key
       if (grokApiKeyInput) body.grok_api_key = grokApiKeyInput
       else delete body.grok_api_key
+      if (geminiApiKeyInput) body.gemini_api_key = geminiApiKeyInput
+      else delete body.gemini_api_key
       const res = await api.patch<AISettings>('/api/settings/ai', body)
       setSettings(res)
       setApiKeyInput('')
       setGrokApiKeyInput('')
+      setGeminiApiKeyInput('')
       setSaved(true)
       await refreshProviders()
       window.setTimeout(() => setSaved(false), 2500)
@@ -190,14 +195,12 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
       <form className="admin-panel" onSubmit={onSubmit}>
         <div className="settings-form">
           <div className="provider-bubbles">
-            <div className="settings-group">
-              <div className="settings-group-head">
-                <h2>
-                  <ChatGPTIcon className="provider-mark" />
-                  <span className={`provider-status-dot ${isEnabled('codex') ? 'on' : ''}`} aria-hidden="true" />
-                  {t('aiSettings.codexGroup')}
-                </h2>
-              </div>
+            <ProviderBubble
+              icon={<ChatGPTIcon className="provider-mark" />}
+              name={t('aiSettings.codexGroup')}
+              enabled={isEnabled('codex')}
+              defaultOpen={isEnabled('codex') || codexStatus?.pending === true}
+            >
               <p className="admin-note">{t('aiSettings.codexIntro')}</p>
               {codexStatus?.connected ? (
                 <>
@@ -225,11 +228,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                   {codexPromptResult && (
                     <p>
                       {t('aiSettings.codexUserCodeHint', { code: codexPromptResult.user_code })}{' '}
-                      <a
-                        href={codexPromptResult.verification_uri}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <a href={codexPromptResult.verification_uri} target="_blank" rel="noopener noreferrer">
                         {codexPromptResult.verification_uri}
                       </a>
                     </p>
@@ -247,16 +246,14 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                   </button>
                 </div>
               )}
-            </div>
+            </ProviderBubble>
 
-            <div className="settings-group">
-              <div className="settings-group-head">
-                <h2>
-                  <GrokIcon className="provider-mark" />
-                  <span className={`provider-status-dot ${isEnabled('grok') ? 'on' : ''}`} aria-hidden="true" />
-                  {t('aiSettings.grokGroup')}
-                </h2>
-              </div>
+            <ProviderBubble
+              icon={<GrokIcon className="provider-mark" />}
+              name={t('aiSettings.grokGroup')}
+              enabled={isEnabled('grok')}
+              defaultOpen={isEnabled('grok') || grokStatus?.pending === true}
+            >
               <p className="admin-note">{t('aiSettings.grokIntro')}</p>
 
               <div className="grok-mode-toggle" role="radiogroup" aria-label={t('aiSettings.grokModeLabel')}>
@@ -356,11 +353,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                   {grokPromptResult && (
                     <p>
                       {t('aiSettings.codexUserCodeHint', { code: grokPromptResult.user_code })}{' '}
-                      <a
-                        href={grokPromptResult.verification_uri}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <a href={grokPromptResult.verification_uri} target="_blank" rel="noopener noreferrer">
                         {grokPromptResult.verification_uri}
                       </a>
                     </p>
@@ -378,16 +371,71 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                   </button>
                 </div>
               )}
-            </div>
+            </ProviderBubble>
 
-            <div className="settings-group">
-              <div className="settings-group-head">
-                <h2>
-                  <OpenCodeIcon className="provider-mark" />
-                  <span className={`provider-status-dot ${isEnabled('opencode') ? 'on' : ''}`} aria-hidden="true" />
-                  {t('aiSettings.opencodeGroup')}
-                </h2>
+            <ProviderBubble
+              icon={<GeminiIcon className="provider-mark" />}
+              name={t('aiSettings.geminiGroup')}
+              enabled={isEnabled('gemini')}
+              defaultOpen={isEnabled('gemini')}
+            >
+              <p className="admin-note">{t('aiSettings.geminiIntro')}</p>
+              <div className="settings-row">
+                <label htmlFor="gemini_api_base">{t('aiSettings.apiBaseUrl')}</label>
+                <input
+                  id="gemini_api_base"
+                  value={settings.gemini_api_base}
+                  onChange={(e) => field('gemini_api_base', e.target.value)}
+                />
               </div>
+              <div className="settings-row">
+                <label htmlFor="gemini_model">{t('aiSettings.model')}</label>
+                <input
+                  id="gemini_model"
+                  value={settings.gemini_model}
+                  onChange={(e) => field('gemini_model', e.target.value)}
+                />
+              </div>
+              <div className="settings-row">
+                <label htmlFor="gemini_api_key">{t('aiSettings.apiKey')}</label>
+                <input
+                  id="gemini_api_key"
+                  type="password"
+                  placeholder={settings.gemini_api_key || t('aiSettings.apiKeyNotSet')}
+                  value={geminiApiKeyInput}
+                  onChange={(e) => setGeminiApiKeyInput(e.target.value)}
+                />
+              </div>
+              <div className="test-actions">
+                <button
+                  className="test-btn"
+                  type="button"
+                  disabled={geminiTest.status === 'testing'}
+                  onClick={() =>
+                    void testProvider(
+                      'gemini',
+                      {
+                        gemini_api_base: settings.gemini_api_base,
+                        gemini_model: settings.gemini_model,
+                        gemini_timeout: settings.gemini_timeout,
+                        ...(geminiApiKeyInput ? { gemini_api_key: geminiApiKeyInput } : {}),
+                      },
+                      setGeminiTest,
+                    )
+                  }
+                >
+                  {geminiTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
+                </button>
+                <TestBadge state={geminiTest} t={t} />
+              </div>
+            </ProviderBubble>
+
+            <ProviderBubble
+              icon={<OpenCodeIcon className="provider-mark" />}
+              name={t('aiSettings.opencodeGroup')}
+              enabled={isEnabled('opencode')}
+              defaultOpen={isEnabled('opencode')}
+            >
               <div className="settings-row">
                 <label htmlFor="opencode">{t('aiSettings.opencodeEnable')}</label>
                 <input id="opencode" value={settings.opencode} onChange={(e) => field('opencode', e.target.value)} />
@@ -409,16 +457,14 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                 </button>
                 <TestBadge state={opencodeTest} t={t} />
               </div>
-            </div>
+            </ProviderBubble>
 
-            <div className="settings-group">
-              <div className="settings-group-head">
-                <h2>
-                  <OllamaIcon className="provider-mark" />
-                  <span className={`provider-status-dot ${isEnabled('ollama') ? 'on' : ''}`} aria-hidden="true" />
-                  {t('aiSettings.ollamaGroup')}
-                </h2>
-              </div>
+            <ProviderBubble
+              icon={<OllamaIcon className="provider-mark" />}
+              name={t('aiSettings.ollamaGroup')}
+              enabled={isEnabled('ollama')}
+              defaultOpen={isEnabled('ollama')}
+            >
               <KbNote
                 prefix={t('aiSettings.ollamaNotePrefix')}
                 linkLabel={t('aiSettings.ollamaNoteLink')}
@@ -464,16 +510,14 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                 </button>
                 <TestBadge state={ollamaTest} t={t} />
               </div>
-            </div>
+            </ProviderBubble>
 
-            <div className="settings-group">
-              <div className="settings-group-head">
-                <h2>
-                  <NimIcon className="provider-mark" />
-                  <span className={`provider-status-dot ${isEnabled('openai') ? 'on' : ''}`} aria-hidden="true" />
-                  {t('aiSettings.openaiGroup')}
-                </h2>
-              </div>
+            <ProviderBubble
+              icon={<NimIcon className="provider-mark" />}
+              name={t('aiSettings.openaiGroup')}
+              enabled={isEnabled('openai')}
+              defaultOpen={isEnabled('openai')}
+            >
               <KbNote
                 prefix={t('aiSettings.nimNotePrefix')}
                 linkLabel={t('aiSettings.nimNoteLink')}
@@ -520,7 +564,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                 </button>
                 <TestBadge state={openaiTest} t={t} />
               </div>
-            </div>
+            </ProviderBubble>
           </div>
 
           {error && <p className="admin-note" style={{ color: 'var(--danger)' }}>{error}</p>}

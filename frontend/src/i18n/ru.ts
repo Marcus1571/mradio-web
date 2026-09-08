@@ -113,6 +113,10 @@ const ru: Dict = {
     grokModeSubscription: 'Подписка',
     grokConnect: 'Подключиться через Grok',
     grokConnected: 'Подключено к вашей подписке Grok.',
+    geminiGroup: 'Gemini',
+    geminiIntro:
+      'Модели Gemini от Google по бесплатному тарифу API — банковская карта не нужна, доступно всем после ' +
+      'настройки, а не только администраторам, как ChatGPT или Grok.',
     errorFallback: 'Не удалось сохранить настройки.',
     test: 'Проверить',
     testing: 'Проверка…',

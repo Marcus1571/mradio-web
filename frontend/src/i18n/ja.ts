@@ -111,6 +111,8 @@ const ja: Dict = {
     grokModeSubscription: 'サブスクリプション',
     grokConnect: 'Grokで接続',
     grokConnected: 'Grokサブスクリプションに接続済みです。',
+    geminiGroup: 'Gemini',
+    geminiIntro: 'Googleの無料APIティアを使ったGeminiモデル。クレジットカード不要で、設定すればChatGPTやGrokと違い管理者以外も利用できます。',
     errorFallback: '設定を保存できませんでした。',
     test: 'テスト',
     testing: 'テスト中…',

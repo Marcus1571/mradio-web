@@ -113,6 +113,10 @@ const pt: Dict = {
     grokModeSubscription: 'Subscrição',
     grokConnect: 'Ligar com o Grok',
     grokConnected: 'Ligado à sua subscrição Grok.',
+    geminiGroup: 'Gemini',
+    geminiIntro:
+      'Modelos Gemini da Google através do seu nível gratuito de API — sem necessidade de cartão de crédito, ' +
+      'disponível para todos assim que configurado, não exclusivo de administradores como o ChatGPT ou o Grok.',
     errorFallback: 'Não foi possível guardar as definições.',
     test: 'Testar',
     testing: 'A testar…',

@@ -111,6 +111,8 @@ const he: Dict = {
     grokModeSubscription: 'מנוי',
     grokConnect: 'התחבר עם Grok',
     grokConnected: 'מחובר למנוי ה-Grok שלך.',
+    geminiGroup: 'Gemini',
+    geminiIntro: 'מודלי Gemini של Google דרך שכבת ה-API החינמית שלהם — לא נדרש כרטיס אשראי, זמין לכולם לאחר ההגדרה, לא רק למנהלים כמו ChatGPT או Grok.',
     errorFallback: 'לא ניתן היה לשמור את ההגדרות.',
     test: 'בדוק',
     testing: 'בודק…',

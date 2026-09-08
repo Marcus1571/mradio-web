@@ -312,6 +312,41 @@ provider; nothing else in the app is affected.
 - **API key**: paste the key from step 3 above. Stored server side; the
   settings page only ever shows it redacted after saving.
 
+### Google Gemini
+
+Not admin-only — unlike ChatGPT and Grok, this isn't tied to anyone's
+personal paid subscription, so once configured every account can use
+it, same as OpenCode/Ollama/NIM.
+
+**Getting an API key:**
+
+1. Go to [aistudio.google.com/api-keys](https://aistudio.google.com/api-keys)
+   and sign in with a Google account.
+2. Click **Create API key** — no credit card or billing account needed
+   for the free tier.
+3. Copy the key and paste it into mradio-web's **AI providers** page
+   (user menu → Settings → AI providers, admin only), in the Gemini
+   section's API key field, then **Save**.
+
+**Fields:**
+
+- **API base URL**: defaults to
+  `https://generativelanguage.googleapis.com/v1beta/openai` on a fresh
+  install — Google's own OpenAI-compatibility endpoint for Gemini, a
+  real documented API (not a workaround), confirmed reachable directly.
+- **Model**: defaults to `gemini-3.8-flash` on a fresh install — the
+  current Flash-family model on Google's free tier. Only Flash/
+  Flash-Lite models remain free as of April 2026; Pro models moved
+  behind billing. Google's model lineup changes fairly often — check
+  [ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models)
+  for the current free-tier model name if this one stops working.
+- **API key**: paste the key from step 2 above. Stored server side; the
+  settings page only ever shows it redacted after saving.
+
+Free-tier rate limits are modest (roughly 10-15 requests/minute, up to
+1,000/day on Flash) but comfortable for this app's one-track-at-a-time
+enrichment pattern.
+
 ### Ollama
 
 **Setting up Ollama:**

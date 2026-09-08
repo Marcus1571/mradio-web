@@ -111,6 +111,10 @@ const en = {
     grokModeSubscription: 'Subscription',
     grokConnect: 'Connect with Grok',
     grokConnected: 'Connected to your Grok subscription.',
+    geminiGroup: 'Gemini',
+    geminiIntro:
+      "Google's Gemini models via their free API tier — no credit card required, available to everyone " +
+      'once configured, not admin-only like ChatGPT or Grok.',
     errorFallback: 'Could not save settings.',
     test: 'Test',
     testing: 'Testing…',

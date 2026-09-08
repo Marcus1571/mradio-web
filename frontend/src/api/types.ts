@@ -48,7 +48,7 @@ export interface Config {
 }
 
 export interface ProviderInfo {
-  name: 'opencode' | 'openai' | 'ollama' | 'codex' | 'grok'
+  name: 'opencode' | 'openai' | 'ollama' | 'codex' | 'grok' | 'gemini'
   enabled: boolean
 }
 
@@ -73,6 +73,10 @@ export interface AISettings {
   grok_api_key: string
   grok_model: string
   grok_timeout: number
+  gemini_api_base: string
+  gemini_api_key: string
+  gemini_model: string
+  gemini_timeout: number
 }
 
 export interface AITestResult {

@@ -20,12 +20,14 @@ bubble (own fields, own PROVIDERS entry, i18n, etc. — the Grok/ChatGPT
 treatment) if the user wants it available *alongside* NIM rather than
 replacing it.
 
-Candidates found, not yet tried against real stations:
+Candidates found:
 
-- **Google Gemini (AI Studio)** — genuinely free, permanent tier (not a
-  trial), no credit card required. As of April 2026 only Flash-family
-  models (Flash, Flash-Lite) remain on the free tier; Pro models moved
-  behind billing. OpenAI-compatible endpoint at
+- **Google Gemini (AI Studio)** — **built 2026-09-08, see MEMORY.md's
+  "Google Gemini added as 6th AI provider" section.** Genuinely free,
+  permanent tier (not a trial), no credit card required, available to
+  every account (not admin-only, unlike ChatGPT/Grok). As of April
+  2026 only Flash-family models (Flash, Flash-Lite) remain on the free
+  tier; Pro models moved behind billing. OpenAI-compatible endpoint at
   `https://generativelanguage.googleapis.com/v1beta/openai/`. Rate
   limits are modest (roughly 10-15 RPM, up to 1,000 RPD on Flash) but
   comfortably enough for this app's one-track-at-a-time enrichment
@@ -43,17 +45,25 @@ Candidates found, not yet tried against real stations:
   provider, at the cost of being a proxy layer (adds a hop, and free-
   model availability on OpenRouter can change without notice).
 
-**Verdict**: no action taken yet — presented as options, not built.
-None independently verified against this app's actual liner-notes
-prompt/JSON-schema requirement (the same verification opencode/Ollama/
-NIM/ChatGPT/Grok all got via `run_provider_test()` and/or a live
-4-way timing comparison) — do that before recommending one as a
-default the way the 0.5.25 comparison drove the ChatGPT/opencode/
-Ollama/NIM preference order.
+**Verdict**: Gemini built 2026-09-08 (own dedicated bubble, not
+admin-only). Groq, Cerebras, and OpenRouter remain unbuilt — presented
+as options only, none independently verified yet against this app's
+actual liner-notes prompt/JSON-schema requirement (the same
+verification every shipped provider got via `run_provider_test()`
+and/or a live timing comparison). Do that before adding any of the
+remaining three, or before recommending one as a default the way the
+0.5.25 comparison drove the ChatGPT/opencode/Ollama/NIM preference
+order.
 
-**How to apply if revisited**: for a quick try, just repoint the
-existing NIM/OpenAI-compatible bubble's base URL + key at one of these
-and use the Test button — no code change needed. For a permanent,
-side-by-side-with-NIM addition, follow the Grok build's pattern
-(`MEMORY.md`'s "Grok (xAI) added as 5th AI provider" section) as the
-template for a new dedicated bubble.
+**How to apply if revisited**: for a quick try of Groq/Cerebras/
+OpenRouter, just repoint the existing NIM/OpenAI-compatible bubble's
+base URL + key at one of these and use the Test button — no code
+change needed. For a permanent, side-by-side-with-NIM addition (own
+dedicated bubble, available to everyone), follow the Gemini build's
+pattern (`MEMORY.md`'s "Google Gemini added as 6th AI provider"
+section, itself built on `providers.py`'s shared
+`_llm_openai_compatible()`/`_test_openai_compatible()` helpers — a
+new fully-OpenAI-compatible provider needs only ~10 lines of backend
+dispatch, not a full new request/response implementation) as the
+template rather than Grok's (which is dual-mode and OAuth-capable,
+overkill for a plain API-key-only provider).

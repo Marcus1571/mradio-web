@@ -174,6 +174,17 @@ export function OpenCodeIcon({ className }: IconProps) {
   )
 }
 
+export function GeminiIcon({ className }: IconProps) {
+  // Asymmetric faceted diamond, echoing Gemini's own mark — distinct
+  // from SparkleIcon's symmetric 4-point star and GrokIcon's crossing
+  // strokes.
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M8 2c0 3.3 2.7 6 6 6-3.3 0-6 2.7-6 6 0-3.3-2.7-6-6-6 3.3 0 6-2.7 6-6Z" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export function OllamaIcon({ className }: IconProps) {
   // A llama silhouette abstracted to two ears and a muzzle.
   return (

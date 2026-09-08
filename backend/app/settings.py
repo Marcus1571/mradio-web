@@ -34,9 +34,16 @@ _DEFAULTS = {
     "grok_api_key": "",
     "grok_model": "grok-4.3",
     "grok_timeout": 30,
+    # Google Gemini via its own OpenAI-compatibility endpoint — genuinely
+    # free tier (Flash-family models), not admin-only (unlike ChatGPT/
+    # Grok) since it isn't tied to anyone's personal paid subscription.
+    "gemini_api_base": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "gemini_api_key": "",
+    "gemini_model": "gemini-3.8-flash",
+    "gemini_timeout": 30,
 }
 
-_SECRET_FIELDS = {"api_key", "grok_api_key"}
+_SECRET_FIELDS = {"api_key", "grok_api_key", "gemini_api_key"}
 
 
 def _seed_from_env() -> dict:

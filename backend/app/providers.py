@@ -13,7 +13,7 @@ import httpx
 
 from . import codex_oauth, codex_settings, grok_oauth, grok_settings
 
-PROVIDERS = ("codex", "grok", "opencode", "ollama", "openai")
+PROVIDERS = ("codex", "grok", "opencode", "ollama", "openai", "gemini")
 
 # Providers that use a real personal/paid subscription rather than a
 # self-hosted (Ollama) or bundled-free (opencode) mechanism or a
@@ -94,6 +94,7 @@ def provider_enabled(name: str, settings: dict) -> bool:
         "openai": bool(settings.get("api_key")),
         "codex": bool(codex_settings.load().get("access_token")),
         "grok": grok_enabled(settings),
+        "gemini": bool(settings.get("gemini_api_key")),
     }
     return probe.get(name, False)
 
@@ -101,7 +102,7 @@ def provider_enabled(name: str, settings: dict) -> bool:
 def ai_configured(settings: dict) -> bool:
     return bool(settings.get("ollama_url")) or bool(settings.get("api_key")) \
         or bool(oc_port(settings)) or bool(codex_settings.load().get("access_token")) \
-        or grok_enabled(settings)
+        or grok_enabled(settings) or bool(settings.get("gemini_api_key"))
 
 
 def api_endpoint(base: str, suffix: str) -> str:
@@ -135,11 +136,17 @@ async def llm_ollama(settings: dict, prompt: str) -> str | None:
         return None
 
 
-async def llm_openai(settings: dict, prompt: str) -> str | None:
-    base = api_endpoint(settings.get("api_base") or "https://api.openai.com/v1",
-                        "chat/completions")
+async def _llm_openai_compatible(base_url: str, model: str, api_key: str,
+                                 timeout: float, prompt: str) -> str | None:
+    """Shared request/response shape for any OpenAI-compatible
+    chat/completions endpoint — used by both llm_openai (NIM/generic) and
+    llm_gemini (Google's own OpenAI-compat layer, confirmed live reachable
+    at generativelanguage.googleapis.com/v1beta/openai/, a real documented
+    endpoint, not a workaround). Kept as one function rather than two
+    near-identical copies now that a second real caller exists."""
+    base = api_endpoint(base_url, "chat/completions")
     payload = {
-        "model": settings.get("api_model") or "gpt-4o-mini",
+        "model": model,
         "messages": [
             {"role": "system", "content":
                 "You are a helpful classical-music metadata assistant. "
@@ -149,17 +156,38 @@ async def llm_openai(settings: dict, prompt: str) -> str | None:
         "temperature": 0.1,
         "max_tokens": 1200,
     }
-    timeout = float(settings.get("api_timeout", 30))
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
             r = await client.post(base, json=payload, headers={
-                "Authorization": "Bearer " + (settings.get("api_key") or "")})
+                "Authorization": f"Bearer {api_key}"})
             r.raise_for_status()
             data = r.json()
         content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
         return content.strip() or None
     except (httpx.HTTPError, ValueError, IndexError):
         return None
+
+
+async def llm_openai(settings: dict, prompt: str) -> str | None:
+    return await _llm_openai_compatible(
+        settings.get("api_base") or "https://api.openai.com/v1",
+        settings.get("api_model") or "gpt-4o-mini",
+        settings.get("api_key") or "",
+        float(settings.get("api_timeout", 30)),
+        prompt,
+    )
+
+
+async def llm_gemini(settings: dict, prompt: str) -> str | None:
+    if not settings.get("gemini_api_key"):
+        return None
+    return await _llm_openai_compatible(
+        settings.get("gemini_api_base") or "https://generativelanguage.googleapis.com/v1beta/openai",
+        settings.get("gemini_model") or "gemini-3.8-flash",
+        settings["gemini_api_key"],
+        float(settings.get("gemini_timeout", 30)),
+        prompt,
+    )
 
 
 async def llm_grok(settings: dict, prompt: str) -> str | None:
@@ -387,20 +415,24 @@ async def _test_ollama(settings: dict) -> tuple[bool, str]:
     return True, "Connected."
 
 
-async def _test_openai(settings: dict) -> tuple[bool, str]:
-    if not settings.get("api_key"):
+async def _test_openai_compatible(base_url: str, api_key: str, model: str,
+                                  key_rejected_statuses: tuple[int, ...] = (401, 403)) -> tuple[bool, str]:
+    """Shared GET /models probe for any OpenAI-compatible endpoint.
+    key_rejected_statuses lets a caller widen which HTTP status counts as
+    "bad key" beyond the standard 401/403 — confirmed live that Gemini's
+    OpenAI-compat layer returns 400 INVALID_ARGUMENT for a bad key
+    instead, per its own docs, not the 401 a typical OpenAI-shaped API
+    uses."""
+    if not api_key:
         return False, "No API key configured."
-    base_url = settings.get("api_base") or "https://api.openai.com/v1"
     models_url = api_endpoint(base_url, "models")
-    model = settings.get("api_model") or "gpt-4o-mini"
     try:
         async with httpx.AsyncClient(timeout=_TEST_TIMEOUT) as client:
-            r = await client.get(models_url, headers={
-                "Authorization": "Bearer " + settings["api_key"]})
+            r = await client.get(models_url, headers={"Authorization": f"Bearer {api_key}"})
             r.raise_for_status()
             data = r.json()
     except httpx.HTTPStatusError as exc:
-        if exc.response.status_code in (401, 403):
+        if exc.response.status_code in key_rejected_statuses:
             return False, "Server rejected the API key."
         return False, f"Server responded with an error ({exc.response.status_code})."
     except httpx.HTTPError as exc:
@@ -413,6 +445,23 @@ async def _test_openai(settings: dict) -> tuple[bool, str]:
     if ids and model not in ids:
         return False, f'Connected, but model "{model}" was not found on this endpoint.'
     return True, "Connected."
+
+
+async def _test_openai(settings: dict) -> tuple[bool, str]:
+    return await _test_openai_compatible(
+        settings.get("api_base") or "https://api.openai.com/v1",
+        settings.get("api_key") or "",
+        settings.get("api_model") or "gpt-4o-mini",
+    )
+
+
+async def _test_gemini(settings: dict) -> tuple[bool, str]:
+    return await _test_openai_compatible(
+        settings.get("gemini_api_base") or "https://generativelanguage.googleapis.com/v1beta/openai",
+        settings.get("gemini_api_key") or "",
+        settings.get("gemini_model") or "gemini-3.8-flash",
+        key_rejected_statuses=(400, 401, 403),
+    )
 
 
 async def _test_opencode(settings: dict) -> tuple[bool, str]:
@@ -462,4 +511,6 @@ async def run_provider_test(provider: str, settings: dict) -> tuple[bool, str]:
         return await _test_codex(settings)
     if provider == "grok":
         return await _test_grok(settings)
+    if provider == "gemini":
+        return await _test_gemini(settings)
     return False, "Unknown provider."

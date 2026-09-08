@@ -113,6 +113,10 @@ const el: Dict = {
     grokModeSubscription: 'Συνδρομή',
     grokConnect: 'Σύνδεση με Grok',
     grokConnected: 'Συνδέθηκε με τη συνδρομή Grok σας.',
+    geminiGroup: 'Gemini',
+    geminiIntro:
+      'Μοντέλα Gemini της Google μέσω του δωρεάν επιπέδου API — δεν απαιτείται πιστωτική κάρτα, διαθέσιμο σε ' +
+      'όλους μόλις ρυθμιστεί, όχι μόνο για διαχειριστές όπως το ChatGPT ή το Grok.',
     errorFallback: 'Δεν ήταν δυνατή η αποθήκευση των ρυθμίσεων.',
     test: 'Δοκιμή',
     testing: 'Δοκιμή…',

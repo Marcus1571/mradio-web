@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0] - 2026-09-08
+
+Added **Google Gemini** as a 6th AI liner-notes provider — free (no
+credit card needed for the free tier) and, unlike ChatGPT or Grok,
+available to every account once an admin configures it, not
+admin-only.
+
+Also reworked the AI providers settings page: each provider is now a
+collapsible card instead of always showing its full fields — a
+configured/connected provider starts open, everything else starts
+collapsed. With 6 providers now, this keeps the page short and
+scannable instead of one long scroll.
+
 ## [1.2.0] - 2026-09-08
 
 Added the ability to **rename a favorite**, right in place. In Edit

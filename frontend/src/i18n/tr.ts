@@ -113,6 +113,10 @@ const tr: Dict = {
     grokModeSubscription: 'Abonelik',
     grokConnect: 'Grok ile bağlan',
     grokConnected: 'Grok aboneliğinize bağlandı.',
+    geminiGroup: 'Gemini',
+    geminiIntro:
+      "Google'ın ücretsiz API katmanı üzerinden Gemini modelleri — kredi kartı gerekmez, yapılandırıldıktan " +
+      'sonra ChatGPT veya Grok gibi yalnızca yöneticilere özel değil, herkes kullanabilir.',
     errorFallback: 'Ayarlar kaydedilemedi.',
     test: 'Test et',
     testing: 'Test ediliyor…',

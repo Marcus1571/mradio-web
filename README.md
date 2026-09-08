@@ -26,8 +26,8 @@ This page is just the overview.
 - **AI liner notes** — a short, factual write-up about the piece and its
   composer/artist, generated on the fly and cached (shared across
   everyone, so the same track is never re-queried twice) via OpenCode,
-  Ollama, ChatGPT, Grok, or any OpenAI-compatible endpoint (e.g. NVIDIA
-  NIM). See
+  Ollama, Google Gemini, ChatGPT, Grok, or any OpenAI-compatible
+  endpoint (e.g. NVIDIA NIM). See
   [KB §6 — Configuring AI providers](KB.md#6-configuring-ai-providers).
   A "recently played" trivia history keeps the last 10 blurbs per
   account, re-readable while something else plays.

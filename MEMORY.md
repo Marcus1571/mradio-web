@@ -2976,6 +2976,94 @@ directly and confirmed a matching-URL rename, a non-matching URL
 no-op, and a blank-name no-op all behave correctly. `tsc --noEmit`,
 `oxlint`, `vite build`, and a Python syntax check both clean.
 
+## Google Gemini added as 6th AI provider, free for everyone; AI providers page redesigned as collapsible cards (added 2026-09-08, 1.3.0)
+
+User explicitly asked for these two together: add Gemini as a free
+provider "intended for everyone" (contrast with the ChatGPT/Grok
+admin-only restriction from the same day), and separately flagged the
+AI providers page as "too long" now that it has this many bubbles,
+asking for some form of toggle.
+
+**Gemini is fully OpenAI-compatible, unlike Grok's dual-mode**:
+confirmed live via `curl` that `generativelanguage.googleapis.com/v1beta/openai/`
+is real, reachable, and returns a proper structured error for a bad
+key (`400 INVALID_ARGUMENT`, not a 401/403 like a typical OpenAI-shaped
+API — this mattered for the test function, see below) — so this needed
+no dual-mode toggle, no OAuth, nothing Grok-shaped at all. Backend
+factored `providers.py`'s existing `llm_openai()`/`_test_openai()` into
+shared `_llm_openai_compatible()`/`_test_openai_compatible()` helpers
+(now that a second real OpenAI-compatible caller exists, not before)
+rather than writing a third near-copy of the same request/response
+shape; `_test_openai_compatible()` gained a `key_rejected_statuses`
+parameter specifically so Gemini's 400-based rejection could be
+handled without duplicating the whole test function. New
+`llm_gemini()`/`_test_gemini()` are each ~6 lines calling the shared
+helpers with Gemini's own field names. **Deliberately NOT added to
+`ADMIN_ONLY_PROVIDERS`** — confirmed this is the one property that
+makes Gemini different from Grok's API-key mode despite both being
+"just an API key": Gemini's free tier isn't billed to anyone's account
+at all, whereas Grok's API-key mode is still billed to the admin's own
+xAI account even though it's not a subscription per se.
+
+Own dedicated settings fields (`gemini_api_base`/`gemini_api_key`/
+`gemini_model`/`gemini_timeout`), same precedent as Grok getting its
+own fields instead of sharing NIM's generic slot — so NIM and Gemini
+can both be configured and used at the same time. Default model
+`gemini-3.8-flash`, the current Flash-family model on Google's actual
+free tier per their own docs as of this writing — Pro models moved
+behind billing in 2026, only Flash/Flash-Lite remain free, and Google's
+model lineup is noted (in KB.md too) as changing often enough to be
+worth a live check if this default ever stops working.
+
+**Page redesign, decided via two explicit design questions before
+building** (not assumed): asked whether collapsed-by-default should
+apply even to already-configured providers, or whether a configured
+provider should start expanded — user chose configured-starts-open,
+matching "let me see what's already set up at a glance, collapse the
+rest." Asked separately whether to extract a shared wrapper now that a
+6th copy-pasted bubble would make the existing duplication worse, or
+keep the copy-paste pattern for consistency — user chose extraction.
+
+New `ProviderBubble` in `AdminSettingsShared.tsx` (alongside the
+existing `KbNote`/`TestBadge`) — owns the collapse/expand shell
+(header row as a real `<button>` for keyboard/a11y correctness,
+`aria-expanded`, a rotating chevron via new CSS `.provider-collapse-chevron.open`),
+each provider only supplies its own fields/test-button JSX as
+`children`. `defaultOpen` seeds `useState` once at mount and
+deliberately does NOT force re-expansion later if `enabled` flips true
+after the admin has manually collapsed it — noted in the component's
+own comment as a deliberate choice, not an oversight, since auto-
+re-expanding after a manual collapse would fight the admin's own
+action. All 6 bubbles (`AISettingsPage.tsx`) converted to
+`<ProviderBubble icon=... name=... enabled=... defaultOpen=...>`,
+shrinking each from its previous ~50-90 line hand-written header block
+down to just its fields. Page's total line count dropped even after
+adding Gemini's entire new bubble, net effect of the refactor
+outweighing the addition.
+
+**Verified with a real driven-click test, not a static screenshot**: a
+throwaway harness rendered the real `AISettingsPage` (with
+`window.fetch` stubbed, one fake-configured provider (`openai`) and one
+fake-unconfigured provider mixed in) and confirmed via screenshot that
+configured bubbles (OpenCode per its own binary-present auto-enable,
+NIM per the fake `enabled: true`) start expanded while unconfigured
+ones (ChatGPT, Grok, Gemini) start collapsed — then a second pass
+programmatically clicked the real Gemini header button and
+screenshotted the result, confirming the chevron flipped, the bubble
+expanded, and the prefilled base-URL/model fields rendered correctly,
+all independent of the still-collapsed ChatGPT/Grok bubbles next to
+it. `tsc --noEmit`, `oxlint`, `vite build` all clean; a throwaway
+Python script exercised `provider_enabled()`/`run_provider_test()`
+against the real live Gemini API with a fake key and confirmed the
+400-as-rejected handling works against the actual server response, not
+just an assumption from reading Google's docs.
+
+**KB.md** gained a `### Google Gemini` section (same setup-walkthrough
+shape as NIM's own section, no risk disclosure needed since this is a
+genuinely documented first-party API, unlike ChatGPT/Grok's caveats)
+with a one-line note up front that this one is NOT admin-only.
+README's provider-list bullet updated to include Gemini.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
