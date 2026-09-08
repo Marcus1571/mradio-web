@@ -233,7 +233,9 @@ than disconnecting (which loses the sign-in and means redoing the OAuth
 flow later), use the **"Show in the player's AI menu"** toggle in this
 same section to hide the provider from everyone's dropdown while
 keeping the connection intact, then switch it back on once the quota
-resets. Grok's section has the same toggle for the same reason.
+resets. Grok, Gemini, and OpenRouter's sections all have the same
+toggle for the same reason — every provider with a real usage quota
+gets one.
 
 This provider is bundled the same way `opencode` is (§ above): the real
 `codex` CLI binary ships inside the Docker image (`Dockerfile`'s
@@ -365,9 +367,12 @@ since there's only the one real endpoint to point at.
 
 ### OpenRouter
 
-Not admin-only — same as Gemini/OpenCode/Ollama/NIM, once configured
-every account can use it. One API key routes to whichever model you
-name, across many underlying providers.
+**Admin-only** — unlike Gemini, which is free for everyone once
+configured. OpenRouter's free tier is a single *shared* daily quota
+(50 requests/day, see below) across every account using the one saved
+key, not a per-user allowance — with several accounts able to pick it,
+that shared quota could be exhausted quickly. One API key routes to
+whichever model you name, across many underlying providers.
 
 **Getting an API key:**
 

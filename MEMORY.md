@@ -3522,6 +3522,60 @@ stub) and drove a real click on its Test button, confirming the
 "Working" badge renders — the same harness technique as every prior UI
 verification this session, `DevHarness.tsx` fully reverted after.
 
+## Gemini/OpenRouter showed as blank entries in the player dropdown; OpenRouter made admin-only; both got the enable/disable toggle (fixed 2026-09-08, 1.7.1)
+
+Direct follow-up to 1.7.0. User's screenshot showed the player's AI
+provider dropdown with a visible empty grey bar below "NIM" — a real,
+render-level bug, not the earlier 1.4.1 filtering logic (which was
+already correct). Root cause: `NowPlayingPanel.tsx`'s
+`_PROVIDER_LABEL` map (`{ opencode, ollama, openai, codex, grok }`)
+was never updated when Gemini (1.3.0) or OpenRouter (1.7.0) were
+added — both were genuinely `enabled: true` and rendering real
+`<button>` elements in the dropdown, just with `_PROVIDER_LABEL[name]`
+evaluating to `undefined`, so the `<span>` inside rendered empty. This
+is why the user's first read of the situation ("admin is missing
+providers") wasn't quite right either — Gemini and OpenRouter WERE in
+the list, just invisible. Same class of bug as the 0.5.28 "missing
+ChatGPT in aiDescription" and 1.3.0's "Gemini missing the KB.md link"
+— a new provider added without updating every place a hardcoded
+provider list already existed. Fixed by adding both entries to
+`_PROVIDER_LABEL`; worth periodically grepping for hardcoded
+`Record<string, string>` provider maps like this one when adding a new
+provider, since nothing currently enforces exhaustiveness against
+`PROVIDERS`.
+
+Separately, per explicit user request: **OpenRouter is now admin-only**
+(added to `ADMIN_ONLY_PROVIDERS` alongside codex/grok) — a genuinely
+different reason than ChatGPT/Grok's "spends the admin's real money"
+rationale. OpenRouter's free tier is a single **shared** daily quota
+(50 requests/day, confirmed live in the 1.7.0 build) across every
+account using the one saved key, not a per-account allowance the way
+Gemini's is — with several regular-user accounts able to pick it, that
+shared quota could be exhausted quickly by people who don't even know
+they're drawing from the same pool. Gemini deliberately stays
+non-admin-only: its free-tier caps are per-model, not shared, and the
+default model (`gemini-3.5-flash-lite`) already gets 500/day (see
+1.5.1), comfortably higher than a real concern for this app's usage
+pattern.
+
+Also added `gemini_manually_enabled`/`openrouter_manually_enabled` —
+the same kill-switch mechanism `codex_manually_enabled`/
+`grok_manually_enabled` already provide (1.4.0), extended to these two
+so an admin can hide either from the dropdown the moment it hits its
+quota without losing the saved API key. `provider_enabled()` was
+already the single choke point for this (per 1.4.0's design), so
+adding two more `and settings.get(..., True)` clauses there was
+sufficient — no other backend change needed. Deliberately NOT added to
+Ollama/NIM: no meaningful "usage quota" concept for a self-hosted or
+bring-your-own-key endpoint the same way.
+
+Not re-verified visually this time for the toggle UI specifically
+(same JSX pattern copy-pasted from the already-verified ChatGPT/Grok
+toggles, See [[feedback_verify_ui_visually]]) — but the dropdown
+blank-label fix WAS re-verified visually (screenshotted the fixed
+dropdown showing all six enabled providers with correct labels, no
+blank bar).
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

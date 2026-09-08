@@ -15,17 +15,20 @@ from . import codex_oauth, codex_settings, grok_oauth, grok_settings
 
 PROVIDERS = ("codex", "grok", "opencode", "ollama", "openai", "gemini", "openrouter")
 
-# Providers that use a real personal/paid subscription rather than a
-# self-hosted (Ollama) or bundled-free (opencode) mechanism or a
-# generic bring-your-own-key endpoint (openai/NIM) — restricted to
-# admins only (2026-09-07, user's explicit request), since a regular
-# user picking one would otherwise be spending the admin's real money
-# with no visibility into it. Both of Grok's modes are included, not
-# just its subscription mode: the user explicitly chose "all of Grok"
-# over "only Grok's subscription mode" when asked, since Grok's
-# API-key mode is still tied to the admin's own paid xAI account, same
-# as ChatGPT.
-ADMIN_ONLY_PROVIDERS = frozenset({"codex", "grok"})
+# Providers restricted to admins only. Two different reasons feed this
+# set: codex/grok (2026-09-07, user's explicit request) because a
+# regular user picking one would spend the admin's real money with no
+# visibility into it — both of Grok's modes are included, not just its
+# subscription mode, since Grok's API-key mode is still tied to the
+# admin's own paid xAI account, same as ChatGPT. openrouter
+# (2026-09-08) for a different reason — it's genuinely free, but its
+# free tier is a single shared daily quota (50 requests/day, confirmed
+# live) across every account using that one saved key; with several
+# users able to pick it, that quota could be exhausted by midday.
+# Deliberately NOT applied to gemini, whose free-tier daily caps are
+# per-model and comfortably higher (500/day on the Lite model this app
+# defaults to, see settings.py) — no shared-quota concern there.
+ADMIN_ONLY_PROVIDERS = frozenset({"codex", "grok", "openrouter"})
 
 _OC_ONPATH: bool | None = None
 
@@ -88,13 +91,17 @@ def grok_enabled(settings: dict) -> bool:
 
 
 def provider_enabled(name: str, settings: dict) -> bool:
-    # codex/grok also need their manual switch on — an admin can hide a
-    # still-configured subscription provider from the player dropdown
-    # the moment it hits its usage quota (see providers.py's
-    # _format_codex_error), without disconnecting/losing the saved
-    # token, and flip it back on once the quota resets. Defaults to
-    # True, so a provider that's never had the switch touched behaves
-    # exactly as it always has (visible whenever configured).
+    # codex/grok/gemini/openrouter all also need their manual switch on
+    # — an admin can hide a still-configured provider from the player
+    # dropdown the moment it hits its usage quota (see providers.py's
+    # _format_codex_error and _format_gemini/_gemini_error_message,
+    # plus OpenRouter's shared-quota concern — see ADMIN_ONLY_PROVIDERS'
+    # comment), without disconnecting/losing the saved credential, and
+    # flip it back on once the quota resets. Defaults to True, so a
+    # provider that's never had the switch touched behaves exactly as
+    # it always has (visible whenever configured). Ollama/NIM don't get
+    # this — no quota to hit against a self-hosted or bring-your-own-key
+    # endpoint the same way.
     probe = {
         "opencode": bool(oc_port(settings)),
         "ollama": bool(settings.get("ollama_url")),
@@ -102,8 +109,10 @@ def provider_enabled(name: str, settings: dict) -> bool:
         "codex": bool(codex_settings.load().get("access_token"))
                  and settings.get("codex_manually_enabled", True),
         "grok": grok_enabled(settings) and settings.get("grok_manually_enabled", True),
-        "gemini": bool(settings.get("gemini_api_key")),
-        "openrouter": bool(settings.get("openrouter_api_key")),
+        "gemini": bool(settings.get("gemini_api_key"))
+                  and settings.get("gemini_manually_enabled", True),
+        "openrouter": bool(settings.get("openrouter_api_key"))
+                      and settings.get("openrouter_manually_enabled", True),
     }
     return probe.get(name, False)
 

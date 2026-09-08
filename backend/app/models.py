@@ -59,9 +59,11 @@ class AISettingsUpdate(BaseModel):
     gemini_api_key: str | None = None
     gemini_model: str | None = None
     gemini_timeout: int | None = None
+    gemini_manually_enabled: bool | None = None
     openrouter_api_key: str | None = None
     openrouter_model: str | None = None
     openrouter_timeout: int | None = None
+    openrouter_manually_enabled: bool | None = None
 
 
 class ProviderSwitchRequest(BaseModel):

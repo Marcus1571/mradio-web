@@ -64,20 +64,33 @@ _DEFAULTS = {
     # next provider in the fallback chain (or fails outright if Gemini
     # is the only one configured) rather than erroring loudly.
     "gemini_timeout": 45,
-    # OpenRouter — genuinely free tier (its own :free-suffixed models,
-    # confirmed live cost: 0), not admin-only, no credit card needed to
-    # sign up. Default model is "openrouter/free", OpenRouter's own
-    # router that auto-picks among whichever models are currently free
-    # rather than pinning to one model ID — see providers.py's
-    # llm_openrouter() for why that matters (the free-model roster
-    # changes over time; Groq and Cerebras were both struck from
-    # findings.md's candidate list for reasons unrelated to this, but
-    # OpenRouter's own free lineup is explicitly documented as
-    # rotating). Free tier: 50 requests/day (no spend), 1,000/day once
-    # $10 has ever been spent on the account (doesn't expire).
+    # Manual kill switch for Gemini's player-dropdown visibility — same
+    # mechanism as codex/grok's (see provider_enabled()'s docstring),
+    # despite Gemini not being admin-only: its free-tier daily quota can
+    # still be hit, and this lets an admin hide it without losing the
+    # saved key.
+    "gemini_manually_enabled": True,
+    # OpenRouter — free tier (its own :free-suffixed models, confirmed
+    # live cost: 0), no credit card needed to sign up, but admin-only
+    # (2026-09-08, changed from the original non-admin-only build) —
+    # unlike Gemini's free tier, OpenRouter's is a single SHARED daily
+    # quota (50 requests/day, confirmed live) across every account using
+    # the one saved key, not a per-user allowance; with several accounts
+    # able to pick it, that shared quota could be exhausted by midday.
+    # See providers.py's ADMIN_ONLY_PROVIDERS for the full reasoning.
+    # Default model is "openrouter/free", OpenRouter's own router that
+    # auto-picks among whichever models are currently free rather than
+    # pinning to one model ID — see providers.py's llm_openrouter() for
+    # why that matters (the free-model roster changes over time; Groq
+    # and Cerebras were both struck from findings.md's candidate list
+    # for reasons unrelated to this, but OpenRouter's own free lineup is
+    # explicitly documented as rotating). Free tier: 50 requests/day (no
+    # spend), 1,000/day once $10 has ever been spent on the account
+    # (doesn't expire).
     "openrouter_api_key": "",
     "openrouter_model": "openrouter/free",
     "openrouter_timeout": 30,
+    "openrouter_manually_enabled": True,
 }
 
 _SECRET_FIELDS = {"api_key", "grok_api_key", "gemini_api_key", "openrouter_api_key"}

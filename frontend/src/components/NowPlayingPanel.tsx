@@ -23,6 +23,8 @@ const _PROVIDER_LABEL: Record<string, string> = {
   openai: 'NIM',
   codex: 'ChatGPT',
   grok: 'Grok',
+  gemini: 'Gemini',
+  openrouter: 'OpenRouter',
 }
 
 function TriviaHistoryStrip({ version, t }: { version: number; t: TFunction }) {

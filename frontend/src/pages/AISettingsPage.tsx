@@ -156,6 +156,18 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
     await refreshProviders()
   }
 
+  async function setGeminiManuallyEnabled(value: boolean) {
+    const res = await api.patch<AISettings>('/api/settings/ai', { gemini_manually_enabled: value })
+    setSettings(res)
+    await refreshProviders()
+  }
+
+  async function setOpenrouterManuallyEnabled(value: boolean) {
+    const res = await api.patch<AISettings>('/api/settings/ai', { openrouter_manually_enabled: value })
+    setSettings(res)
+    await refreshProviders()
+  }
+
   async function testGrok() {
     setGrokTest({ status: 'testing' })
     try {
@@ -420,6 +432,15 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               defaultOpen={isEnabled('gemini')}
             >
               <p className="admin-note">{t('aiSettings.geminiIntro')}</p>
+              <label className="provider-enable-toggle">
+                <input
+                  type="checkbox"
+                  checked={settings.gemini_manually_enabled}
+                  onChange={(e) => void setGeminiManuallyEnabled(e.target.checked)}
+                />
+                {t('aiSettings.providerEnableToggle')}
+              </label>
+              <p className="admin-note admin-note-hint">{t('aiSettings.providerEnableToggleHint')}</p>
               <KbNote
                 prefix={t('aiSettings.geminiNotePrefix')}
                 linkLabel={t('aiSettings.geminiNoteLink')}
@@ -474,6 +495,15 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               defaultOpen={isEnabled('openrouter')}
             >
               <p className="admin-note">{t('aiSettings.openrouterIntro')}</p>
+              <label className="provider-enable-toggle">
+                <input
+                  type="checkbox"
+                  checked={settings.openrouter_manually_enabled}
+                  onChange={(e) => void setOpenrouterManuallyEnabled(e.target.checked)}
+                />
+                {t('aiSettings.providerEnableToggle')}
+              </label>
+              <p className="admin-note admin-note-hint">{t('aiSettings.providerEnableToggleHint')}</p>
               <KbNote
                 prefix={t('aiSettings.openrouterNotePrefix')}
                 linkLabel={t('aiSettings.openrouterNoteLink')}

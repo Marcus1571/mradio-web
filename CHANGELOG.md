@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.7.1] - 2026-09-08
+
+Fixed a real bug from the 1.7.0 release: Gemini and OpenRouter both
+appeared in the player's AI menu as a blank, unlabeled entry — the
+dropdown's provider-name lookup was never updated when either was
+added, so it silently rendered empty text instead of "Gemini" or
+"OpenRouter".
+
+Also: made OpenRouter admin-only (its free tier is a single quota
+shared by everyone using the one saved key — 50 requests/day — unlike
+Gemini's per-account allowance, so it needed the same protection
+ChatGPT/Grok already have). Added the "Show in the player's AI menu"
+enable/disable toggle to Gemini and OpenRouter, matching ChatGPT/Grok.
+
 ## [1.7.0] - 2026-09-08
 
 Added **OpenRouter** as a 7th AI liner-notes provider — genuinely free
