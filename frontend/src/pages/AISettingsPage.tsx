@@ -41,6 +41,10 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
     return providers.find((p) => p.name === name)?.enabled ?? false
   }
 
+  function isAutoHidden(name: Provider): boolean {
+    return providers.find((p) => p.name === name)?.auto_hidden ?? false
+  }
+
   useEffect(() => {
     api.get<AISettings>('/api/settings/ai').then(setSettings)
   }, [])
@@ -245,6 +249,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                 {t('aiSettings.providerEnableToggle')}
               </label>
               <p className="admin-note admin-note-hint">{t('aiSettings.providerEnableToggleHint')}</p>
+              {isAutoHidden('codex') && <p className="auto-hidden-note">{t('aiSettings.autoHiddenNote')}</p>}
               {codexStatus?.connected ? (
                 <>
                   <p className="admin-note">
@@ -307,6 +312,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                 {t('aiSettings.providerEnableToggle')}
               </label>
               <p className="admin-note admin-note-hint">{t('aiSettings.providerEnableToggleHint')}</p>
+              {isAutoHidden('grok') && <p className="auto-hidden-note">{t('aiSettings.autoHiddenNote')}</p>}
 
               <div className="grok-mode-toggle" role="radiogroup" aria-label={t('aiSettings.grokModeLabel')}>
                 <label className="grok-mode-option">
@@ -441,6 +447,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                 {t('aiSettings.providerEnableToggle')}
               </label>
               <p className="admin-note admin-note-hint">{t('aiSettings.providerEnableToggleHint')}</p>
+              {isAutoHidden('gemini') && <p className="auto-hidden-note">{t('aiSettings.autoHiddenNote')}</p>}
               <KbNote
                 prefix={t('aiSettings.geminiNotePrefix')}
                 linkLabel={t('aiSettings.geminiNoteLink')}
@@ -504,6 +511,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                 {t('aiSettings.providerEnableToggle')}
               </label>
               <p className="admin-note admin-note-hint">{t('aiSettings.providerEnableToggleHint')}</p>
+              {isAutoHidden('openrouter') && <p className="auto-hidden-note">{t('aiSettings.autoHiddenNote')}</p>}
               <KbNote
                 prefix={t('aiSettings.openrouterNotePrefix')}
                 linkLabel={t('aiSettings.openrouterNoteLink')}

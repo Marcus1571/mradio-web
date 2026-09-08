@@ -131,6 +131,8 @@ const de: Dict = {
     providerEnableToggle: '„Im KI-Menü des Players anzeigen“',
     providerEnableToggleHint:
       'Deaktivieren, um es aus dem Dropdown-Menü aller Nutzer auszublenden, ohne die Verbindung zu trennen – praktisch, sobald ein Nutzungslimit erreicht ist.',
+    autoHiddenNote:
+      'Nach einem kürzlichen Fehler vorübergehend aus dem Dropdown-Menü ausgeblendet — wird automatisch im Hintergrund erneut versucht.',
     errorFallback: 'Einstellungen konnten nicht gespeichert werden.',
     test: 'Testen',
     testing: 'Wird getestet…',

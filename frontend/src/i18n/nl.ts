@@ -131,6 +131,8 @@ const nl: Dict = {
     providerEnableToggle: '‘Weergeven in het AI-menu van de speler’',
     providerEnableToggleHint:
       'Zet uit om het voor iedereen uit het dropdownmenu te verbergen zonder te verbreken — handig zodra een gebruikslimiet is bereikt.',
+    autoHiddenNote:
+      'Tijdelijk verborgen uit het dropdownmenu na een recente storing — wordt automatisch opnieuw geprobeerd op de achtergrond.',
     errorFallback: 'Instellingen opslaan mislukt.',
     test: 'Testen',
     testing: 'Testen…',

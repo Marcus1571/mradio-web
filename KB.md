@@ -237,6 +237,21 @@ resets. Grok, Gemini, and OpenRouter's sections all have the same
 toggle for the same reason — every provider with a real usage quota
 gets one.
 
+**Auto-hide on failure**: ChatGPT, Grok, Gemini, and OpenRouter also
+hide themselves from the dropdown automatically, without any manual
+action — if a real enrichment request through one of them fails (bad
+key, expired token, quota hit, network error), it drops out of
+everyone's dropdown right away. A background check retries it every 30
+minutes; if that retest succeeds, it reappears on its own — no admin
+action needed either way. While hidden this way, its section on the AI
+providers page shows a note: "Temporarily hidden from the dropdown
+after a recent failure — retrying automatically in the background." —
+distinct from the manual toggle above, which stays exactly as you left
+it. Ollama and the generic OpenAI-compatible (NIM) bubble don't get
+this: a failure there is almost always a config mistake (wrong URL/
+key) that won't fix itself on a timer, so hiding it automatically would
+just mask something that needs a person to go fix it.
+
 This provider is bundled the same way `opencode` is (§ above): the real
 `codex` CLI binary ships inside the Docker image (`Dockerfile`'s
 `codex-build` stage, `ARG CODEX_VERSION`), used only to perform the

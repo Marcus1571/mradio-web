@@ -131,6 +131,8 @@ const tr: Dict = {
     providerEnableToggle: '“Oynatıcının yapay zeka menüsünde göster”',
     providerEnableToggleHint:
       'Bağlantıyı kesmeden herkesin açılır menüsünden gizlemek için kapatın — bir kullanım kotasına ulaşıldığında kullanışlıdır.',
+    autoHiddenNote:
+      'Yakın zamanda oluşan bir hata nedeniyle açılır menüden geçici olarak gizlendi — arka planda otomatik olarak yeniden denenecek.',
     errorFallback: 'Ayarlar kaydedilemedi.',
     test: 'Test et',
     testing: 'Test ediliyor…',

@@ -3576,6 +3576,89 @@ blank-label fix WAS re-verified visually (screenshotted the fixed
 dropdown showing all six enabled providers with correct labels, no
 blank bar).
 
+## Auto-hide-on-failure + background retest for quota-prone providers (added 2026-09-08, 1.8.0)
+
+User asked: what happens when a provider fails, can the dropdown hide
+it automatically, and how does it come back — "a test every x hours?"
+Design settled through a few back-and-forth clarifications worth
+recording since they shaped real decisions:
+
+1. **Detection**: track failures from real usage only, not a proactive
+   health-check hitting every configured provider on a timer — avoids
+   spending real API calls/quota (a real concern for Gemini/OpenRouter
+   specifically) checking a provider nobody's even using.
+2. **Recovery**: NOT a blind "un-hide after N minutes" timer — user
+   explicitly pushed back on that ("can the reappear happen after an
+   internal test instead of blindly...putting it back on the list
+   without any check?"). Settled on: cooldown gates one real background
+   retest (reusing `run_provider_test()`, the same call the Test button
+   makes), and it only reappears if that retest actually passes.
+3. **Always-on regardless of active users**: user asked directly "this
+   is done serverside, right? what if no user is connected, no user is
+   playing?" — confirmed yes: the retry loop is a single global
+   `asyncio.create_task` started in `main.py`'s `lifespan` (not tied to
+   any per-user `Enricher`, which only exists while someone's logged
+   in), so it keeps ticking as long as the server process is up,
+   independent of anyone being connected.
+4. **Scope**: initially considered applying this to every provider
+   uniformly (including Ollama/NIM) for a simpler mental model, but
+   reconsidered once the "always-running background loop" nature was
+   confirmed — landed on restricting it to the same
+   quota-prone set that already has the manual enable/disable toggle
+   (`{codex, grok, gemini, openrouter}`, now named
+   `AUTO_HIDE_PROVIDERS`). Ollama/NIM failures are almost always a
+   config mistake (wrong URL/key) that won't self-heal on a timer —
+   auto-hiding them would mask something an admin actually needs to go
+   fix, not something that recovers on its own.
+
+**Implementation** (`providers.py`): `AUTO_HIDE_PROVIDERS`,
+`_provider_next_retry: dict[str, float]` (module-level, mirrors the
+existing global `_offline_until` pattern but per-provider),
+`mark_provider_failed()`/`mark_provider_recovered()`/
+`provider_hidden_by_failure()`/`providers_due_for_retry()`, and
+`health_retry_loop()` — an infinite `asyncio.sleep(5 min)` loop that
+checks `providers_due_for_retry()` each wake, and for each one due,
+calls `run_provider_test()` for real and marks it failed again (reset
+cooldown) or recovered based on the result. 30-minute cooldown
+(`_RETRY_COOLDOWN_SECONDS`) between a failure and the next retest.
+`provider_enabled()` gained a final gate:
+`... and not provider_hidden_by_failure(name)` — applies uniformly
+regardless of the manual toggle's own state, so auto-hide and manual
+disable are two independent reasons a provider can be hidden, not one
+overriding the other's stored value.
+
+`enricher.py`'s `_llm()` calls `mark_provider_failed(name)` when a
+provider in `AUTO_HIDE_PROVIDERS` returns `None`, and
+`mark_provider_recovered(name)` when one succeeds — so a provider that
+was hidden but happens to work again via normal use (not just the
+background retest) clears immediately too, not only on the 30-min
+cycle.
+
+`main.py`'s `lifespan` starts `health_retry_loop()` via
+`asyncio.create_task` alongside `init_db()`/`bootstrap_admin()`, and
+cancels it on shutdown alongside the existing `shutdown_enrichers()`/
+`close_db()` — same lifecycle pattern already established there.
+
+**Surfaced to the admin, not left invisible**: `/api/enrich/providers`
+gained an `auto_hidden: bool` field per provider (distinct from
+`enabled`) so the settings page can show a specific note —
+"Temporarily hidden from the dropdown after a recent failure —
+retrying automatically in the background." — instead of a
+failed-and-hidden provider looking identical to one an admin manually
+switched off. Added to all four `AUTO_HIDE_PROVIDERS` bubbles
+(ChatGPT/Grok/Gemini/OpenRouter), i18n'd across all 15 languages, new
+`.auto-hidden-note` CSS reusing the existing `--accent`/`--accent-soft`
+tokens (no new color introduced for one small note).
+
+Verified live on LT before deploying: hot-patched the real
+`providers.py`/`enricher.py` into the running container, confirmed the
+full cycle — `mark_provider_failed('gemini')` → correctly hidden →
+`providers_due_for_retry()` correctly lists it once the cooldown is
+forced to 0 → a real `run_provider_test('gemini', ...)` call against
+the actual Gemini API → success → correctly un-hidden. Not a
+simulated/mocked test; a genuine round trip through the real retry
+mechanism against a real external API.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

@@ -5,6 +5,7 @@ of configured providers, none of them hold their own keys."""
 
 import asyncio
 import json
+import logging
 import shutil
 import time
 import urllib.parse
@@ -12,6 +13,9 @@ import urllib.parse
 import httpx
 
 from . import codex_oauth, codex_settings, grok_oauth, grok_settings
+from . import settings as settings_store
+
+logger = logging.getLogger("mradio.providers")
 
 PROVIDERS = ("codex", "grok", "opencode", "ollama", "openai", "gemini", "openrouter")
 
@@ -51,6 +55,76 @@ def mark_offline(seconds: float = 120) -> None:
 def clear_offline() -> None:
     global _offline_until
     _offline_until = 0.0
+
+
+# Per-provider auto-hide on failure, scoped to the quota-prone providers
+# only (the same set that already got the manual enable/disable toggle
+# in 1.7.1) — Ollama/NIM failures are almost always a config mistake
+# (wrong URL/key) that won't self-heal on a timer, so auto-hiding them
+# would just mask something the admin needs to go fix, not something
+# that recovers on its own. Distinct from _offline_until above: that's
+# a single global "everything just failed" cooldown; this is per-
+# provider, driven by real enrichment failures (not a proactive health
+# check — no extra API calls for a provider nobody's using), and comes
+# back only after a real background retest passes, not blindly after a
+# timer (see health_retry_loop() below for the retest).
+AUTO_HIDE_PROVIDERS = frozenset({"codex", "grok", "gemini", "openrouter"})
+_RETRY_COOLDOWN_SECONDS = 30 * 60
+
+_provider_next_retry: dict[str, float] = {}
+
+
+def mark_provider_failed(name: str) -> None:
+    if name not in AUTO_HIDE_PROVIDERS:
+        return
+    _provider_next_retry[name] = time.time() + _RETRY_COOLDOWN_SECONDS
+
+
+def mark_provider_recovered(name: str) -> None:
+    _provider_next_retry.pop(name, None)
+
+
+def provider_hidden_by_failure(name: str) -> bool:
+    next_retry = _provider_next_retry.get(name)
+    return next_retry is not None and time.time() < next_retry
+
+
+def providers_due_for_retry() -> list[str]:
+    now = time.time()
+    return [name for name, next_retry in _provider_next_retry.items() if now >= next_retry]
+
+
+_HEALTH_CHECK_INTERVAL_SECONDS = 5 * 60
+
+
+async def health_retry_loop() -> None:
+    """Runs for the lifetime of the server process (started from
+    main.py's lifespan, independent of any user session — a provider
+    hidden by failure recovers on its own even if nobody is logged in
+    to trigger it). Every _HEALTH_CHECK_INTERVAL_SECONDS, checks which
+    auto-hidden providers are past their cooldown and makes one real
+    run_provider_test() call each — the same call the Test button
+    makes — to confirm they're actually working again before un-hiding
+    them, rather than blindly un-hiding after a timer with no check."""
+    while True:
+        await asyncio.sleep(_HEALTH_CHECK_INTERVAL_SECONDS)
+        due = providers_due_for_retry()
+        if not due:
+            continue
+        settings = settings_store.load()
+        for name in due:
+            try:
+                ok, _message = await run_provider_test(name, settings)
+            except Exception:
+                logger.exception("health retest crashed for provider=%s", name)
+                mark_provider_failed(name)
+                continue
+            if ok:
+                logger.info("provider=%s recovered on background retest", name)
+                mark_provider_recovered(name)
+            else:
+                logger.info("provider=%s still failing on background retest", name)
+                mark_provider_failed(name)
 
 
 def oc_binary_present() -> bool:
@@ -114,7 +188,12 @@ def provider_enabled(name: str, settings: dict) -> bool:
         "openrouter": bool(settings.get("openrouter_api_key"))
                       and settings.get("openrouter_manually_enabled", True),
     }
-    return probe.get(name, False)
+    # Auto-hide on failure (see AUTO_HIDE_PROVIDERS) is a separate gate
+    # from the manual switch above — a provider that just failed a real
+    # request gets hidden here regardless of the manual toggle's own
+    # state, and comes back only once a background retest passes (see
+    # enrichers.py's _health_retry_loop()), not on a blind timer.
+    return probe.get(name, False) and not provider_hidden_by_failure(name)
 
 
 def ai_configured(settings: dict) -> bool:

@@ -131,6 +131,8 @@ const sv: Dict = {
     providerEnableToggle: '”Visa i spelarens AI-meny”',
     providerEnableToggleHint:
       'Stäng av för att dölja den från allas rullgardinsmeny utan att koppla från — praktiskt när en användningskvot nåtts.',
+    autoHiddenNote:
+      'Tillfälligt dold från rullgardinsmenyn efter ett nyligt fel — försöks automatiskt igen i bakgrunden.',
     errorFallback: 'Det gick inte att spara inställningarna.',
     test: 'Testa',
     testing: 'Testar…',

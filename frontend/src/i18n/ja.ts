@@ -127,6 +127,8 @@ const ja: Dict = {
     providerEnableToggle: '「プレーヤーのAIメニューに表示」',
     providerEnableToggleHint:
       'オフにすると接続を切らずに全員のドロップダウンから非表示にできます。利用上限に達したときに便利です。',
+    autoHiddenNote:
+      '直近の失敗によりドロップダウンから一時的に非表示になっています。バックグラウンドで自動的に再試行されます。',
     errorFallback: '設定を保存できませんでした。',
     test: 'テスト',
     testing: 'テスト中…',

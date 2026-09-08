@@ -17,8 +17,11 @@ logging.basicConfig(
     format="%(asctime)s %(name)s %(levelname)s %(message)s",
 )
 
+import asyncio
+
 from .db import close_db, init_db
 from .enrichers import shutdown_all as shutdown_enrichers
+from .providers import health_retry_loop
 from .routers import analytics as analytics_router
 from .routers import auth as auth_router
 from .routers import codex as codex_router
@@ -39,7 +42,9 @@ from .users import bootstrap_admin
 async def lifespan(app: FastAPI):
     await init_db()
     await bootstrap_admin()
+    health_task = asyncio.create_task(health_retry_loop())
     yield
+    health_task.cancel()
     await shutdown_enrichers()
     await close_db()
 

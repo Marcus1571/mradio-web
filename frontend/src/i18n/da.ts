@@ -131,6 +131,8 @@ const da: Dict = {
     providerEnableToggle: '„Vis i afspillerens AI-menu“',
     providerEnableToggleHint:
       'Slå fra for at skjule den fra alles dropdown uden at afbryde forbindelsen — praktisk, når en brugskvote er nået.',
+    autoHiddenNote:
+      'Midlertidigt skjult fra dropdown-menuen efter en nylig fejl — forsøges automatisk igen i baggrunden.',
     errorFallback: 'Kunne ikke gemme indstillinger.',
     test: 'Test',
     testing: 'Tester…',

@@ -33,7 +33,17 @@ async def list_providers(user: dict = Depends(get_active_user)):
         # preference, so "Asking <name>..." names something real.
         "active": await enricher.active_provider(),
         "providers": [
-            {"name": name, "enabled": providers.provider_enabled(name, settings)}
+            {
+                "name": name,
+                "enabled": providers.provider_enabled(name, settings),
+                # True only while auto-hidden by a real failure (see
+                # providers.py's AUTO_HIDE_PROVIDERS/health_retry_loop),
+                # not for a manual toggle-off — lets the settings page
+                # show a distinct "temporarily hidden, retrying
+                # automatically" state instead of looking identical to
+                # an admin having switched it off on purpose.
+                "auto_hidden": providers.provider_hidden_by_failure(name),
+            }
             for name in visible
         ],
     }

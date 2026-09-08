@@ -371,6 +371,10 @@ class Enricher:
             else:
                 out = None
             if out:
+                if name in providers.AUTO_HIDE_PROVIDERS:
+                    providers.mark_provider_recovered(name)
                 return out
+            if name in providers.AUTO_HIDE_PROVIDERS:
+                providers.mark_provider_failed(name)
         return None
 

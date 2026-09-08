@@ -49,8 +49,9 @@ export interface Config {
 }
 
 export interface ProviderInfo {
-  name: 'opencode' | 'openai' | 'ollama' | 'codex' | 'grok' | 'gemini'
+  name: 'opencode' | 'openai' | 'ollama' | 'codex' | 'grok' | 'gemini' | 'openrouter'
   enabled: boolean
+  auto_hidden: boolean
 }
 
 export interface ProvidersResponse {

@@ -131,6 +131,8 @@ const it: Dict = {
     providerEnableToggle: '«Mostra nel menu AI del player»',
     providerEnableToggleHint:
       'Disattivalo per nasconderlo dal menu a tendina di tutti senza disconnettere — utile quando raggiungi una quota d’uso.',
+    autoHiddenNote:
+      'Nascosto temporaneamente dal menu a tendina dopo un errore recente — verrà ritentato automaticamente in background.',
     errorFallback: 'Impossibile salvare le impostazioni.',
     test: 'Prova',
     testing: 'Provando…',

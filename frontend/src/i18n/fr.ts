@@ -131,6 +131,8 @@ const fr: Dict = {
     providerEnableToggle: '« Afficher dans le menu IA du lecteur »',
     providerEnableToggleHint:
       'Désactivez pour le masquer du menu déroulant de tout le monde sans le déconnecter — pratique en cas de quota d’utilisation atteint.',
+    autoHiddenNote:
+      'Masqué temporairement du menu déroulant après un échec récent — nouvelle tentative automatique en arrière-plan.',
     errorFallback: "Impossible d'enregistrer les paramètres.",
     test: 'Tester',
     testing: 'Test…',

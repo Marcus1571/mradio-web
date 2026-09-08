@@ -131,6 +131,8 @@ const pt: Dict = {
     providerEnableToggle: '«Mostrar no menu de IA do leitor»',
     providerEnableToggleHint:
       'Desative para ocultá-lo do menu pendente de todos sem desligar — útil ao atingir uma cota de utilização.',
+    autoHiddenNote:
+      'Temporariamente oculto do menu pendente após uma falha recente — nova tentativa automática em segundo plano.',
     errorFallback: 'Não foi possível guardar as definições.',
     test: 'Testar',
     testing: 'A testar…',

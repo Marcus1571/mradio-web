@@ -363,6 +363,16 @@
   margin-bottom: var(--space-2xs);
 }
 
+.auto-hidden-note {
+  margin-top: var(--space-3xs);
+  margin-bottom: var(--space-2xs);
+  padding: var(--space-3xs) var(--space-xs);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
 .grok-mode-toggle {
   display: flex;
   gap: var(--space-md);

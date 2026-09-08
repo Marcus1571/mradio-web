@@ -129,6 +129,8 @@ const en = {
     providerEnableToggle: 'Show in the player’s AI menu',
     providerEnableToggleHint:
       'Turn this off to hide it from everyone’s dropdown without disconnecting — handy once you’ve hit a usage quota.',
+    autoHiddenNote:
+      'Temporarily hidden from the dropdown after a recent failure — retrying automatically in the background.',
     errorFallback: 'Could not save settings.',
     test: 'Test',
     testing: 'Testing…',

@@ -131,6 +131,8 @@ const es: Dict = {
     providerEnableToggle: '«Mostrar en el menú de IA del reproductor»',
     providerEnableToggleHint:
       'Desactívalo para ocultarlo del menú desplegable de todos sin desconectarlo — útil al alcanzar una cuota de uso.',
+    autoHiddenNote:
+      'Oculto temporalmente del menú desplegable tras un fallo reciente — se reintenta automáticamente en segundo plano.',
     errorFallback: 'No se pudo guardar la configuración.',
     test: 'Probar',
     testing: 'Probando…',

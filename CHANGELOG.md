@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.8.0] - 2026-09-08
+
+ChatGPT, Grok, Gemini, and OpenRouter now hide themselves from the
+player's AI menu automatically when they fail — no more picking a
+provider that's silently broken. If a real enrichment request through
+one of them fails (bad key, expired token, quota hit, network error),
+it drops out of the dropdown immediately for everyone. A background
+check retests it every 30 minutes and only brings it back once that
+retest actually succeeds — never blindly after a timer. The AI
+providers settings page shows a note when a provider is in this state,
+distinct from the manual enable/disable toggle. Ollama and NIM don't
+get this — a failure there is almost always a config mistake that
+won't fix itself.
+
 ## [1.7.1] - 2026-09-08
 
 Fixed a real bug from the 1.7.0 release: Gemini and OpenRouter both

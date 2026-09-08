@@ -131,6 +131,8 @@ const nb: Dict = {
     providerEnableToggle: '«Vis i spillerens AI-meny»',
     providerEnableToggleHint:
       'Slå av for å skjule den fra alles nedtrekksmeny uten å koble fra — praktisk når en bruksgrense er nådd.',
+    autoHiddenNote:
+      'Midlertidig skjult fra nedtrekksmenyen etter en nylig feil — prøves automatisk på nytt i bakgrunnen.',
     errorFallback: 'Kunne ikke lagre innstillingene.',
     test: 'Test',
     testing: 'Tester…',
