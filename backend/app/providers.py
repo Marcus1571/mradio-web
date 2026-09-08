@@ -211,15 +211,17 @@ def _gemini_output_text(data: dict) -> str | None:
 async def llm_gemini(settings: dict, prompt: str) -> str | None:
     """Uses Google's Interactions API (v1beta/interactions), not the
     OpenAI-compatibility shim — confirmed live that the compat shim's own
-    GET /models listing omits gemini-3.8-flash even though the model
+    GET /models listing omitted gemini-3.8-flash even though the model
     works fine on this endpoint, which is what produced the "model not
     found on this endpoint" Test failure this replaces. See
-    _gemini_output_text()'s docstring for the response shape."""
+    _gemini_output_text()'s docstring for the response shape. Default
+    model is gemini-3.5-flash-lite, not the newer 3.8 — see settings.py's
+    _DEFAULTS for why (a 25x-smaller daily quota on non-Lite models)."""
     api_key = settings.get("gemini_api_key")
     if not api_key:
         return None
     payload = {
-        "model": settings.get("gemini_model") or "gemini-3.8-flash",
+        "model": settings.get("gemini_model") or "gemini-3.5-flash-lite",
         "input": prompt,
         # Confirmed live: "system_instruction" is the real field name on
         # this API (not "instructions", the OpenAI Responses API's name
@@ -604,14 +606,14 @@ def _gemini_error_message(status_code: int, body: bytes) -> str:
 async def _test_gemini(settings: dict) -> tuple[bool, str]:
     """Makes a real request against the Interactions API (the same one
     llm_gemini() uses) rather than probing GET /models — confirmed live
-    that the OpenAI-compat shim's /models listing omits gemini-3.8-flash
+    that the OpenAI-compat shim's /models listing omitted gemini-3.8-flash
     even though the model works fine, which is exactly what produced the
     "model not found on this endpoint" false failure this replaces."""
     api_key = settings.get("gemini_api_key")
     if not api_key:
         return False, "No API key configured."
     payload = {
-        "model": settings.get("gemini_model") or "gemini-3.8-flash",
+        "model": settings.get("gemini_model") or "gemini-3.5-flash-lite",
         "input": 'Reply with exactly: {"trivia": "pong"}',
     }
     headers = {"x-goog-api-key": api_key, "Api-Revision": _GEMINI_API_REVISION}

@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.5.1] - 2026-09-08
+
+Changed Gemini's default model from `gemini-3.8-flash` to
+`gemini-3.5-flash-lite`. Confirmed via a real account's AI Studio
+rate-limit dashboard: every non-Lite free-tier Flash model shares a
+20-requests-**per-day** cap (resets only at midnight Pacific) — trivial
+to exhaust with normal use. The Lite variants get 500/day instead, on
+the same free tier. Existing installs with a saved `gemini_model` keep
+whatever they already have; this only changes the default for new/
+unconfigured setups.
+
 ## [1.5.0] - 2026-09-08
 
 Fixed Gemini's Test button showing "Connected, but model

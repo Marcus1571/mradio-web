@@ -49,9 +49,16 @@ _DEFAULTS = {
     # Ollama/NIM, this endpoint isn't user-swappable, so there's nothing
     # meaningful to configure there.
     "gemini_api_key": "",
-    "gemini_model": "gemini-3.8-flash",
+    # gemini-3.5-flash-lite, not gemini-3.8-flash: confirmed live via the
+    # user's own AI Studio rate-limit dashboard that every non-Lite Flash
+    # model on the free tier (2.5/3/3.5/3.6/3.7/3.8) shares the same
+    # 20-requests-PER-DAY cap (resets at midnight Pacific, not rolling) —
+    # trivially exhausted by more than one or two liner-notes requests.
+    # The Lite variants (3.1/3.5 flash-lite) get 500 RPD instead, 25x the
+    # headroom, same free tier, same account.
+    "gemini_model": "gemini-3.5-flash-lite",
     # 45s, not the 30s other providers default to — confirmed live that
-    # gemini-3.8-flash's reasoning ("thinking") tokens can push a simple
+    # Gemini's "thinking" models' reasoning tokens can push a simple
     # reply's latency well past 30s, and a request that times out here
     # just silently falls through llm_gemini()'s except clause to the
     # next provider in the fallback chain (or fails outright if Gemini

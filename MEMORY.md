@@ -3379,6 +3379,53 @@ so it gets its own 45s timeout rather than sharing the other
 providers' 10s `_TEST_TIMEOUT` — those are all fast, lightweight
 listing calls; Gemini's test genuinely can't be.
 
+## Gemini default switched from gemini-3.8-flash to gemini-3.5-flash-lite (2026-09-08, 1.5.1)
+
+Direct follow-up to 1.5.0. Even with the Interactions API fix working
+correctly, the user kept hitting "Gemini rejected the request: You
+exceeded your current quota... limit: 20" on the Test button shortly
+after 1.5.0 shipped. Initially mis-diagnosed as a per-minute limit
+(the retry countdown was shrinking, 35s → 10s, across repeated Test
+clicks) — wrong: a later Test click sent the countdown back UP to 41s,
+which a rolling per-minute window can't do. The real answer came from
+the user checking their own AI Studio rate-limit dashboard
+(`aistudio.google.com/rate-limit`) directly: `gemini-3.8-flash` showed
+**23/20 RPD** (requests-per-day, resets at midnight Pacific — a fixed
+daily cap, not rolling) — confirmed by the dashboard's own peak-usage
+chart spiking straight into the red "Limit" line. The countdown
+fluctuation was just each new request recalculating "time until the
+next slot frees up" within an already-blown daily bucket, which can
+go up or down depending on exactly which of the day's 23 requests are
+aging out of the window next — not a sign of an imminent full reset.
+
+Checked the same dashboard for every other free-tier Gemini model: all
+of 2.5-flash, 3-flash, 3.5-flash, 3.6-flash, and 3.7-flash share that
+identical 20 RPD ceiling — this isn't a 3.8-specific quirk, it's the
+free tier's standard allowance for any non-Lite Flash model. Only the
+"Lite" variants (`gemini-3.1-flash-lite`, `gemini-3.5-flash-lite`) get
+500 RPD — 25x more, same free tier, same account, no billing needed.
+User also asked about **Antigravity**, visible on the same dashboard —
+checked and ruled out: it's a distinct "Agents" product (Google's
+agentic coding tool), not a chat-completion model this app's
+liner-notes generation could point at.
+
+Switched the default `gemini_model` to `gemini-3.5-flash-lite`
+everywhere it was hardcoded (`settings.py`'s `_DEFAULTS`, both
+`llm_gemini()`'s and `_test_gemini()`'s `or "gemini-3.8-flash"`
+fallbacks in `providers.py`) — verified live via `_test_gemini()`
+itself (not just assumed) that the new model name works before
+committing. Also directly patched LT's already-saved
+`gemini_model: "gemini-3.8-flash"` in production `settings.json` via
+`settings.save()`, the same "code default alone isn't retroactive for
+existing saved data" pattern as the 1.1.1 Grok-mode-persistence fix —
+a code default change never touches a value a user (or earlier testing
+in this same session) already saved.
+
+`gemini_timeout`'s 45s default (from 1.5.0) and the Interactions API
+switch itself both stay correct regardless of which specific model is
+selected — this fix only concerns which model name ships as the
+out-of-the-box default, not the request/response mechanics.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

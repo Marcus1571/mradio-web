@@ -339,12 +339,19 @@ it, same as OpenCode/Ollama/NIM.
 
 **Fields:**
 
-- **Model**: defaults to `gemini-3.8-flash` on a fresh install — the
-  current Flash-family model on Google's free tier. Only Flash/
-  Flash-Lite models remain free as of April 2026; Pro models moved
-  behind billing. Google's model lineup changes fairly often — check
+- **Model**: defaults to `gemini-3.5-flash-lite` on a fresh install —
+  deliberately a "Lite" model, not the newest `gemini-3.8-flash`. Confirmed
+  via a real account's AI Studio rate-limit dashboard
+  (`aistudio.google.com/rate-limit`): every non-Lite free-tier Flash
+  model (2.5/3/3.5/3.6/3.7/3.8) shares a **20 requests-per-day** cap —
+  trivially exhausted by a couple of liner-notes requests, and it only
+  resets at midnight Pacific, not on a rolling basis. The Lite variants
+  (`gemini-3.1-flash-lite`, `gemini-3.5-flash-lite`) get **500/day**
+  instead, on the same free tier, same account. Google's model lineup
+  changes fairly often — check
   [ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models)
-  for the current free-tier model name if this one stops working.
+  or your own AI Studio rate-limit dashboard for current numbers before
+  switching to a non-Lite model.
 - **API key**: paste the key from step 2 above. Stored server side; the
   settings page only ever shows it redacted after saving.
 
@@ -355,10 +362,6 @@ confirmed live that the compat shim's own model listing didn't include
 produced a false "model not found" Test failure early on. The
 Interactions endpoint isn't user-configurable (no base URL field),
 since there's only the one real endpoint to point at.
-
-Free-tier rate limits are modest (roughly 10-15 requests/minute, up to
-1,000/day on Flash) but comfortable for this app's one-track-at-a-time
-enrichment pattern.
 
 ### Ollama
 
