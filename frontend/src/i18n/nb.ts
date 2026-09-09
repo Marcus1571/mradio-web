@@ -76,6 +76,9 @@ const nb: Dict = {
     editFullNamePrompt: 'Nytt fullt navn for {username}:',
     editEmailPrompt: 'Ny e-post for {username}:',
     editProfileDone: 'Profilen er oppdatert.',
+    resendInvite: 'Send invitasjon på nytt',
+    resendInviteDone: 'Invitasjons-e-post sendt.',
+    resendInviteFailed: 'Kunne ikke sende invitasjons-e-posten.',
   },
   aiSettings: {
     title: 'AI-leverandører',

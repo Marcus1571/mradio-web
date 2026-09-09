@@ -76,6 +76,9 @@ const tr: Dict = {
     editFullNamePrompt: '{username} için yeni ad soyad:',
     editEmailPrompt: '{username} için yeni e-posta:',
     editProfileDone: 'Profil güncellendi.',
+    resendInvite: 'Daveti yeniden gönder',
+    resendInviteDone: 'Davet e-postası gönderildi.',
+    resendInviteFailed: 'Davet e-postası gönderilemedi.',
   },
   aiSettings: {
     title: 'AI sağlayıcıları',

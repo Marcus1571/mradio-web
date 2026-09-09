@@ -76,6 +76,9 @@ const de: Dict = {
     editFullNamePrompt: 'Neuer vollständiger Name für {username}:',
     editEmailPrompt: 'Neue E-Mail für {username}:',
     editProfileDone: 'Profil aktualisiert.',
+    resendInvite: 'Einladung erneut senden',
+    resendInviteDone: 'Einladungs-E-Mail gesendet.',
+    resendInviteFailed: 'Die Einladungs-E-Mail konnte nicht gesendet werden.',
   },
   aiSettings: {
     title: 'KI-Anbieter',

@@ -76,6 +76,9 @@ const da: Dict = {
     editFullNamePrompt: 'Nyt fulde navn for {username}:',
     editEmailPrompt: 'Ny e-mail for {username}:',
     editProfileDone: 'Profil opdateret.',
+    resendInvite: 'Send invitation igen',
+    resendInviteDone: 'Invitations-e-mail sendt.',
+    resendInviteFailed: 'Kunne ikke sende invitations-e-mailen.',
   },
   aiSettings: {
     title: 'AI-udbydere',

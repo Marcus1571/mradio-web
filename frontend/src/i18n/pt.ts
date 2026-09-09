@@ -76,6 +76,9 @@ const pt: Dict = {
     editFullNamePrompt: 'Novo nome completo para {username}:',
     editEmailPrompt: 'Novo email para {username}:',
     editProfileDone: 'Perfil atualizado.',
+    resendInvite: 'Reenviar convite',
+    resendInviteDone: 'E-mail de convite enviado.',
+    resendInviteFailed: 'Não foi possível enviar o e-mail de convite.',
   },
   aiSettings: {
     title: 'Fornecedores de IA',

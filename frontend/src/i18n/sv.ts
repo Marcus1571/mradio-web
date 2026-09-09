@@ -76,6 +76,9 @@ const sv: Dict = {
     editFullNamePrompt: 'Nytt fullständigt namn för {username}:',
     editEmailPrompt: 'Ny e-post för {username}:',
     editProfileDone: 'Profilen har uppdaterats.',
+    resendInvite: 'Skicka inbjudan igen',
+    resendInviteDone: 'Inbjudningsmejl skickat.',
+    resendInviteFailed: 'Kunde inte skicka inbjudningsmejlet.',
   },
   aiSettings: {
     title: 'AI-leverantörer',

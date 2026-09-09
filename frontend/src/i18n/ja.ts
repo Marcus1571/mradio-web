@@ -76,6 +76,9 @@ const ja: Dict = {
     editFullNamePrompt: '{username} の新しいフルネーム：',
     editEmailPrompt: '{username} の新しいメールアドレス：',
     editProfileDone: 'プロフィールを更新しました。',
+    resendInvite: '招待メールを再送信',
+    resendInviteDone: '招待メールを送信しました。',
+    resendInviteFailed: '招待メールを送信できませんでした。',
   },
   aiSettings: {
     title: 'AIプロバイダー',

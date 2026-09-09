@@ -76,6 +76,9 @@ const nl: Dict = {
     editFullNamePrompt: 'Nieuwe volledige naam voor {username}:',
     editEmailPrompt: 'Nieuw e-mailadres voor {username}:',
     editProfileDone: 'Profiel bijgewerkt.',
+    resendInvite: 'Uitnodiging opnieuw versturen',
+    resendInviteDone: 'Uitnodigingsmail verzonden.',
+    resendInviteFailed: 'Kon de uitnodigingsmail niet verzenden.',
   },
   aiSettings: {
     title: 'AI-providers',

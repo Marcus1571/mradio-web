@@ -76,6 +76,9 @@ const el: Dict = {
     editFullNamePrompt: 'Νέο πλήρες όνομα για {username}:',
     editEmailPrompt: 'Νέο email για {username}:',
     editProfileDone: 'Το προφίλ ενημερώθηκε.',
+    resendInvite: 'Επαναποστολή πρόσκλησης',
+    resendInviteDone: 'Το email πρόσκλησης στάλθηκε.',
+    resendInviteFailed: 'Δεν ήταν δυνατή η αποστολή του email πρόσκλησης.',
   },
   aiSettings: {
     title: 'Πάροχοι AI',

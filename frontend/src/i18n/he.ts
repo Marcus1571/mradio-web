@@ -76,6 +76,9 @@ const he: Dict = {
     editFullNamePrompt: 'שם מלא חדש עבור {username}:',
     editEmailPrompt: 'דוא"ל חדש עבור {username}:',
     editProfileDone: 'הפרופיל עודכן.',
+    resendInvite: 'שליחת הזמנה מחדש',
+    resendInviteDone: 'הודעת ההזמנה נשלחה.',
+    resendInviteFailed: 'לא ניתן היה לשלוח את הודעת ההזמנה.',
   },
   aiSettings: {
     title: 'ספקי AI',

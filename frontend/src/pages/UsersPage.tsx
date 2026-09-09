@@ -80,6 +80,15 @@ export function UsersPage({ onBack, t }: { onBack?: () => void; t: TFunction }) 
     await refresh()
   }
 
+  async function resendInvite(u: User) {
+    try {
+      await api.post(`/api/users/${u.id}/resend-invite`)
+      window.alert(t('users.resendInviteDone'))
+    } catch (err) {
+      window.alert(err instanceof ApiError ? err.message : t('users.resendInviteFailed'))
+    }
+  }
+
   async function resetPassword(u: User) {
     const next = window.prompt(t('users.resetPasswordPrompt', { username: u.username }))
     if (!next) return
@@ -167,6 +176,11 @@ export function UsersPage({ onBack, t }: { onBack?: () => void; t: TFunction }) 
                       <button type="button" onClick={() => openEdit(u)}>
                         {t('users.editProfile')}
                       </button>
+                      {u.email && (
+                        <button type="button" onClick={() => void resendInvite(u)}>
+                          {t('users.resendInvite')}
+                        </button>
+                      )}
                       <button type="button" onClick={() => void resetPassword(u)}>
                         {t('users.resetPassword')}
                       </button>

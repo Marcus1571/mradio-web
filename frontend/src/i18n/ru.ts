@@ -76,6 +76,9 @@ const ru: Dict = {
     editFullNamePrompt: 'Новое полное имя для {username}:',
     editEmailPrompt: 'Новая эл. почта для {username}:',
     editProfileDone: 'Профиль обновлён.',
+    resendInvite: 'Отправить приглашение повторно',
+    resendInviteDone: 'Письмо с приглашением отправлено.',
+    resendInviteFailed: 'Не удалось отправить письмо с приглашением.',
   },
   aiSettings: {
     title: 'Провайдеры ИИ',

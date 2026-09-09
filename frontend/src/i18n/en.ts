@@ -74,6 +74,9 @@ const en = {
     editFullNamePrompt: 'New full name for {username}:',
     editEmailPrompt: 'New email for {username}:',
     editProfileDone: 'Profile updated.',
+    resendInvite: 'Resend invite',
+    resendInviteDone: 'Invite email sent.',
+    resendInviteFailed: 'Could not send the invite email.',
   },
   aiSettings: {
     title: 'AI providers',
