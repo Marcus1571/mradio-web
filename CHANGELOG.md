@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.15.1] - 2026-09-09
+
+Extended the same anti-hallucination prompt hardening (v1.15.0) to
+**Ollama** — user spotted `gemma4:e4b-it-qat` inventing vague, unverifiable
+filler ("featured in live sets and radio rotations that celebrate
+contemporary jazz innovation") for a real Robert Glasper track. Verified
+live: the same prompt against the same model now stays to disciplined,
+checkable facts only.
+
 ## [1.15.0] - 2026-09-09
 
 Three real, live-confirmed provider fixes from a full provider-by-

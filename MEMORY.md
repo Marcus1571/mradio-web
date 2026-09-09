@@ -4418,7 +4418,25 @@ directly, not a hand-copied prompt string) — not just theorized.
 `python3 -m py_compile` on all touched backend files, `npm run build`
 clean (no frontend changes this session, backend-only fixes).
 
-## Known unknowns
+## Ollama added to the categorical hallucination hardening (fixed 2026-09-09, 1.15.1)
+
+User caught a real example live in the app: with Ollama selected
+(`gemma4:e4b-it-qat` at `192.168.88.8:11434`), a genuinely real Robert
+Glasper track ("Yes I'm Country (And That's OK)") got real facts
+right (born Houston 1978, blends jazz/hip-hop/R&B, worked with Herbie
+Hancock/Kendrick Lamar — all true) but padded with unverifiable filler
+("has been featured in live sets and radio rotations that celebrate
+contemporary jazz innovation" — vague, unfalsifiable, not a real
+fact). The original 1.13.0-1.15.0 exemption for ollama was reasoned
+from a QUOTA angle ("no shared-quota pressure pushing toward a must-
+answer instinct") that never actually addressed hallucination risk —
+those are separate concerns, and self-hosted models fabricate just as
+readily as cloud ones once asked for more detail than they actually
+know. Added `"ollama"` to `textutil.py`'s `_CATEGORICAL_PROVIDERS`.
+Verified live against the exact same model/prompt that produced the
+original bad answer: re-ran with the new hardening and got a short,
+fully-checkable 2-sentence answer instead (24.2s on the P5000, no
+padding, no invented specifics).
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
   `https://integrate.api.nvidia.com/v1`" — that's not independently

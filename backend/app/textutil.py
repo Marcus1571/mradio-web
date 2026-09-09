@@ -195,23 +195,29 @@ CATEGORICAL_HALLUCINATION_RULES = (
 # need every advantage to actually finish within budget, and a shorter
 # target (this rule set's real effect, independent of the hallucination
 # angle) means less to reason through before emitting real JSON.
-# Deliberately NOT applied to codex/grok (subscription-backed, the
-# admin's own paid account — not tested for this failure mode this
-# session, and a behavior change there is a bigger blast radius given
-# real money is involved) or opencode/ollama (self-hosted, no shared
-# free-tier quota pressure pushing toward a "must answer" instinct).
-_CATEGORICAL_PROVIDERS = frozenset({"mistral", "openai", "gemini", "openrouter"})
+# ollama added 2026-09-09 too — user spotted a real example
+# (gemma4:e4b-it-qat inventing vague "featured in live sets and radio
+# rotations" filler for Robert Glasper's "Yes I'm Country") showing
+# self-hosted models fabricate just as readily as cloud ones; the
+# original "no shared-quota pressure" reasoning for exempting it never
+# actually addressed hallucination risk, just quota economics — a
+# separate concern. Still deliberately NOT applied to codex/grok
+# (subscription-backed, the admin's own paid account — not tested for
+# this failure mode, and a behavior change there is a bigger blast
+# radius given real money is involved) or opencode (untested this
+# round; revisit if it shows the same pattern).
+_CATEGORICAL_PROVIDERS = frozenset({"mistral", "openai", "gemini", "openrouter", "ollama"})
 
 
 def apply_provider_rules(prompt: str, provider: str) -> str:
     """Provider-targeted prompt additions. mistral/openai(NIM)/gemini/
-    openrouter get SINCERITY_RULES + CATEGORICAL_HALLUCINATION_RULES +
+    openrouter/ollama get SINCERITY_RULES + CATEGORICAL_HALLUCINATION_RULES +
     a length-target override — see CATEGORICAL_HALLUCINATION_RULES'
     comment for the full story: a competing "aim for 750-850
     characters" instruction earlier in the prompt kept winning against
     a later "ignore that" rule unless the original instruction was
-    replaced outright, not just argued with. opencode and ollama keep
-    the stock prompt; codex/grok too (see _CATEGORICAL_PROVIDERS)."""
+    replaced outright, not just argued with. opencode keeps the stock
+    prompt; codex/grok too (see _CATEGORICAL_PROVIDERS)."""
     if provider in _CATEGORICAL_PROVIDERS:
         target = ("Aim for 750-850 characters with a hard "
                   "maximum of 850 — if your draft runs long, tighten it.")
