@@ -4061,6 +4061,27 @@ API" tab — explicitly not "Vibe" — fields, free-tier limits, the
 researched and recommended in the same conversation but not
 implemented — a real pending follow-up, not forgotten scope.
 
+## Mistral made admin-only, immediately after shipping (fixed 2026-09-09, 1.12.1)
+
+Same session as the 1.12.0 build above — right after Mistral shipped as
+free-for-everyone, the user asked to make it admin-only instead ("let's
+have Mistral only available to admins for now"). Added `"mistral"` to
+`providers.py`'s `ADMIN_ONLY_PROVIDERS` (now `{"codex", "grok",
+"openrouter", "mistral"}`) — no other backend change needed, since
+`routers/enrich.py`'s `/api/enrich/providers` and
+`enrichers.py`'s `_usable_providers()` both already filter generically
+against that set for every provider, not per-provider special-cased
+logic. Unlike `openrouter`'s admin-only reasoning (a real, documented
+shared-quota concern), this one is explicitly NOT quota-driven — just
+"for now," so the code comment says exactly that rather than inventing
+a technical justification that isn't the real reason.
+
+Also fixed: the `aiSettings.mistralIntro` copy in all 15 languages and
+KB.md's "### Mistral" section both said "not admin-only" (accurate at
+write time, wrong one message later) — updated to "admin-only for now"
+in the same tone as the code comment, not a manufactured quota
+explanation.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

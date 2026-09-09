@@ -432,9 +432,11 @@ ever surfaces as a `401` on that call, never on the models listing.
 
 ### Mistral
 
-Not admin-only — free for everyone once configured, same as Gemini.
-Uses Mistral AI's free "Experiment" plan on La Plateforme (their
-developer API console, distinct from their consumer "Vibe" chat app).
+**Admin-only** (as of 2026-09-09, by explicit request — not a
+quota-driven restriction like OpenRouter's shared daily cap, just kept
+for admins for now). Uses Mistral AI's free "Experiment" plan on La
+Plateforme (their developer API console, distinct from their consumer
+"Vibe" chat app).
 
 **Getting an API key:**
 

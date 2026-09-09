@@ -129,8 +129,8 @@ const en = {
     openrouterNoteSuffix: 'for how to get a free API key.',
     mistralGroup: 'Mistral',
     mistralIntro:
-      "Mistral AI's free \"Experiment\" tier on La Plateforme — no credit card required, available to " +
-      'everyone once configured, not admin-only. Defaults to a smaller model that stays within the free ' +
+      "Mistral AI's free \"Experiment\" tier on La Plateforme — no credit card required. Admin-only for " +
+      'now. Defaults to a smaller model that stays within the free ' +
       "tier's quota (their flagship model is not included on this tier).",
     mistralNotePrefix: 'New to Mistral? See',
     mistralNoteLink: '"Getting an API key" in KB.md',

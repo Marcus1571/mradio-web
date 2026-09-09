@@ -131,8 +131,8 @@ const pt: Dict = {
     openrouterNoteSuffix: 'para obter uma chave API gratuita.',
     mistralGroup: 'Mistral',
     mistralIntro:
-      'O nível gratuito "Experiment" da Mistral AI na La Plateforme — sem necessidade de cartão de crédito, ' +
-      'disponível para todos após a configuração, não exclusivo de administradores. Por predefinição usa um ' +
+      'O nível gratuito "Experiment" da Mistral AI na La Plateforme — sem necessidade de cartão de crédito. ' +
+      'Por agora, exclusivo de administradores. Por predefinição usa um ' +
       'modelo mais pequeno que fica dentro da quota do nível gratuito (o modelo principal não está incluído neste nível).',
     mistralNotePrefix: 'Novo no Mistral? Veja',
     mistralNoteLink: '«Getting an API key» no KB.md',

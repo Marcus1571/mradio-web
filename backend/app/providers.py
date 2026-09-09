@@ -21,10 +21,10 @@ logger = logging.getLogger("mradio.providers")
 # user's explicit ordering request (2026-09-09): "the three with
 # subscription at the top, Mistral being the third" — a dropdown/list
 # order preference, not a functional grouping (mistral is a free-tier
-# key, not a subscription, and is NOT in ADMIN_ONLY_PROVIDERS below).
+# key, not a subscription).
 PROVIDERS = ("codex", "grok", "mistral", "opencode", "ollama", "openai", "gemini", "openrouter")
 
-# Providers restricted to admins only. Two different reasons feed this
+# Providers restricted to admins only. Three different reasons feed this
 # set: codex/grok (2026-09-07, user's explicit request) because a
 # regular user picking one would spend the admin's real money with no
 # visibility into it — both of Grok's modes are included, not just its
@@ -34,10 +34,14 @@ PROVIDERS = ("codex", "grok", "mistral", "opencode", "ollama", "openai", "gemini
 # free tier is a single shared daily quota (50 requests/day, confirmed
 # live) across every account using that one saved key; with several
 # users able to pick it, that quota could be exhausted by midday.
-# Deliberately NOT applied to gemini, whose free-tier daily caps are
-# per-model and comfortably higher (500/day on the Lite model this app
-# defaults to, see settings.py) — no shared-quota concern there.
-ADMIN_ONLY_PROVIDERS = frozenset({"codex", "grok", "openrouter"})
+# mistral (2026-09-09, user's explicit request: "let's have Mistral
+# only available to admins for now") — a temporary, deliberately
+# unexplained restriction rather than a quota-driven one like
+# openrouter's; revisit if the user says why later. Deliberately NOT
+# applied to gemini, whose free-tier daily caps are per-model and
+# comfortably higher (500/day on the Lite model this app defaults to,
+# see settings.py) — no shared-quota concern there.
+ADMIN_ONLY_PROVIDERS = frozenset({"codex", "grok", "openrouter", "mistral"})
 
 _OC_ONPATH: bool | None = None
 

@@ -131,8 +131,8 @@ const tr: Dict = {
     openrouterNoteSuffix: 'bölümüne bakın — ücretsiz API anahtarı nasıl alınır orada anlatılıyor.',
     mistralGroup: 'Mistral',
     mistralIntro:
-      'Mistral AI’ın La Plateforme üzerindeki ücretsiz "Experiment" katmanı — kredi kartı gerekmez, ' +
-      'yapılandırıldıktan sonra herkes kullanabilir, sadece yöneticilere özel değil. Varsayılan olarak ücretsiz ' +
+      'Mistral AI’ın La Plateforme üzerindeki ücretsiz "Experiment" katmanı — kredi kartı gerekmez. ' +
+      'Şimdilik yalnızca yöneticilere özel. Varsayılan olarak ücretsiz ' +
       'katmanın kotası içinde kalan daha küçük bir model kullanır (amiral gemisi modelleri bu katmana dahil değildir).',
     mistralNotePrefix: 'Mistral’a yeni misiniz? Bakın:',
     mistralNoteLink: 'KB.md içindeki "Getting an API key"',

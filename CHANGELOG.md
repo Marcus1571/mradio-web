@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1] - 2026-09-09
+
+Made **Mistral** admin-only (like ChatGPT/Grok/OpenRouter), by explicit
+request, immediately after 1.12.0 shipped it as free-for-everyone. Not
+a quota-driven restriction — just kept for admins for now. Updated the
+provider's intro copy (all 15 languages) and KB.md to match.
+
 ## [1.12.0] - 2026-09-09
 
 Added **Mistral AI** as an 8th AI liner-notes provider — their free

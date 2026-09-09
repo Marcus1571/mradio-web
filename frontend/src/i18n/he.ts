@@ -127,8 +127,8 @@ const he: Dict = {
     openrouterNoteSuffix: 'להוראות קבלת מפתח API בחינם.',
     mistralGroup: 'Mistral',
     mistralIntro:
-      'המסלול החינמי "Experiment" של Mistral AI ב-La Plateforme — אין צורך בכרטיס אשראי, זמין לכולם לאחר ' +
-      'ההגדרה, לא רק למנהלים. כברירת מחדל משתמש במודל קטן יותר שנשאר בתוך המכסה של המסלול החינמי ' +
+      'המסלול החינמי "Experiment" של Mistral AI ב-La Plateforme — אין צורך בכרטיס אשראי. ' +
+      'בשלב זה זמין למנהלים בלבד. כברירת מחדל משתמש במודל קטן יותר שנשאר בתוך המכסה של המסלול החינמי ' +
       '(המודל הדגל שלהם אינו כלול במסלול הזה).',
     mistralNotePrefix: 'חדש ב-Mistral? ראה',
     mistralNoteLink: '״Getting an API key״ ב-KB.md',
