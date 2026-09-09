@@ -24,10 +24,13 @@ _ACCENT_INK = "#e0f3f4"
 _FONT_DISPLAY = "Georgia, 'Times New Roman', serif"
 _FONT_BODY = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
 
-# Flat single-path recreation of favicon.svg's outer silhouette — the
-# original's blur filters, mask, and gradient decoration are dropped
-# entirely (neither renders reliably across email clients), leaving
-# just the bolt/arrow shape as one solid teal fill. Shipped as a real
+# Recreation of favicon.svg's outer silhouette, with its own gradient
+# fill + hairline dark stroke + drop shadow baked into a raster PNG
+# (not the original's feGaussianBlur/mask/glow layers, which don't
+# render reliably across email clients, and not a flat single fill
+# either — a first pass at flat teal read as a sticker; a gradient +
+# stroke + shadow gives it real material presence instead, per a user
+# reference of a similarly-dimensional logo mockup). Shipped as a real
 # PNG (frontend/public/email-logo.png, built into frontend/dist and
 # served by the app's own static mount) referenced by absolute URL —
 # NOT inline <svg>: Outlook desktop's Word-based rendering engine

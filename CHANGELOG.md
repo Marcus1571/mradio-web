@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.1] - 2026-09-09
+
+Gave the email logo real depth — a gradient fill, hairline dark stroke,
+and drop shadow instead of a flat single-color fill, which read as a
+sticker rather than a mark. Also fixed the production domain used to
+verify the previous release (`mradioweb.legba.myddns.rocks`, not the
+stale `radio.legba.myddns.rocks` from an outdated note).
+
 ## [1.9.0] - 2026-09-09
 
 Both outbound emails are now real branded HTML — dark theme, the app's

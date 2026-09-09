@@ -3764,6 +3764,30 @@ looks correct against the dark card background. Confirmed via
 the exported logo has real alpha transparency, not a baked-in
 background color that would show as a visible box around the mark.
 
+**Follow-up same day (1.9.1) — logo given real depth.** First-draft
+flat single-color fill read as a sticker, not a mark — user showed a
+reference (a "logo mockup" product image of a fox icon) with gradient
+fill, dark hairline edge stroke, and drop shadow, and asked for that
+"real, solid, fake-3D" quality. Rebuilt the same silhouette with an
+SVG `linearGradient` (light teal → mid teal → dark teal, upper-left to
+lower-right, mimicking a light source), a `stroke` in a near-black teal
+for edge definition against the dark card, and an `feDropShadow` filter
+— then re-rasterized via `rsvg-convert` at the same 112×108 (2x) size.
+Checked it held up at actual email display size (56×54), not just the
+larger preview render, before shipping — gradient/highlight detail can
+turn muddy at small sizes and that needed verifying separately.
+
+**Also caught while verifying**: the send-a-real-test-email step used
+a stale domain from this project's own memory file
+(`radio.legba.myddns.rocks`) instead of the real one
+(`mradioweb.legba.myddns.rocks`, confirmed live in NPM) — the memory
+was simply wrong, not stale-but-once-correct. Corrected
+`infra_landscape.md` directly. Lesson already logged generally
+elsewhere in this project (verify memory against current reality
+before asserting it as fact) but worth another concrete instance:
+this one silently broke a real user-facing asset URL until caught by
+actually checking the sent email, not just trusting the file.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
