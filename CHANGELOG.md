@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.16.5] - 2026-09-09
+
+Fixed a real, root-cause bug in the categorical hallucination rules
+(applies to every hardened provider): the "unknown artist/work" skip
+instruction was conflating two different situations — genuinely not
+recognizing an artist at all, vs. recognizing a real, well-known artist
+but not knowing this SPECIFIC track by name. Both were collapsing to
+the same blanket "No confident details are available" refusal, even
+when the model had real, certain, general facts about the artist
+themselves (era, nationality, style, notable associations). User
+flagged this as making the tool feel non-functional — declines that
+throw away real available knowledge instead of just staying silent on
+the part that's genuinely uncertain. Split into two explicit cases:
+unknown artist still declines fully (unchanged, still required); known
+artist/unknown track now fills SLOT 1 with genuine artist-level facts
+and skips the track-specific slots (year/city/character) rather than
+guessing at them or declining everything. Verified live via the real
+production Grok subscription: both previously-declined tracks (Herb
+Ellis' "Country Boy," Théodore Dubois' cello Fantaisie-Stück) now
+correctly surface real artist facts, consistently across repeat runs;
+the genuine fabrication trap still declines correctly, unaffected.
+
 ## [1.16.4] - 2026-09-09
 
 Added an 8th fact category to the hallucination allowlist (applies to
