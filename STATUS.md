@@ -4722,6 +4722,63 @@ tracks before concluding whether it's model temperature variance
 (0.1, not 0) or something structural about how deep in the prompt this
 slot sits.
 
+## Known-artist/unknown-track root-cause fix (fixed 2026-09-09, 1.16.5)
+
+User called the 1.16.4 fix insufficient — 4 more real tracks (Dubois
+cello piece, Rossini sonata, Tchaikovsky Rococo Variations, Herb
+Ellis' "Country Boy"), and the two declines ("No confident details are
+available") read as the app being non-functional, called "insulting."
+This was the right escalation: three sessions in a row had been adding
+narrow allowlist categories (cover facts, notable-recordings) without
+questioning whether the DECLINE mechanism itself was over-triggering.
+
+Diagnosed live, correctly this time — asked Grok directly whether it
+had ANY knowledge of Herb Ellis, separate from the specific "Country
+Boy" track. It answered immediately: real, certain, general facts
+(American jazz guitarist, mid-20th century, Oscar Peterson Trio
+association) — it plainly recognizes the ARTIST, just not this
+specific track by name. But the app's actual answer was a full,
+contentless decline. Root cause found in the existing "CRITICAL" skip
+instruction: it already drew the distinction in words ("recognizing a
+real, famous artist/work and genuinely not knowing one are
+different") but never actually told the model what to DO differently
+in the second case — only gave it the skip-everything instruction, so
+it defaulted to the safest, most defensive behavior for both
+situations rather than the one actually intended for total
+non-recognition.
+
+Fixed by splitting the instruction into two explicit, named cases:
+(A) don't recognize the artist at all → decline fully, unchanged
+behavior, still correct. (B) recognize the artist/composer (real,
+certain, general facts available) but don't know this specific
+track → fill SLOT 1 with genuine artist-level facts (who they are,
+era, style), explicitly skip slots 2-5 rather than guess at
+track-specific year/city/character. This is a fix to
+`CATEGORICAL_HALLUCINATION_RULES` itself (the shared constant every
+hardened provider uses), not a new allowlist category — a behavioral
+correction to when the existing categories are allowed to apply, not
+new content.
+
+**Verified live** via the real production Grok subscription, same
+`docker cp`-into-running-container method: both tracks that previously
+declined (Herb Ellis, Dubois) now correctly surface real artist facts,
+consistent across 2 repeat runs each (unlike 1.16.4's category 8,
+which was inconsistent run-to-run — this fix held reliably in
+testing). The genuine fabrication trap ("Xyzblorp Fakenstein") still
+declines correctly across 2 repeat runs, confirming case (A) is
+unaffected. The already-fixed Carpenters cover case still gives a
+true, non-fabricated answer (didn't happen to surface the cover fact
+on this particular run — expected, already-documented variance from
+1.16.3/1.16.4, not a new regression introduced here).
+
+This is judged the actual root-cause fix for the "feels thin/useless"
+complaint, more than any of the three prior narrow-category additions
+— those were treating symptoms (missing specific fact types) while
+this addresses the mechanism that was suppressing legitimate,
+already-known artist-level information on any track the model didn't
+recognize by exact title, which is a far more common case than any
+single missing fact category.
+
 ## Where things live
 
 - `backend/app/` — one module per concern: `auth.py`/`users.py`/`db.py`

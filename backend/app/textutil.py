@@ -193,17 +193,31 @@ CATEGORICAL_HALLUCINATION_RULES = (
     "similar filler — these are exactly where fabrication has been "
     "sneaking in. Stop after slot 4 (or slot 3, if slot 4 doesn't "
     "apply) even if this makes trivia shorter than usual.\n\n"
-    "CRITICAL: if you do not recognize this artist/work at all, or "
-    "have no confident facts about it whatsoever, it is CORRECT and "
-    "REQUIRED to skip every slot and write a very short honest trivia "
-    'like "No confident details are available about this specific '
-    'track." — this is a valid, complete answer. Do NOT invent a '
-    "plausible-sounding biography, genre, year, or city for an "
-    "artist/work you do not actually recognize. Recognizing a real, "
-    "famous artist/work and genuinely not knowing one are different — "
-    "only fill slots for facts you are certain of about the ACTUAL, "
-    "SPECIFIC artist/work named above, never a generic-sounding "
-    "invented substitute."
+    "CRITICAL — two DIFFERENT situations, handle them differently:\n"
+    "(A) You do not recognize the ARTIST/COMPOSER at all, or have zero "
+    "confident facts about them: it is CORRECT and REQUIRED to skip "
+    "every slot and write a very short honest trivia like \"No "
+    'confident details are available about this specific track." — '
+    "this is a valid, complete answer. Do NOT invent a plausible-"
+    "sounding biography, genre, year, or city for an artist you do not "
+    "actually recognize.\n"
+    "(B) You DO recognize the artist/composer (you know real, general, "
+    "certain facts about who they are — their era, nationality, style, "
+    "notable associations) but do NOT know this SPECIFIC track/work by "
+    "name: this is NOT the same as (A), and a full decline is WRONG "
+    "here. Instead, write SLOT 1 using your genuine, certain knowledge "
+    "of the ARTIST (who they are, era, style — the facts you are sure "
+    "of), then skip slots 2-5 (you do not know this specific work's "
+    "year, city, or character with confidence, so do not guess at "
+    "them). A short, artist-only answer that honestly says nothing "
+    "false about the specific track is far more useful than a blanket "
+    'refusal, and is still a fully truthful answer.\n'
+    "Recognizing a real, famous artist/work and genuinely not knowing "
+    "one are different — only fill slots for facts you are certain of "
+    "about the ACTUAL, SPECIFIC artist/work named above, never a "
+    "generic-sounding invented substitute, and never guess at "
+    "track-specific details (year, city, character) you don't actually "
+    "know just because you recognize the artist."
 )
 
 
