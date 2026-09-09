@@ -10,12 +10,17 @@ from .auth import _token_hash
 from .db import get_db, tx
 
 RESET_TTL = timedelta(hours=1)
+# Invite links (new-account welcome email) reuse this same token
+# mechanism but need a much longer window than "I forgot my password
+# right now" — an invited person checks their email on their own
+# schedule, not necessarily same-day.
+INVITE_TTL = timedelta(days=7)
 
 
-async def create_reset_token(user_id: int) -> str:
+async def create_reset_token(user_id: int, ttl: timedelta = RESET_TTL) -> str:
     raw_token = secrets.token_urlsafe(32)
     now = datetime.now(timezone.utc)
-    expires = now + RESET_TTL
+    expires = now + ttl
     async with tx() as db:
         await db.execute(
             "INSERT INTO password_resets (token_hash, user_id, created_at, expires_at) "

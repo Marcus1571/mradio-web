@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.9.0] - 2026-09-09
+
+Both outbound emails are now real branded HTML — dark theme, the app's
+own logo mark, teal accent, serif headline — instead of plain text:
+
+- **Password reset**: same link and expiry as before, now with a
+  proper design.
+- **New: welcome/invite email.** When an admin creates a new user
+  *with* an email address filled in right at creation, that person now
+  gets an invitation to set their own password directly, instead of
+  relying on the admin to hand them a temporary one. Adding an email
+  to an existing account later doesn't trigger this — only having one
+  at creation time does. The invite link lasts 7 days (vs. 1 hour for
+  a password-reset link, since an invite is checked on the recipient's
+  own schedule, not urgently).
+
 ## [1.8.0] - 2026-09-08
 
 ChatGPT, Grok, Gemini, and OpenRouter now hide themselves from the

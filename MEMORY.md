@@ -3659,6 +3659,111 @@ the actual Gemini API → success → correctly un-hidden. Not a
 simulated/mocked test; a genuine round trip through the real retry
 mechanism against a real external API.
 
+## Branded HTML emails (password reset + new welcome/invite email) (added 2026-09-09, 1.9.0)
+
+User asked for two things: (1) turn the plain-text "forgot password"
+email into a real branded HTML design matching the app's dark UI
+theme, using the Hallmark skill for design discipline; (2) add a new
+welcome/invite email, sent only when an admin fills in a new user's
+email address at creation time (not if added later via profile edit —
+the user's own explicit distinction), with real warmth — specifically
+referencing Plex's "Someone wonderful has invited you..." style
+phrasing.
+
+**Design approach**: invoked the Hallmark skill, but email is its own
+constrained genre — Hallmark's web macrostructure/nav/footer catalog
+doesn't apply (Outlook's Word-based rendering engine can't do flex/
+grid/CSS-custom-properties/most modern CSS at all). Took Hallmark's
+*judgment* (genre discipline, no invented content, real typographic
+hierarchy, calm copy on frustration paths per `copy.md`'s explicit ban
+on humor there) and built actual markup as table-based/inline-styled
+HTML, the standard bulletproof-email pattern. Single-column centered
+card: logo header, headline, body, one CTA button, footer — deliberately
+plain structurally, since an email's job is "get to the one link," not
+demonstrate layout range.
+
+**Colors**: converted the app's real dark-theme OKLCH tokens
+(`frontend/src/index.css`) to hex by hand (email clients don't parse
+`oklch()`) — paper `#111419`, ink `#edebe7`, teal accent `#35b9c0`
+(from `--accent: oklch(72% 0.11 200)` in dark mode). Fonts: Georgia/
+serif stack as the email-safe equivalent of the app's actual Newsreader
+display face (web fonts aren't reliably available in email), system
+sans-serif stack for body (equivalent to Hanken Grotesk).
+
+**Logo**: the real favicon (`frontend/public/favicon.svg`) is an
+ornate purple/violet mark with `feGaussianBlur` filters, a `<mask>`,
+and gradient fills — none of which render in email clients (Outlook
+strips SVG filters/masks entirely; many clients don't render inline
+`<svg>` at all). Extracted just the outer silhouette path (grep'd the
+first `<path fill="#863bff" d="...">` out of the favicon, ignoring
+every blur/mask/glow layer) and recreated it as one flat teal fill —
+reads clearly as the same bolt/arrow mark at a glance, works as a
+single flat color. **First draft used inline `<svg>`** — reconsidered
+after confirming Outlook desktop doesn't render inline SVG in email at
+all (only Gmail/Apple Mail/modern webmail do) — switched to a real
+transparent PNG (`rsvg-convert`, confirmed `RGBA` mode via file
+inspection) referenced via a normal `<img src>`, universally supported.
+Shipped as `frontend/public/email-logo.png` — lands in `frontend/dist`
+via Vite's verbatim `public/` copy, served by the app's own existing
+static-file mount (`main.py`'s `_CacheAwareStaticFiles`), so the emailed
+`<img>` URL is just `{base_url}/email-logo.png` — no separate asset
+hosting needed.
+
+**Welcome-email mechanism — the real design decision**: the existing
+"Add user" flow has an admin type a **temporary password** for the new
+account (`must_change_password=True`, forced change at first login) —
+there was no existing "invite link" concept. Rather than emailing that
+admin-typed password (weak UX, doesn't match "great invitation"),
+reused the existing `password_reset` token system generically — it
+already didn't care *why* a token was issued, just validated hash/
+expiry/single-use. Added a `ttl` parameter to
+`create_reset_token()` (previously hardcoded to the 1-hour
+`RESET_TTL`) and a new `INVITE_TTL = timedelta(days=7)` — a forgot-
+password link is urgent (same-session), an invite is checked on the
+recipient's own schedule, so it needed a much longer window (explicit
+user confirmation on this exact tradeoff before building). The
+existing `/reset-password` frontend page and `POST /api/auth/reset-
+password` endpoint are reused as-is — an invited user clicking the
+email link lands on the identical "set a new password" screen a
+locked-out user would, and `reset_password()` already correctly clears
+`must_change_password` on success, so the admin-typed temp password
+becomes moot the moment the real recipient sets their own (though it
+still works as a fallback path if someone logs in with it directly,
+unchanged from before).
+
+**Only-at-creation-time trigger**: `routers/users.py`'s `create_user`
+checks `if body.email:` — `UserCreateRequest`'s email field, only
+populated on the POST body at creation. `update_user` (PATCH, used for
+later profile edits) has entirely separate code with no email-sending
+call at all, so adding an email later is structurally incapable of
+triggering this, not just deliberately skipped — matches the user's
+own framing ("if the user adds it later on his own, no email") exactly.
+
+**Refactor**: `_base_url()` existed as a private helper inside
+`routers/auth.py`, used only by the forgot-password flow. Moved to
+`email_sender.py` as a public `base_url()` once `routers/users.py`
+needed the identical logic for the invite flow — same "whichever
+domain a listener actually used to reach the app" reasoning, shared
+rather than duplicated.
+
+**`email_sender.py`**: extended `send_email()` with an optional
+`html_body` param; when present, uses stdlib `EmailMessage.
+add_alternative(html, subtype="html")` for a proper multipart/
+alternative message (HTML for real clients, the existing plain-text
+body remains as the fallback for clients that don't render HTML) — no
+new dependency, matching the project's existing "stdlib smtplib only"
+constraint documented in that file's own module docstring.
+
+**Verified before shipping**: rendered both templates to standalone
+HTML files and screenshotted via headless Chrome (not just read the
+Python source) — confirmed the dark card, logo, serif headline, teal
+button, and footer all render correctly, and specifically re-verified
+after the inline-SVG→PNG logo swap that the transparent PNG still
+looks correct against the dark card background. Confirmed via
+`rsvg-convert`'s own PNG header inspection (`8-bit/color RGBA`) that
+the exported logo has real alpha transparency, not a baked-in
+background color that would show as a visible box around the mark.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

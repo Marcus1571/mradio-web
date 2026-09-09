@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
-from .. import auth, email_sender, password_reset, smtp_settings, users
+from .. import auth, email_sender, email_templates, password_reset, smtp_settings, users
 from ..auth import SESSION_COOKIE_NAME
 from ..deps import get_current_user
 from ..models import (ChangePasswordRequest, ForgotPasswordRequest, LoginRequest,
@@ -58,22 +58,6 @@ async def change_password(body: ChangePasswordRequest,
     return _user_out(await users.get_by_id(user["id"]))
 
 
-def _base_url(request: Request, override: str) -> str:
-    """Whichever domain a listener actually used to reach the app is the
-    one that should come back in their reset email — so this prefers the
-    live request's own forwarded host over a fixed admin setting, which
-    would be wrong for every domain except the one typed in. The admin's
-    `public_url` override exists only as a fallback for an unusual proxy
-    setup that doesn't forward Host/X-Forwarded-Host reliably."""
-    if override:
-        return override.rstrip("/")
-    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
-    if not host:
-        return ""
-    scheme = request.headers.get("x-forwarded-proto", "https")
-    return f"{scheme}://{host}"
-
-
 @router.post("/forgot-password")
 async def forgot_password(body: ForgotPasswordRequest, request: Request):
     # Always the same response regardless of outcome — whether the email
@@ -83,15 +67,16 @@ async def forgot_password(body: ForgotPasswordRequest, request: Request):
     user = await users.get_by_email(body.email)
     if user is not None and not user["disabled"]:
         cfg = smtp_settings.load()
-        base_url = _base_url(request, cfg.get("public_url", ""))
-        if base_url:
+        base = email_sender.base_url(request, cfg.get("public_url", ""))
+        if base:
             token = await password_reset.create_reset_token(user["id"])
-            link = f"{base_url}/reset-password?token={token}"
+            link = f"{base}/reset-password?token={token}"
             await email_sender.send_email(
-                user["email"], "Reset your mradio-web password",
+                user["email"], "Reset your mradio web password",
                 f"Click the link below to reset your password:\n\n{link}\n\n"
                 "This link expires in 1 hour and can only be used once. "
                 "If you didn't request this, you can ignore this email.",
+                html_body=email_templates.password_reset_html(link),
             )
     return {"ok": True}
 

@@ -459,9 +459,22 @@ assumes either way.
 ## 7. Configuring email (SMTP)
 
 From the user menu → **Settings** → **Email (SMTP)** (admin only). This is
-one shared outgoing-mail configuration for the whole app, used only to
-send self-service "forgot password" reset links (§4) — nobody's inbox is
-read, and there's no other use for it yet.
+one shared outgoing-mail configuration for the whole app — nobody's
+inbox is read, only sent from. Two flows use it:
+
+- **Forgot password** (§4): a self-service reset link, sent to whatever
+  address is already on the account.
+- **New-account invite**: when an admin creates a user *with* an email
+  address filled in at creation time, that person gets a "you've been
+  invited" email with a link to set their own password — the same
+  one-time-link mechanism as the reset email, just with a 7-day window
+  instead of 1 hour. Adding an email to an *existing* account later
+  (via profile edit) does **not** trigger this — only having one at the
+  moment of creation does, so an admin backfilling emails for old
+  accounts doesn't accidentally spam everyone with invite links.
+
+Both emails share the same branded HTML template (dark theme, the
+app's own logo mark, teal accent) — see `backend/app/email_templates.py`.
 
 ### Using Gmail
 
