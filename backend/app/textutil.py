@@ -201,12 +201,29 @@ CATEGORICAL_HALLUCINATION_RULES = (
 # self-hosted models fabricate just as readily as cloud ones; the
 # original "no shared-quota pressure" reasoning for exempting it never
 # actually addressed hallucination risk, just quota economics — a
-# separate concern. Still deliberately NOT applied to codex/grok
-# (subscription-backed, the admin's own paid account — not tested for
-# this failure mode, and a behavior change there is a bigger blast
-# radius given real money is involved) or opencode (untested this
-# round; revisit if it shows the same pattern).
-_CATEGORICAL_PROVIDERS = frozenset({"mistral", "openai", "gemini", "openrouter", "ollama"})
+# separate concern.
+# grok added 2026-09-09 too — user spotted it live in the app giving a
+# full, confident biography (Compay Segundo's birth year, the song's
+# 1940s composition decade, Buena Vista Social Club's 1997 release) for
+# a Kora Jazz Trio COVER of "Chan Chan" — every fact was about the
+# ORIGINAL composer/recording, stated with total confidence, none of it
+# independently re-verified against a source in that session (unlike
+# the live-verified hallucination this project caught and fixed for
+# Mistral/Gemini/NIM/OpenRouter/Ollama). The original exemption reason
+# ("subscription-backed, admin's own paid account, bigger blast radius
+# if changed") was a real caution about SHIPPING a change untested, not
+# a claim that grok doesn't hallucinate — same category error as
+# ollama's original "no quota pressure" exemption above. Verification
+# for this one happens through the real app/account (per the operator's
+# choice, since grok's subscription OAuth token lives server-side, not
+# reachable from a standalone test script the way Ollama's open LAN
+# endpoint was) rather than a live API script — check STATUS.md's entry
+# for this fix for how that verification actually went.
+# Still deliberately NOT applied to codex (subscription-backed, the
+# admin's own paid account, genuinely untested for this failure mode)
+# or opencode (untested this round; revisit if it shows the same
+# pattern).
+_CATEGORICAL_PROVIDERS = frozenset({"mistral", "openai", "gemini", "openrouter", "ollama", "grok"})
 
 
 # gpt-oss-specific, not Ollama-provider-wide: this is a MODEL trait, not a
@@ -250,13 +267,13 @@ _GPT_OSS_ANTI_LOOP_RULES = (
 
 def apply_provider_rules(prompt: str, provider: str, model: str = "") -> str:
     """Provider-targeted prompt additions. mistral/openai(NIM)/gemini/
-    openrouter/ollama get SINCERITY_RULES + CATEGORICAL_HALLUCINATION_RULES +
+    openrouter/ollama/grok get SINCERITY_RULES + CATEGORICAL_HALLUCINATION_RULES +
     a length-target override — see CATEGORICAL_HALLUCINATION_RULES'
     comment for the full story: a competing "aim for 750-850
     characters" instruction earlier in the prompt kept winning against
     a later "ignore that" rule unless the original instruction was
     replaced outright, not just argued with. opencode keeps the stock
-    prompt; codex/grok too (see _CATEGORICAL_PROVIDERS).
+    prompt; codex too (see _CATEGORICAL_PROVIDERS).
 
     `model` is an optional hint (Ollama's configured model name) used
     only to add gpt-oss's own anti-deliberation-loop rules on top of the
