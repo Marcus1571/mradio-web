@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.14.0] - 2026-09-09
+
+Fixed a real gap found while investigating a user report: when the
+new-account invite email failed to send (bad SMTP credentials,
+provider hiccup, etc.), the account was still created successfully
+and nothing anywhere — API response or server log — showed that the
+email didn't go out. Send failures are now logged
+(`mradio.users` logger), and admins can manually trigger a fresh
+invite at any time via a new **Resend invite** button on the Users
+page (also useful after correcting a user's email address, since
+changing it there never sends anything on its own by design).
+
 ## [1.13.0] - 2026-09-09
 
 Hardened Mistral's enrichment prompt with a much stronger,

@@ -4194,6 +4194,51 @@ system message was silently telling every provider to think of itself
 as classical-music-only while the user message asked it to handle any
 genre. Fixed to a genre-neutral phrasing across all 4 sites.
 
+## Invite-email send failures were invisible; added manual resend (fixed 2026-09-09, 1.14.0)
+
+Found while investigating a real report: the user created `ackei30`
+with `ackei30@yahoo.es`, then changed the email to
+`alejandraconesakeiser@gmail.com` via the Users admin page's edit
+form, and wasn't sure the invite ever went out. Checked LT's live
+`mradio-web` logs — the `POST /api/users 201` line was there, but
+**zero** log output existed for the SMTP attempt itself: no recipient,
+no host, no success/failure. Root cause: `routers/users.py`'s
+`create_user` called `email_sender.send_email()`, which already
+returns `(ok, message)`, but discarded the return value — a failed
+SMTP login/send (bad app password, provider outage, etc.) looked
+byte-for-byte identical to a successful send in both the API response
+(still `201 Created`) and the logs (nothing at all). Separately,
+`PATCH /api/users/{id}` never sent anything when `email` changed —
+that's intentional (mirrors "adding an email later via profile edit
+shouldn't spam an invite", see the `0.4.0`/original design note in
+`KB.md` §7), but it means an admin has no way to get a first invite
+out to a *corrected* address either, short of deleting and recreating
+the account.
+
+Fixed by extracting the invite-send logic (`create_reset_token` +
+`send_email` + logging) into a shared `_send_invite()` helper in
+`routers/users.py`, used by both `create_user` and a new endpoint,
+`POST /api/users/{id}/resend-invite` (admin-only, 404 if no such user,
+400 if the user has no email, 502 if the send itself fails). Added an
+`mradio.users` logger — success and failure are now both logged
+(`invite email sent for user_id=…` / `invite email FAILED for
+user_id=…: <smtplib error>`). Frontend: a "Resend invite" button on
+`UsersPage.tsx`, shown per-row only when that user has an email set,
+calling the new endpoint and alerting the admin either way. i18n keys
+(`users.resendInvite`/`resendInviteDone`/`resendInviteFailed`) added
+across all 15 locale files (`en` + 14 more — this repo has 16 total
+counting `en`, not 4; corrected a stale note in personal memory that
+said 4).
+
+**Still unresolved**: whether the *original* `ackei30@yahoo.es` invite
+send in production actually succeeded or failed is unknowable in
+retrospect — that's exactly the gap this fix closes going forward, but
+it can't retroactively explain what happened before the logging
+existed. SMTP network connectivity from LT to `smtp.gmail.com:587`
+(STARTTLS) was confirmed working at investigation time, which rules
+out a firewall/DNS problem but not a login-credential/quota issue on
+that specific send.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

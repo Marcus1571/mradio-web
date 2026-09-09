@@ -534,7 +534,14 @@ inbox is read, only sent from. Two flows use it:
   *existing* account later (via profile edit) does **not** trigger this
   — only having one at the moment of creation does, so an admin
   backfilling emails for old accounts doesn't accidentally spam
-  everyone with invite links.
+  everyone with invite links. If the send fails (bad SMTP credentials,
+  provider outage, etc.) the account is still created — check the
+  server log (`mradio.users`) for `invite email FAILED for user_id=…`,
+  or just use **Resend invite** (next to each user with an email, on
+  the Users admin page) to try again once SMTP is fixed. The same
+  button is also the way to get an invite out after changing a user's
+  email address on the Users page, since that edit itself never sends
+  anything on its own.
 
 Both emails share the same branded HTML template (light theme, the
 app's own logo mark, teal accent) — see `backend/app/email_templates.py`.
