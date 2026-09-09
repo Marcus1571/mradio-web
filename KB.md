@@ -463,18 +463,28 @@ one shared outgoing-mail configuration for the whole app — nobody's
 inbox is read, only sent from. Two flows use it:
 
 - **Forgot password** (§4): a self-service reset link, sent to whatever
-  address is already on the account.
+  address is already on the account. This email also always states the
+  account's username, so it doubles as a "forgot my username" recovery
+  — click the link only to learn the username, then go back to the
+  still-open login page and sign in with the password you actually
+  remembered; the unused reset link simply expires untouched, it
+  doesn't block a normal login.
 - **New-account invite**: when an admin creates a user *with* an email
   address filled in at creation time, that person gets a "you've been
-  invited" email with a link to set their own password — the same
-  one-time-link mechanism as the reset email, just with a 7-day window
-  instead of 1 hour. Adding an email to an *existing* account later
-  (via profile edit) does **not** trigger this — only having one at the
-  moment of creation does, so an admin backfilling emails for old
-  accounts doesn't accidentally spam everyone with invite links.
+  invited" email with their username and a link to set their own
+  password — the same one-time-link mechanism as the reset email, just
+  with a 7-day window instead of 1 hour. Adding an email to an
+  *existing* account later (via profile edit) does **not** trigger this
+  — only having one at the moment of creation does, so an admin
+  backfilling emails for old accounts doesn't accidentally spam
+  everyone with invite links.
 
-Both emails share the same branded HTML template (dark theme, the
+Both emails share the same branded HTML template (light theme, the
 app's own logo mark, teal accent) — see `backend/app/email_templates.py`.
+The set-password page itself (reached from either link) also shows
+"Signing in as &lt;username&gt;" before the form, via a read-only token
+lookup (`GET /api/auth/reset-password-info`) that doesn't consume the
+link.
 
 ### Using Gmail
 

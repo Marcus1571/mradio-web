@@ -75,6 +75,19 @@
   border-color: var(--accent);
 }
 
+.auth-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.auth-checkbox input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
 .auth-error {
   font-size: var(--text-sm);
   color: var(--danger);

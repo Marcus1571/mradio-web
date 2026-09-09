@@ -20,7 +20,7 @@ import '../styles/dashboard.css'
 export function Dashboard() {
   const config = useInitialConfig()
   const player = usePlayer(config?.volume)
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [theme, setTheme] = useState<'dark' | 'light'>('light')
   const [language, setLanguageState] = useState<Language>('en')
   const [page, setPage] = useState<Page>('dashboard')
   const resumedRef = useRef(false)
@@ -28,7 +28,11 @@ export function Dashboard() {
 
   useEffect(() => {
     if (!config) return
-    const nextTheme = config.theme === 'light' ? 'light' : 'dark'
+    // Light is now the default for anyone with no saved preference yet
+    // (a fresh config.json, or one that predates the theme key) —
+    // 'dark' only wins when explicitly saved, the inverse of the old
+    // fallback direction.
+    const nextTheme = config.theme === 'dark' ? 'dark' : 'light'
     setTheme(nextTheme)
     document.documentElement.setAttribute('data-theme', nextTheme)
     const nextLanguage: Language = LANGUAGES.some((l) => l.code === config.language)

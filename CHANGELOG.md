@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.10.0] - 2026-09-09
+
+- **Username reminder**: the password-reset and welcome/invite emails
+  now always state the account's username, and so does the set-your-
+  password page they link to. A forgot-password email now doubles as a
+  forgot-username recovery — click the link only to see your username,
+  then go back and sign in normally with the password you actually
+  remembered; the unused link just expires, it doesn't block login.
+- **Remember me for 30 days**: a checkbox on the login screen,
+  checked by default. Unchecked, the session cookie is dropped when
+  the browser closes instead of persisting; checked matches today's
+  existing behavior exactly.
+- **Email design switched from dark to light theme**, matching the
+  app's own light palette. Logo is ~35% bigger.
+- **Light is now the default theme** for any account with no saved
+  preference yet (new signups, or an existing config that predates the
+  theme setting) — previously defaulted to dark.
+
 ## [1.9.1] - 2026-09-09
 
 Gave the email logo real depth — a gradient fill, hairline dark stroke,

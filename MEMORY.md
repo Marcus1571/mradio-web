@@ -3788,6 +3788,107 @@ before asserting it as fact) but worth another concrete instance:
 this one silently broke a real user-facing asset URL until caught by
 actually checking the sent email, not just trusting the file.
 
+## Username reminders, remember-me login, light-theme email + default (added 2026-09-09, 1.10.0)
+
+User's own insight, stated directly: since account creation no longer
+needs an admin-typed temporary password (1.9.0's invite-link change),
+and a reset/invite link was already confirmed not to block a normal
+username+password login (checked, not assumed — `login()` in
+`routers/auth.py` has zero interaction with the `password_resets`
+table), the system can safely remind someone of their username by
+email without weakening anything. Four related asks bundled into one
+release: username reminders (email + set-password page), a real
+"remember me" checkbox, light theme for the email design, and light as
+the new default app theme.
+
+**Username reminder — email side**: `password_reset_html()` and
+`welcome_html()` both gained a `username` param and a shared
+`_username_line()` component ("Your username is **X**."). Both real
+call sites (`routers/auth.py`'s `forgot_password()`, `routers/
+users.py`'s `create_user()`) already had the username on hand (`user
+["username"]` / `body.username`) — no new lookup needed, just threading
+an existing value one hop further. Plain-text fallback bodies updated
+to match (a multipart email's two parts should carry the same
+information, not diverge).
+
+**Username reminder — set-password page side**: the page itself
+(`ResetPasswordScreen.tsx`) had no way to know whose token it was
+before this — `POST /reset-password` only ever took `{token,
+new_password}` and returned `{"ok": true}`. Added a **read-only**
+lookup: `password_reset.py` refactored `consume_reset_token()`'s
+validation (hash match + not expired + not used) into a shared
+`_validate()` helper, then added `peek_reset_token()` — same
+validation, but does NOT mark the token used. New `GET /api/auth/
+reset-password-info?token=...` returns `{"username": ...}` or 400.
+Frontend calls it on mount, shows "Signing in as **username**" above
+the form (and again in the success state), and shows the existing
+"invalid link" state immediately if the lookup fails — rather than
+letting someone fill out a whole form only to have the POST fail at
+the end. This read-only/write split (`peek` vs `consume`) is exactly
+what makes the "click the link just to see the username" use case
+safe: looking doesn't burn the single use, only actually submitting a
+new password does.
+
+**Design decision explicitly declined**: considered giving the invite-
+landing page different wording than the reset page ("Welcome, Marco!"
+vs. "Reset your password"), which would have needed a new `purpose`/
+`kind` column on `password_resets` to distinguish the two link types.
+User confirmed: skip it, just show the username on one shared page —
+simpler, no schema change, and still satisfies the actual ask.
+
+**Remember me**: real investigation before building anything, since
+the obvious naive approach (a checkbox that shortens the session)
+turned out to have no gap to fill — sessions already last 30 days by
+default (`auth.py`'s `SESSION_TTL`) and `login()` already set the
+cookie's `max_age` to that full duration unconditionally, meaning the
+cookie already survived browser restarts on every login, forever, with
+no checkbox needed to opt into that. Asked the user directly what the
+checkbox should actually control; landed on: unchecked → cookie has no
+`max_age` at all (browser-session-only, cleared on close) while the
+server-side session row is *unchanged* — same 30-day expiry either way,
+only the cookie's own persistence differs. `LoginRequest` gained
+`remember_me: bool = True` (default true so any existing API caller
+that doesn't send the field is unaffected); `login()` passes
+`max_age=... if body.remember_me else None` to `response.set_cookie()`
+— confirmed live on the actual deployed Starlette version (0.41.3) that
+`max_age: int | None = None` is genuinely the documented "make it a
+session cookie" value, not a guess from the stdlib docs alone.
+
+**Email theme + logo size**: straight hex swap from the dark-theme
+constants (from the original 1.9.0 build) to the light-theme
+equivalents computed in that same earlier OKLCH→hex conversion pass —
+paper `#f4f1ed`, ink `#181d26`, accent `#008c92`, button label
+`#031a1b` (needed re-picking for contrast against the now-lighter teal
+button fill, not just a straight swap of the old dark-mode
+`--accent-ink`). Logo display size bumped from 56×54 to 76×73 (~35%),
+still well inside the underlying PNG's native 112×108 (2x) raster
+resolution, so no re-export was needed to avoid visible softening at
+the larger size.
+
+**App-wide light-theme default**: two-line change in `Dashboard.tsx` —
+the `useState<'dark'|'light'>` initial value, and the config-merge
+fallback (`config.theme === 'light' ? 'light' : 'dark'` inverted to
+`config.theme === 'dark' ? 'dark' : 'light'`, flipping which value is
+the explicit opt-in vs. the implicit fallback). Investigated but
+deliberately left alone: `index.css`'s own `@media (prefers-color-
+scheme: dark) { :root:not([data-theme="light"]) {...} }` rule, which
+lets a user's OS-level dark-mode preference show briefly before React
+hydrates and sets an explicit `data-theme`. That's a different, legitimate
+concern (respecting system preference pre-hydration) from what was
+asked (what a *saved* preference defaults to once the app has actually
+loaded config) — correctly out of scope for this change, left as-is.
+
+**Verified before shipping**: re-rendered both email templates locally
+(username line, light theme, bigger logo) and screenshotted via
+headless Chrome — confirmed legibility, correct button contrast, and
+that the more-dimensional 1.9.1 logo still reads correctly at the new
+larger size. Separately screenshotted the real `LoginScreen`/
+`ResetPasswordScreen` components (not just the email templates) via
+the same throwaway-harness technique used all session — confirmed the
+"Remember me for 30 days" checkbox renders correctly (checked by
+default, teal accent) and "Signing in as marco." shows correctly above
+the reset form when a token's info lookup resolves.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

@@ -30,9 +30,11 @@ async def create_reset_token(user_id: int, ttl: timedelta = RESET_TTL) -> str:
     return raw_token
 
 
-async def consume_reset_token(raw_token: str) -> int | None:
-    """Validates hash match + not expired + not already used, marking it
-    used in the same step. Returns the user_id, or None if invalid."""
+async def _validate(raw_token: str):
+    """Shared hash-match + not-expired + not-already-used check used by
+    both consume_reset_token() (which also marks it used) and
+    peek_reset_token() (read-only, for showing the account's username on
+    the set-password page before the user submits anything)."""
     if not raw_token:
         return None
     db = get_db()
@@ -46,9 +48,28 @@ async def consume_reset_token(raw_token: str) -> int | None:
         return None
     if row["expires_at"] <= datetime.now(timezone.utc).isoformat():
         return None
+    return row
+
+
+async def consume_reset_token(raw_token: str) -> int | None:
+    """Validates the token, marking it used in the same step. Returns
+    the user_id, or None if invalid."""
+    row = await _validate(raw_token)
+    if row is None:
+        return None
     async with tx() as db:
         await db.execute(
             "UPDATE password_resets SET used_at = ? WHERE token_hash = ?",
-            (datetime.now(timezone.utc).isoformat(), token_hash),
+            (datetime.now(timezone.utc).isoformat(), _token_hash(raw_token)),
         )
     return row["user_id"]
+
+
+async def peek_reset_token(raw_token: str) -> int | None:
+    """Same validation as consume_reset_token() but does NOT mark the
+    token used — a read-only lookup so the set-password page can show
+    "signing in as <username>" before the user has actually submitted a
+    new password. Safe to call any number of times; only the real
+    consume_reset_token() call (on form submit) burns the single use."""
+    row = await _validate(raw_token)
+    return row["user_id"] if row is not None else None

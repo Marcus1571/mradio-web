@@ -35,9 +35,10 @@ async def create_user(body: UserCreateRequest, request: Request,
                 body.email, "You've been invited to mradio web",
                 f"Someone wonderful has invited you to mradio web.\n\n"
                 f"Hi {greeting},\n\n"
+                f"Your username is {body.username}.\n\n"
                 f"Set your password to get started:\n\n{link}\n\n"
                 "This link expires in 7 days and can only be used once.",
-                html_body=email_templates.welcome_html(greeting, link),
+                html_body=email_templates.welcome_html(greeting, body.username, link),
             )
     return user
 

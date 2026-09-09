@@ -9,6 +9,7 @@ export function LoginScreen() {
   const { login } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(true)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [mode, setMode] = useState<'login' | 'forgot'>('login')
@@ -18,7 +19,7 @@ export function LoginScreen() {
     setError('')
     setBusy(true)
     try {
-      await login(username, password)
+      await login(username, password, rememberMe)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not sign in.')
     } finally {
@@ -57,6 +58,14 @@ export function LoginScreen() {
             autoComplete="current-password"
             required
           />
+        </label>
+        <label className="auth-checkbox">
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+          />
+          Remember me for 30 days
         </label>
         {error && <p className="auth-error">{error}</p>}
         <button className="auth-submit" type="submit" disabled={busy}>

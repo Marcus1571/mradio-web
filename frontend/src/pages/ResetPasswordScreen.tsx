@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError, api } from '../api/client'
 import '../styles/auth.css'
@@ -13,6 +13,21 @@ export function ResetPasswordScreen() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
+  // null while the read-only info lookup is in flight (see
+  // password_reset.peek_reset_token) — set to the real username on
+  // success, or tokenInvalid flips true on failure, so an invalid/
+  // expired token shows immediately instead of only after a failed
+  // submit.
+  const [username, setUsername] = useState<string | null>(null)
+  const [tokenInvalid, setTokenInvalid] = useState(false)
+
+  useEffect(() => {
+    if (!token) return
+    api
+      .get<{ username: string }>(`/api/auth/reset-password-info?token=${encodeURIComponent(token)}`)
+      .then((res) => setUsername(res.username))
+      .catch(() => setTokenInvalid(true))
+  }, [token])
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -40,7 +55,7 @@ export function ResetPasswordScreen() {
     }
   }
 
-  if (!token) {
+  if (!token || tokenInvalid) {
     return (
       <div className="auth-screen">
         <div className="auth-card">
@@ -49,7 +64,11 @@ export function ResetPasswordScreen() {
             <span className="brand-sub">player</span>
           </div>
           <h1 className="auth-title">Invalid link</h1>
-          <p className="auth-hint">This password reset link is missing its token.</p>
+          <p className="auth-hint">
+            {token
+              ? 'This link is invalid or has expired. Please request a new one.'
+              : 'This password reset link is missing its token.'}
+          </p>
           <a className="auth-submit" style={{ textAlign: 'center' }} href="/">
             Back to sign in
           </a>
@@ -67,13 +86,24 @@ export function ResetPasswordScreen() {
             <span className="brand-sub">player</span>
           </div>
           <h1 className="auth-title">Password reset</h1>
-          <p className="auth-hint">You can now sign in with your new password.</p>
+          <p className="auth-hint">
+            {username
+              ? <>You can now sign in as <strong>{username}</strong> with your new password.</>
+              : 'You can now sign in with your new password.'}
+          </p>
           <a className="auth-submit" style={{ textAlign: 'center' }} href="/">
             Back to sign in
           </a>
         </div>
       </div>
     )
+  }
+
+  // username === null: the info lookup is still in flight (or the
+  // token is empty/invalid, already handled above) — don't flash the
+  // form before we know who it belongs to.
+  if (username === null) {
+    return <div className="auth-screen" />
   }
 
   return (
@@ -84,6 +114,9 @@ export function ResetPasswordScreen() {
           <span className="brand-sub">player</span>
         </div>
         <h1 className="auth-title">Reset your password</h1>
+        <p className="auth-hint">
+          Signing in as <strong>{username}</strong>.
+        </p>
         <label className="field">
           <span>New password</span>
           <input

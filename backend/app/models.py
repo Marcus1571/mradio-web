@@ -4,6 +4,10 @@ from pydantic import BaseModel, Field
 class LoginRequest(BaseModel):
     username: str
     password: str
+    # True = today's existing behavior (persists across browser
+    # restarts for the full session TTL); default True so any existing
+    # API caller that doesn't send this field is unaffected.
+    remember_me: bool = True
 
 
 class UserOut(BaseModel):
