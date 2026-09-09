@@ -69,14 +69,19 @@ don't let the two drift apart. GitHub's heading-anchor slugging (lowercase, stri
 periods/parens, spaces→hyphens) is the rule to follow when writing new deep links;
 spot-check unusual punctuation after pushing.
 
-## KB.md and public docs must stay generic
+## Every committed doc must stay generic — including STATUS.md
 
-`KB.md` and any similar public-facing deployment doc must read as something a
-stranger could follow: no personal infra nicknames, no real LAN IPs, no real
-domains, no personal container/stack names. Use placeholders: "the server," "your
-Unraid instance," `192.168.1.10`, `radio.example.com`, "an existing Ollama/NIM setup
-you already run." Real deployment specifics belong in the operator's private notes,
-never in a committed doc.
+All six governance files are committed to this public repo, `STATUS.md` included —
+it is not private, and must not carry real infra details even though it reads as
+internal dev history rather than a setup guide. No personal infra nicknames (e.g.
+"LT"), no real LAN IPs, no real domains, no personal container/stack names, anywhere
+in any committed file. Use placeholders: "the server," "your Unraid instance,"
+`192.168.1.10`, `radio.example.com`, "an existing Ollama/NIM setup you already run."
+Real deployment specifics belong in the operator's private notes (outside this
+repo), never in anything committed here — this was tightened 2026-09-09 after
+`STATUS.md`'s accumulated history was found carrying a real domain and box nickname
+that predated this rule; that history was scrubbed, and this rule now covers every
+committed file, not just `KB.md`/`README.md`.
 
 ## Architecture decisions worth knowing (and why)
 
