@@ -4633,6 +4633,45 @@ fabrication risk is no longer hypothetical after this incident, so the
 caution now argues for fixing it, not for leaving it exempt forever.
 codex remains exempted, genuinely untested for this failure mode.
 
+## Cover-song fact category added to the allowlist (fixed 2026-09-09, 1.16.3)
+
+User tried Grok live after the 1.16.2 hardening shipped and found
+answers "went tight" — comparing 4 tracks (Two Kites, I Only Want To
+Be With You, Finally, I'll Be Missing You), two correctly declined
+(genuinely obscure), one gave a full correct answer (Puff Daddy, a
+globally famous track), and one was suspiciously thin: The Tourists'
+"I Only Want To Be With You" got only band era/genre, nothing about
+the song itself — a well-known 1963 Dusty Springfield original the
+band covered.
+
+Diagnosed live rather than assumed: asked Grok directly, outside the
+app's constrained prompt, whether it knew this was a cover — it
+answered immediately and correctly ("Dusty Springfield, 1963"), no
+hedging. So the model had the fact; the rules gave it nowhere to put
+it. The `CATEGORICAL_HALLUCINATION_RULES` allowlist (6 categories: year,
+city, certain performers, general style, broad context, a certain
+relationship to another PERSON) had no category for a work-to-work
+relationship — a cover's original artist/year is exactly the kind of
+certain, checkable, low-fabrication-risk fact those rules exist to
+allow, just never named.
+
+Added category 7 (cover/version → original artist + year only, nothing
+more about the original) and referenced it explicitly in SLOT 4 so the
+model doesn't self-censor it out of caution. Verified live through the
+real deployed app's production Grok subscription token (temporarily
+`docker cp`'d a test copy of `textutil.py` into the running container
+rather than editing the live file, cleaned up after — no downtime, no
+risk to the actual served code) on 4 tracks: the original thin case
+now correctly adds the cover fact; a genuine non-cover (Miles Davis)
+correctly does NOT invent a cover relationship; the fabrication trap
+still correctly declines (the new category didn't weaken the
+skip-when-unknown discipline); a second real cover/sample (Puff
+Daddy's "I'll Be Missing You," built on The Police's "Every Breath You
+Take") also resolves correctly. Applies to every hardened provider
+(mistral/openai/gemini/openrouter/ollama/grok), not grok-specific,
+since it's a change to the shared `CATEGORICAL_HALLUCINATION_RULES`
+constant.
+
 ## Where things live
 
 - `backend/app/` — one module per concern: `auth.py`/`users.py`/`db.py`

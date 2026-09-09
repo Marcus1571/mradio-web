@@ -113,6 +113,11 @@ CATEGORICAL_HALLUCINATION_RULES = (
     "  5. Broad historical/cultural context, no specific events/films.\n"
     "  6. A well-known, certain relationship to another figure "
     "(teacher/mentor/family), specific to THIS work.\n"
+    "  7. If THIS recording is a cover/version of an earlier song: the "
+    "fact that it IS a cover, plus the original artist and year, ONLY "
+    "if certain. Do not add anything else about the original recording "
+    "beyond artist+year (no original venue, no original chart "
+    "performance, no anecdote about the original).\n"
     "FORBIDDEN even if plausible: exact dates, ANY specific "
     "venue/theater/studio/hall name (this is the single most common "
     "mistake — when in doubt, name only the CITY and nothing more "
@@ -165,7 +170,9 @@ CATEGORICAL_HALLUCINATION_RULES = (
     "elsewhere.\n"
     "SLOT 4 (OPTIONAL — only if you are certain of a specific real "
     "fact not covered by slots 1-3, such as certain real performers on "
-    "THIS recording): 1 sentence, or skip entirely.\n"
+    "THIS recording, or — if genuinely certain — that this is a cover "
+    "of an earlier song and who originally recorded it and when, per "
+    "category 7 above): 1 sentence, or skip entirely.\n"
     "Do NOT add any sentence outside these slots. Do NOT add a "
     'closing/summary sentence about legacy, popularity, "remains a '
     'staple", "beloved by audiences", "associated with", or any '

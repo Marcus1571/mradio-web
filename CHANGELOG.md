@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.16.3] - 2026-09-09
+
+Added a 7th fact category to the categorical hallucination allowlist
+(applies to every hardened provider — Mistral/NIM/Gemini/OpenRouter/
+Ollama/Grok): whether the current track is a cover/version of an
+earlier song, plus the original artist and year, when genuinely
+certain — nothing more about the original beyond that. Caught live:
+the existing rules were correctly declining to pad answers with
+unverifiable detail, but had no category for this specific, checkable,
+low-risk fact, so answers on well-known covers read thinner than
+necessary even when the model plainly knew the original. Verified live
+(Grok, via the real production subscription token) on 4 tracks: a
+previously-thin cover now correctly states "The Tourists... cover of
+the song originally recorded by Dusty Springfield in 1963"; a
+non-cover correctly does NOT invent a cover claim; a fabrication trap
+still correctly declines; a second real cover (Puff Daddy's "I'll Be
+Missing You," built on The Police's "Every Breath You Take") also
+resolves correctly.
+
 ## [1.16.2] - 2026-09-09
 
 Extended the anti-hallucination categorical rules (already applied to
