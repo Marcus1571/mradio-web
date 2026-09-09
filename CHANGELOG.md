@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.16.1] - 2026-09-09
+
+Fixed a real, previously undiagnosed failure mode for the `gpt-oss:20b`
+Ollama model: on the app's actual trivia prompt, it could enter a
+non-convergent internal reasoning loop (repeatedly re-litigating one
+uncertain fact, e.g. an ambiguous anniversary year) and burn its entire
+token budget without ever emitting a response — not a wrong answer, no
+answer at all. Diagnosed live against the model's own `thinking` field
+(gpt-oss is a genuine reasoning model per its Ollama capabilities
+listing), confirmed NOT fixed by a bigger token budget alone (the loop
+just runs longer). Fixed with a targeted anti-deliberation instruction
+(gpt-oss-specific, not applied to other Ollama models) plus a higher
+`num_predict` ceiling as backup headroom — verified over 7 live runs
+across 5 different tracks, including the exact track that previously
+triggered the loop and a fabricated-track hallucination trap, all
+converging cleanly with valid, non-fabricated output.
+
 ## [1.16.0] - 2026-09-09
 
 Two AI providers page usability improvements, both user-requested:
