@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.14.1] - 2026-09-09
+
+Fixed a wrong station logo: "Heart 70s (UK)" was showing the generic
+Heart brand heart-icon instead of a decade-specific logo. Root cause:
+when the exact station name finds nothing in the Radio-Browser
+directory, the app retries with a shortened, "loose" search (here,
+just "Heart") and sanity-checks results against the station's own
+distinguishing words — but that check only required *any one* shared
+word to pass, so a result named plain "Heart" or "Heart 80s" slipped
+through on the shared word "heart" alone, without the actually
+distinguishing word "70s" ever matching. Now requires every
+distinguishing word to match, not just one — the same rule the
+Wikipedia-image fallback tier already used correctly.
+
 ## [1.14.0] - 2026-09-09
 
 Fixed a real gap found while investigating a user report: when the

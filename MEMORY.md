@@ -4256,6 +4256,47 @@ process actually owns the port first. [[infra_landscape]]'s "host port
 8000" note for mradio-web is now wrong and should be corrected to
 8123 next time that file is touched.
 
+## "Heart 70s (UK)" showed the wrong (generic) station logo (fixed 2026-09-09, 1.14.1)
+
+User screenshotted the live now-playing panel: "Heart 70s" was
+rendering a plain red heart-outline icon — the generic Heart brand
+mark, not a decade-specific logo — and asked directly to find the bug.
+
+Root cause was in `radio_browser.py`'s `_first_working_favicon()`: its
+`require_words` sanity check used set **intersection** (`&`) instead
+of subset (`<=`). `_name_variants("Heart 70s (UK)")` produces
+`[("Heart 70s (UK)", False), ("Heart 70s", False), ("Heart", True)]`
+— when the exact/paren-stripped names find nothing in Radio-Browser,
+it falls back to the bare first word ("Heart", since it's >4 chars) as
+a "loose" search, with `require_words = {"heart", "70s"}` (the
+station's own distinguishing words) meant to sanity-check whatever
+that loose search returns. But `{"heart"} & {"heart", "70s"}` is
+truthy, so a Radio-Browser result named plain **"Heart"** or **"Heart
+80s"** passed the check on the shared word "heart" alone — "70s" (the
+word that actually distinguishes this station from its siblings) never
+had to match anything. Confirmed the exact mechanism with a standalone
+simulation (`_name_variants`/`_distinguishing_words` against real
+candidate names) before touching code, not just theorizing from
+reading.
+
+The fix (subset check: `require_words <= _distinguishing_words(...)`)
+was already the pattern used one tier down in `_wikipedia_logo()` —
+that function's own comment describes an *identical* bug shape for a
+different station pair (WSM 650 AM matching WSM-FM on the shared call
+sign). It just was never applied to `_first_working_favicon()` (the
+first, most-often-hit tier) or `_searxng_logo()` (fixed the same way,
+`any()` → `all()`) — both brought in line with the rule the codebase
+had already figured out correctly once.
+
+**Cache-busting caveat worth remembering**: `station_logos.json` caches
+*every* result forever, including wrong ones — a confirmed miss and a
+confirmed-but-wrong hit look identical to the cache (see
+`station_logos.py`'s own docstring: "stops a station from being looked
+up twice"). Shipping the matching-logic fix alone does nothing for
+already-cached stations; the bad `Heart70sMP3` entry has to be evicted
+from the live `station_logos.json` on LT (or the whole cache file
+cleared) for the new logic to actually run for it again.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
