@@ -340,6 +340,7 @@ class Enricher:
                 language_instruction=_LANGUAGE_INSTRUCTIONS.get(self.language, ""),
             ),
             self.provider,
+            model=settings.get("ollama_model", "") if self.provider == "ollama" else "",
         )
         raw = await self._llm(settings, prompt)
         if raw is None:

@@ -209,7 +209,46 @@ CATEGORICAL_HALLUCINATION_RULES = (
 _CATEGORICAL_PROVIDERS = frozenset({"mistral", "openai", "gemini", "openrouter", "ollama"})
 
 
-def apply_provider_rules(prompt: str, provider: str) -> str:
+# gpt-oss-specific, not Ollama-provider-wide: this is a MODEL trait, not a
+# provider trait — gemma4/qwen3/phi4-mini etc. under the same "ollama"
+# provider don't show this failure. Diagnosed live 2026-09-09 against the
+# real P5000 server (192.168.88.8:11434) with gpt-oss:20b, a genuine
+# reasoning/"thinking" model per its own Ollama /api/tags listing
+# (capabilities: completion, tools, thinking). Root cause found via the
+# /api/generate response's separate "thinking" field (not visible in
+# "response", easy to miss without inspecting it directly): on the real
+# app prompt (JSON output + CATEGORICAL_HALLUCINATION_RULES'
+# fact-category constraints), the model would enter a non-convergent
+# reasoning loop obsessing over one narrow uncertain fact (e.g. "was this
+# the 200th anniversary of X or Y? Let's check... Eh, let's drop that."
+# repeated near-verbatim many times), burn its entire num_predict budget
+# on that loop, and emit an EMPTY "response" (done_reason: "length") —
+# not a wrong answer, no answer at all. Confirmed NOT fixed by: raising
+# num_predict to 3000 (loop just runs longer, still empty), think:false
+# (no effect, actually slower), removing the JSON wrapper, or removing
+# the length-target instruction — none of those were the actual trigger.
+# What worked, tested over 7 live runs across 5 different tracks
+# including a hallucination trap (all converged, all valid JSON, no
+# fabrication, no repeat of the loop): an explicit instruction telling
+# the model to stop deliberating on narrow uncertain facts after at most
+# one pass and commit to an answer immediately — see
+# _GPT_OSS_ANTI_LOOP_RULES below. Not a 100% guarantee (a strong-but-not
+# -absolute prompt instruction) — see llm_ollama()'s num_predict bump for
+# gpt-oss for the second half of the mitigation (headroom in case a loop
+# still runs longer before self-correcting).
+_GPT_OSS_ANTI_LOOP_RULES = (
+    "\n\nCRITICAL OUTPUT DISCIPLINE: You have a strict internal reasoning "
+    "budget. Do NOT deliberate about, second-guess, or attempt to verify "
+    "specific anniversary years, exact event dates, conductor/recording-year "
+    "pairings, or any other narrow factual detail. The moment such a detail "
+    "feels uncertain, drop it permanently and move on — do not revisit it. "
+    "Reason briefly (a few sentences of internal thought at most), then "
+    "commit to your final JSON answer immediately. Do not repeat or "
+    "rephrase the same uncertain question to yourself more than once."
+)
+
+
+def apply_provider_rules(prompt: str, provider: str, model: str = "") -> str:
     """Provider-targeted prompt additions. mistral/openai(NIM)/gemini/
     openrouter/ollama get SINCERITY_RULES + CATEGORICAL_HALLUCINATION_RULES +
     a length-target override — see CATEGORICAL_HALLUCINATION_RULES'
@@ -217,7 +256,13 @@ def apply_provider_rules(prompt: str, provider: str) -> str:
     characters" instruction earlier in the prompt kept winning against
     a later "ignore that" rule unless the original instruction was
     replaced outright, not just argued with. opencode keeps the stock
-    prompt; codex/grok too (see _CATEGORICAL_PROVIDERS)."""
+    prompt; codex/grok too (see _CATEGORICAL_PROVIDERS).
+
+    `model` is an optional hint (Ollama's configured model name) used
+    only to add gpt-oss's own anti-deliberation-loop rules on top of the
+    categorical rules every Ollama model already gets — see
+    _GPT_OSS_ANTI_LOOP_RULES' comment. Every other provider/model
+    combination ignores this parameter."""
     if provider in _CATEGORICAL_PROVIDERS:
         target = ("Aim for 750-850 characters with a hard "
                   "maximum of 850 — if your draft runs long, tighten it.")
@@ -231,7 +276,10 @@ def apply_provider_rules(prompt: str, provider: str) -> str:
             "sentence not found in prompt — _PROMPT_TEMPLATE wording "
             "changed; update the .replace() target above to match.")
         prompt = prompt.replace(target, _CATEGORICAL_LENGTH_OVERRIDE)
-        return prompt + SINCERITY_RULES + CATEGORICAL_HALLUCINATION_RULES
+        prompt = prompt + SINCERITY_RULES + CATEGORICAL_HALLUCINATION_RULES
+        if provider == "ollama" and model.startswith("gpt-oss"):
+            prompt = prompt + _GPT_OSS_ANTI_LOOP_RULES
+        return prompt
     return prompt
 
 

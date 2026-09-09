@@ -4527,6 +4527,73 @@ latest (2.5 GB)` last, with the configured `gemma4:e4b-it-qat`
 correctly pre-selected) — not just trusting the JSX. `main.tsx` fully
 reverted and the harness file deleted afterward.
 
+## gpt-oss:20b's non-convergent reasoning loop, diagnosed and fixed (fixed 2026-09-09, 1.16.1)
+
+User asked to "win the golden guidance/constraints/prompting" for
+`gpt-oss:20b` specifically — a real, unresolved gap: it's the largest
+Ollama model installed (13.8GB) and the earlier P5000 comparison
+testing found it both slower AND less accurate than `qwen3:14b` on the
+same tracks, but nobody had actually diagnosed *why*, or given it its
+own hardening the way Mistral got in 1.13.0.
+
+Followed this project's own established discipline (live-iterate
+against the real API, don't theorize) — live against the actual
+server. First baseline test using the exact real app prompt
+(`_PROMPT_TEMPLATE` + `apply_provider_rules("ollama")`) returned an
+EMPTY response with `done_reason: "length"` — the model burned its
+entire `num_predict` budget and produced nothing, not a wrong answer.
+Root cause found by inspecting Ollama's `/api/generate` response's
+separate `"thinking"` field directly (gpt-oss is a genuine reasoning
+model — confirmed via its own `/api/tags` capabilities list including
+`"thinking"`): the model enters a non-convergent loop re-litigating one
+narrow uncertain fact (in the reproducer case: which anniversary a
+performance might correspond to), saying "let's drop that," then
+re-raising the identical unresolved question moments later, over and
+over, never reaching the point of writing an answer.
+
+**Ruled out, each tested live and confirmed NOT the fix**: raising
+`num_predict` to 3000 (loop just runs longer, 14,636 characters of
+thinking, still empty response), `think: false` (no effect, actually
+slower — 60s vs 39s), removing the JSON wrapper (still empty), removing
+the length-target instruction (still empty), the uncertainty-caveat
+wording specifically (isolated and tested alone, not the trigger).
+
+**What worked**: an explicit instruction telling the model its
+reasoning budget is limited, to drop any narrow uncertain fact
+permanently after one pass rather than revisiting it, and to commit to
+a final answer without extended internal debate
+(`textutil._GPT_OSS_ANTI_LOOP_RULES`, appended only when
+`provider == "ollama" and model.startswith("gpt-oss")` — gated on
+model, not provider, since gemma4/qwen3/phi4-mini don't show this
+failure). Verified over 7 live runs across 5 tracks: Beethoven Sym. 7
+(the original failing case, 3/3 clean on the final version after one
+run still hit the length limit on an earlier, weaker instruction
+wording), Miles Davis "So What" (correct, full personnel list), a
+fabricated nonexistent artist/track (correctly declined, no
+fabrication), and — directly relevant — Robert Glasper's "Yes I'm
+Country," the exact track whose vague "featured in live sets and radio
+rotations" fabrication was what got Ollama added to the categorical
+hardening in the first place (1.15.1); it now produces a short,
+fully-checkable answer instead. `providers.py`'s `llm_ollama()` also
+bumps `num_predict` to 2200 (from the standard 1200) specifically for
+gpt-oss, as backup headroom for the runs where some deliberation still
+happens before the model self-corrects — not a substitute for the
+prompt fix, insurance on top of it.
+
+Not a 100% guarantee — a strong prompt instruction, not a hard
+constraint the model architecture enforces — and documented as such in
+`textutil.py`'s comments rather than oversold. `apply_provider_rules()`
+gained an optional `model` parameter (default `""`, every other
+provider/model combination unaffected) to make this possible; threaded
+through from `enricher.py`'s `_ask()`, which already had `settings`
+(and therefore `ollama_model`) in scope.
+
+**Verified**: full backend `py_compile` clean; every fix tested via a
+live call through the actual wired production functions
+(`app.textutil.apply_provider_rules` + `app.providers.llm_ollama`
+imported directly, not a hand-copied prompt), not just the standalone
+scratch script used for initial diagnosis. No frontend changes.
+
 ## Where things live
 
 - `backend/app/` — one module per concern: `auth.py`/`users.py`/`db.py`
