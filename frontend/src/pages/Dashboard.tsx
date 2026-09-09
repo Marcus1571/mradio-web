@@ -55,7 +55,7 @@ export function Dashboard() {
       // "Stopped" state, rather than either silently auto-playing audio
       // the user explicitly stopped, or dropping the selection entirely
       // and showing an empty "Nothing playing" panel — see 1.4.2's
-      // MEMORY.md entry for why last_status exists and 1.4.3 for why
+      // STATUS.md entry for why last_status exists and 1.4.3 for why
       // selectStation() exists.
       if (config.last_status === 'playing') player.play(station)
       else player.selectStation(station)
