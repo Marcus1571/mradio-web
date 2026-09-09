@@ -142,11 +142,13 @@ configured outgoing email (§7) and your account has an email address set
 No public sign-up. From the user menu (top right) → **Settings** → **Users**
 (admin only):
 
-- **Add user** — pick a username and a temporary password; they're forced
-  to change it on their first sign-in, same as the bootstrap account. A
+- **Add user** — pick a username. If you give an email address, mradio-web
+  generates a temporary password itself and emails the new user an invite
+  link to set their own — you never see or type a password. Leave the
+  email blank and you pick the temporary password yourself; they're then
+  forced to change it on first sign-in, same as the bootstrap account. A
   full name (shown instead of the username everywhere in the UI — top
-  bar, Analytics — once set; supports emoji) and email address (needed
-  for the self-service "forgot password" flow above) are optional.
+  bar, Analytics — once set; supports emoji) is optional either way.
 - **Make admin / Remove admin**, **Disable / Enable**, **Edit profile**
   (full name/email), **Reset password**, **Delete** — self-explanatory;
   you can't demote, disable, or delete your own account from here (avoids

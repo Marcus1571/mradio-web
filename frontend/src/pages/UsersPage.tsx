@@ -56,7 +56,7 @@ export function UsersPage({ onBack, t }: { onBack?: () => void; t: TFunction }) 
     try {
       await api.post('/api/users', {
         username: createForm.username,
-        password: createForm.password,
+        password: createForm.email ? undefined : createForm.password,
         is_admin: createForm.isAdmin,
         full_name: createForm.fullName || undefined,
         email: createForm.email || undefined,
@@ -222,16 +222,20 @@ export function UsersPage({ onBack, t }: { onBack?: () => void; t: TFunction }) 
               onChange={(e) => setCreateForm((f) => ({ ...f, email: e.target.value }))}
             />
           </label>
-          <label className="field">
-            <span>{t('users.fieldTempPassword')}</span>
-            <input
-              type="text"
-              value={createForm.password}
-              onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))}
-              minLength={8}
-              required
-            />
-          </label>
+          {createForm.email ? (
+            <p className="admin-note">{t('users.fieldTempPasswordAuto')}</p>
+          ) : (
+            <label className="field">
+              <span>{t('users.fieldTempPassword')}</span>
+              <input
+                type="text"
+                value={createForm.password}
+                onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))}
+                minLength={8}
+                required
+              />
+            </label>
+          )}
           <label className="checkbox">
             <input
               type="checkbox"

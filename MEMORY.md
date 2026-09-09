@@ -3889,6 +3889,59 @@ the same throwaway-harness technique used all session — confirmed the
 default, teal accent) and "Signing in as marco." shows correctly above
 the reset form when a token's info lookup resolves.
 
+## Auto-generated temporary passwords when creating a user with an email (added 2026-09-09, 1.11.0)
+
+Prompted by the user noticing the Add User modal's "Temporary password"
+field was empty-but-still-required even when they'd already filled in
+an email — since 1.9.0/1.10.0, an email means the invited person sets
+their own password via the emailed link, so the admin-typed temp
+password is never actually consumed on that path. Asked the user
+directly (rather than assuming) whether to drop the field outright or
+make it conditional; they picked conditional — the field is still the
+only way in when there's no email (no invite-link path exists then).
+
+**Backend**: `UserCreateRequest.password` in `models.py` changed from
+`Field(min_length=8)` (unconditionally required) to `str | None =
+Field(default=None, min_length=8)`. The actual requirement is now
+enforced in `routers/users.py`'s `create_user()`, not the Pydantic
+schema, because the rule depends on another field (`email`): if
+`body.email` is set, generate a random password with
+`secrets.token_urlsafe(24)` and ignore whatever the client sent for
+`password`; if not, require `body.password` to be present and ≥8 chars
+or raise `400`. The generated password is never surfaced anywhere
+(not returned in the response, not logged) — it exists only to satisfy
+`users.create_user()`'s signature, since the real credential the
+invited user ends up with is whatever they set via the invite-link
+flow.
+
+**Frontend**: `UsersPage.tsx`'s Add User form now conditionally
+renders the Temporary password field based on `createForm.email` —
+empty email keeps the field (required, as before); a filled-in email
+swaps it for an explanatory note (`users.fieldTempPasswordAuto`)
+instead of an input. The submit handler sends `password: undefined`
+when an email is present, regardless of whatever is left in
+`createForm.password` from a prior edit (e.g. if the admin typed a
+password, then added an email) — email presence is the single source
+of truth for which path the backend takes, not whatever's sitting in
+the password field.
+
+**i18n**: added `users.fieldTempPasswordAuto` and reworded
+`users.footerNote` (was "New accounts must change this password on
+first sign-in" — now scoped to "Accounts without an email…", since
+email-invited accounts never hit the forced-change screen at all) —
+both replicated across all 15 language files, not just English.
+
+**Verified before shipping**: real headless-Chrome screenshots of the
+Add User modal in both states (empty email → password field shown and
+required; email filled in → field replaced by the auto-generate note),
+via the same throwaway-harness technique used all session. Needed one
+extra wrapper this time — `AuthProvider` — since `UsersPage` calls
+`useAuth()` internally and the harness renders it standalone outside
+`App`'s normal provider tree; omitting it threw immediately
+(`useAuth must be used within AuthProvider`), a reminder to wrap
+harnesses with whatever context providers the target component
+actually depends on, not just stub `fetch`.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

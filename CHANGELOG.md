@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0] - 2026-09-09
+
+- **Auto-generated temporary passwords for email invites**: when an admin
+  creates a user with an email address, mradio-web now generates the
+  temporary password itself instead of asking the admin to pick one — the
+  admin never sees or types it, since the invited person always sets
+  their own via the emailed invite link. The Add User form's "Temporary
+  password" field is only shown (and required) when no email is given,
+  which remains the only case with no invite-link path. Fixes a UX
+  dead-end where the field was still marked required even though nothing
+  ever consumed the value once an email was set.
+
 ## [1.10.0] - 2026-09-09
 
 - **Username reminder**: the password-reset and welcome/invite emails

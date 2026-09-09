@@ -1,3 +1,5 @@
+import secrets
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from .. import email_sender, email_templates, password_reset, smtp_settings, users
@@ -17,7 +19,18 @@ async def create_user(body: UserCreateRequest, request: Request,
                       admin: dict = Depends(require_admin)):
     if await users.get_by_username(body.username) is not None:
         raise HTTPException(status.HTTP_409_CONFLICT, "username already taken")
-    user = await users.create_user(body.username, body.password, body.email,
+    # With an email, the invited person sets their own password via the
+    # invite link, so the admin never needs to pick or know one — generate
+    # a random one server-side. Without an email there's no invite-link
+    # path, so an admin-provided password is still the only way in.
+    if body.email:
+        password = secrets.token_urlsafe(24)
+    elif body.password and len(body.password) >= 8:
+        password = body.password
+    else:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST,
+                            "password (min 8 characters) is required when no email is given")
+    user = await users.create_user(body.username, password, body.email,
                                    body.is_admin, full_name=body.full_name)
     # Only when an email was given right at creation — an admin adding
     # one later via profile edit is a deliberate, separate action that

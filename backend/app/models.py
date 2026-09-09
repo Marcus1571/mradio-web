@@ -23,7 +23,10 @@ class UserOut(BaseModel):
 
 class UserCreateRequest(BaseModel):
     username: str = Field(min_length=1, max_length=64)
-    password: str = Field(min_length=8)
+    # Required only when no email is given (enforced in the route handler,
+    # not here) — with an email, the server generates a random password the
+    # admin never sees, since the invited person sets their own via email.
+    password: str | None = Field(default=None, min_length=8)
     email: str | None = None
     full_name: str | None = None
     is_admin: bool = False
