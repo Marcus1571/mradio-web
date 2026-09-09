@@ -1,6 +1,6 @@
 """ONE-TIME script: overwrite every existing user's favorites with the
 new default 12-station lineup (see stations.py's DEFAULT_STATIONS[:12]
-and MEMORY.md's dated entry for why). Run once by hand, then never
+and STATUS.md's dated entry for why). Run once by hand, then never
 again — this is NOT part of the app's normal startup or migration path,
 and does not get re-run automatically on future deploys.
 

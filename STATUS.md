@@ -1,9 +1,14 @@
-# mradio-web — project memory
+# mradio-web — project status
 
-A current-state snapshot, not a rules file — read this once to pick up
-where the project stands without reconstructing it from `git log`. Update
-it when the state changes; it's meant to stay short enough to actually be
-read, not a full history (that's what commit messages and `KB.md` are for).
+A current-state snapshot, not a rules file (see `AGENTS.md` for rules) —
+read this once to pick up where the project stands without reconstructing
+it from `git log`. Update it when the state changes; it's meant to stay
+short enough to actually be read, not a full history (that's what commit
+messages and `KB.md` are for).
+
+Part of this project's governance layer — see `~/governance/GOVERNANCE.md`
+for how this file fits into the overall system, and `~/governance/USER.md`
+for the operator's cross-project preferences that apply here too.
 
 ## What this is
 

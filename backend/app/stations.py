@@ -34,7 +34,7 @@ DEFAULT_STATIONS = [
     # userdata.py's _load_favorites_sync "first run for this user"
     # branch, which reads DEFAULT_STATIONS[:MAX_FAV]). Set once,
     # 2026-09-06, per the user's explicit one-time favorites reset —
-    # see MEMORY.md. Not meant to be reordered casually going forward;
+    # see STATUS.md. Not meant to be reordered casually going forward;
     # existing users' own favorites are never re-synced from this list.
     {"name": "VCR Auditorium | Venice Classic Radio Italia",
      "url": "https://uk2.streamingpulse.com/ssl/vcr1", "genre": "classical"},
