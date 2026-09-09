@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.16.4] - 2026-09-09
+
+Added an 8th fact category to the hallucination allowlist (applies to
+every hardened provider): for a well-known WORK, who first
+recorded/premiered it (year + label if certain), and up to 2-3 other
+well-known artists who notably recorded the same work (name + era
+only, no anecdotes, no rankings). Caught live on Thelonious Monk's
+"Ruby, My Dear" — the model demonstrably knew real, checkable facts
+(first recorded 1947 for Blue Note, later recorded by John Coltrane)
+that the previous rules had no category for. **Known limitation,
+tested and documented rather than papered over**: this category lands
+inconsistently — repeat runs on the same track sometimes surface it,
+sometimes skip it and stay thin, even though the underlying knowledge
+is there. No fabrication risk either way (skipping is always safe);
+shipped as a net improvement over the prior baseline of "structurally
+impossible to surface," not a guarantee of consistent richness.
+
 ## [1.16.3] - 2026-09-09
 
 Added a 7th fact category to the categorical hallucination allowlist
