@@ -4082,6 +4082,118 @@ write time, wrong one message later) — updated to "admin-only for now"
 in the same tone as the code comment, not a manufactured quota
 explanation.
 
+## Provider comparison tables + Mistral prompt hardening via live iteration (2026-09-09, 1.13.0)
+
+Two-part request. First: build real (not estimated) usage-limit and
+quality/speed comparison tables across every configured provider —
+user has ChatGPT Go and SuperGrok subscriptions specifically (asked
+directly via AskUserQuestion rather than guessed), so those two got
+real published ranges researched for those exact tiers, not generic
+"ChatGPT limits" figures. Mistral/Gemini/OpenRouter's numbers were
+already live-verified earlier this session; NIM/Ollama/opencode are
+correctly "not quota-bound" (self-hosted/bring-your-own-endpoint).
+
+Second, and the bulk of this entry: user asked to "craft a more
+precise constraint net" for Mistral and "try every possible effort to
+perfect the prompt" — an extended live-iteration session against the
+real API (not guessing at what might work), using a real testing key
+the user generated (`console.mistral.ai` → Docs & API) after their
+first key from the 1.12.0 build session was invalidated (very likely
+rotated by the user themselves, following the earlier recommendation
+to do so after a key sits in chat history — confirmed indirectly: the
+old key returned "Invalid API Key" on the next test).
+
+**What was tried, in order, and why each attempt fell short before the
+final version worked** (full detail also lives in `textutil.py`'s
+comments, since a future reader touching this code needs the "why",
+not just the "what"):
+
+1. **Confidence-gating rules** ("only include a fact if 90% certain") —
+   improved things on isolated free-text test prompts (no competing
+   length target) but this was misleading: the app's REAL prompt
+   always carries `_PROMPT_TEMPLATE`'s "aim for 750-850 characters"
+   instruction, and testing without it produced false confidence.
+2. **Categorical allowlist appended after the length instruction** —
+   the real regression-causing discovery. Against the actual app
+   prompt (with the 750-850 char target still present), the model
+   reliably prioritized hitting that length target over a
+   category-restriction rule that came later in the same prompt,
+   fabricating conductor names, venue names, and "used in
+   films/celebrations" claims in roughly 1 of 3 runs regardless of
+   how the later rule was worded.
+3. **Moving the rule earlier, relaxing the length target with a "this
+   doesn't apply, write shorter" override, and an explicit "max 4
+   sentences" cap** — none of these alone fixed it. The model ignored
+   the sentence cap outright in testing, and kept finding new
+   plausible-sounding fabrication categories not explicitly named on
+   the forbidden list (whack-a-mole).
+4. **What finally worked, stacked together**: (a) REPLACING the
+   conflicting length sentence outright via a targeted `.replace()` in
+   `apply_provider_rules()`, not just appending a contradicting
+   instruction after it — a competing instruction left in the prompt
+   kept winning even when told to ignore it; (b) two worked GOOD/BAD
+   few-shot examples on the exact Kind of Blue test case, explicitly
+   naming why the BAD example is bad even though it "sounds
+   professional"; (c) an explicit self-check pass instructing the
+   model to re-read its own draft sentence-by-sentence against the
+   forbidden list; (d) — the single biggest lever — a MANDATORY
+   sentence-slot structure (composer/era → year+city ONLY → musical
+   character → one optional certain fact) with an explicit ban on any
+   closing "legacy/popularity/beloved" sentence, since that closing
+   sentence was consistently where fabrication re-entered even after
+   (a)-(c) were in place.
+5. **A real regression found and fixed along the way**: the mandatory
+   slot structure alone made results WORSE on a genuinely unknown
+   track (a fabricated artist/song name used deliberately as a
+   hallucination trap) — forcing the model into slots removed its
+   ability to say "I don't know," so it invented an entire fake
+   biography, discography-sounding details, and a made-up "performed
+   live with the Ensemble Modern" claim to fill them. Fixed by
+   explicitly stating that skipping every slot and writing a plain "no
+   confident details available" is a valid, REQUIRED answer for a
+   genuinely unrecognized artist/work — not a fallback the model
+   should avoid reaching for. This is the kind of failure mode that
+   only surfaces by testing the actual hard case (an unknown/obscure
+   or nonexistent track), not just well-documented famous ones — a
+   worthwhile lesson for any future prompt-hardening work on any
+   provider.
+
+**Final measured results** (live, via the real code path — not just
+the standalone test prompts, confirmed by importing `textutil.py`'s
+actual `apply_provider_rules()` and diffing the constructed prompt
+against what was tested): 3-4/4 clean on Beethoven's Symphony No. 7,
+2/2 clean on Miles Davis's "So What" (one run substituted a real but
+wrong pianist — Wynton Kelly instead of Bill Evans — a genuinely hard
+adjacent-fact confusion, not a fabrication), 4/4 clean on the obscure
+Josef Suk Asrael Symphony test, 3/3 correctly declining on the
+fabricated nonexistent track. A real, substantial improvement over the
+near-constant fabrication seen in the original spot-check and every
+early iteration — explicitly NOT claimed as a perfect fix; residual
+risk on genuinely thin training data remains and is documented as such
+in the code, not glossed over.
+
+**Implementation**: `textutil.py`'s `apply_provider_rules()` now does
+a targeted `.replace()` on the incoming prompt for the `mistral`
+provider specifically, swapping out the length-target sentence for an
+override, guarded by an `assert` that fails loudly (rather than
+silently degrading) if `enricher.py`'s `_PROMPT_TEMPLATE` wording ever
+changes and the target string stops matching. `MISTRAL_RULES` grew
+substantially (allowlist + few-shot + self-check + mandatory slots +
+unknown-track allowance) and still stacks with the existing
+`SINCERITY_RULES`, applied in addition to it rather than replacing it.
+
+**Also fixed in this session, found while reading the same code**:
+every provider's hardcoded system message (`_llm_openai_compatible()`,
+`llm_gemini()`, `llm_grok()`, `_codex_request_payload()`) said "You
+are a helpful classical-music metadata assistant" — user caught this
+directly ("it is not just about classical music, ain't it?"),
+correctly pointing out it contradicted `_PROMPT_TEMPLATE`'s own
+explicit "classical, jazz, rock, pop, or any other genre" scope. This
+was a real, pre-existing bug unrelated to the Mistral work — the
+system message was silently telling every provider to think of itself
+as classical-music-only while the user message asked it to handle any
+genre. Fixed to a genre-neutral phrasing across all 4 sites.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

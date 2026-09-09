@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.13.0] - 2026-09-09
+
+Hardened Mistral's enrichment prompt with a much stronger,
+category-based constraint set, arrived at by iterating live against
+the real API across 20+ test runs on 4 tracks (well-documented
+classical, well-documented jazz, an obscure classical work, and a
+fabricated nonexistent track used as a hallucination trap). Replaces
+the base prompt's 750-850 character target for Mistral specifically
+(that instruction was reliably winning over any later "be careful"
+rule) with a mandatory sentence-slot structure (composer/era, then
+year+city only, then musical character, then one optional certain
+fact — no closing "legacy/popularity" sentence, which is where
+fabrication kept sneaking back in), two worked GOOD/BAD examples, a
+self-check pass, and an explicit allowance to skip every slot and say
+so plainly for a genuinely unrecognized artist/track. Full account of
+what didn't work along the way is in `textutil.py`'s comments.
+
+Also fixed a real, pre-existing inconsistency unrelated to Mistral:
+every provider's hardcoded system message said "You are a helpful
+classical-music metadata assistant", contradicting the actual prompt's
+own explicit "classical, jazz, rock, pop, or any other genre" scope.
+Fixed across all 4 call sites (NIM/OpenRouter/Mistral's shared helper,
+Gemini, Grok, Codex) to a genre-neutral phrasing.
+
 ## [1.12.1] - 2026-09-09
 
 Made **Mistral** admin-only (like ChatGPT/Grok/OpenRouter), by explicit

@@ -258,7 +258,8 @@ async def _llm_openai_compatible(base_url: str, model: str, api_key: str,
         "model": model,
         "messages": [
             {"role": "system", "content":
-                "You are a helpful classical-music metadata assistant. "
+                "You are a helpful music metadata assistant, covering classical, "
+                "jazz, rock, pop, and every other genre. "
                 "Reply ONLY with the requested JSON, no markdown."},
             {"role": "user", "content": prompt},
         ],
@@ -329,7 +330,8 @@ async def llm_gemini(settings: dict, prompt: str) -> str | None:
         # for the same concept, wrongly copied from llm_codex() at
         # first) — a request with "instructions" gets a 400
         # "Unknown parameter" error.
-        "system_instruction": "You are a helpful classical-music metadata assistant. "
+        "system_instruction": "You are a helpful music metadata assistant, covering classical, "
+                              "jazz, rock, pop, and every other genre. "
                               "Reply ONLY with the requested JSON, no markdown.",
     }
     headers = {"x-goog-api-key": api_key, "Api-Revision": _GEMINI_API_REVISION}
@@ -421,7 +423,8 @@ async def llm_grok(settings: dict, prompt: str) -> str | None:
         "model": model,
         "messages": [
             {"role": "system", "content":
-                "You are a helpful classical-music metadata assistant. "
+                "You are a helpful music metadata assistant, covering classical, "
+                "jazz, rock, pop, and every other genre. "
                 "Reply ONLY with the requested JSON, no markdown."},
             {"role": "user", "content": prompt},
         ],
@@ -453,7 +456,8 @@ _CODEX_TIMEOUT = 180
 def _codex_request_payload(prompt: str, account_id: str, token: str) -> tuple[dict, dict]:
     payload = {
         "model": _CODEX_MODEL,
-        "instructions": "You are a helpful classical-music metadata assistant. "
+        "instructions": "You are a helpful music metadata assistant, covering classical, "
+                        "jazz, rock, pop, and every other genre. "
                         "Reply ONLY with the requested JSON, no markdown.",
         "input": [{"role": "user", "content": prompt}],
         "stream": True,
