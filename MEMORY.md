@@ -4297,6 +4297,127 @@ already-cached stations; the bad `Heart70sMP3` entry has to be evicted
 from the live `station_logos.json` on LT (or the whole cache file
 cleared) for the new logic to actually run for it again.
 
+## Full provider-by-provider comparison; three real bugs fixed (2026-09-09, 1.15.0)
+
+User asked for a real, live quality/speed comparison across every
+configured AI provider (not just Mistral) after asking whether Mistral
+might be hallucinating because it can't do web search (confirmed: it
+can't — `WebSearchTool connector is not supported` on plain
+`chat/completions`, only Mistral's separate Conversations/Agents API
+supports it, researched via a background agent and judged not worth
+the rearchitecture right now — different endpoint shape, unresolved
+free-tier eligibility, unresolved response envelope, no first-party
+latency data). Ran the same Beethoven Symphony No. 7 / Miles Davis
+"So What" / Josef Suk Asrael Symphony / fabricated-nonexistent-track
+battery from the Mistral work against Gemini, OpenRouter, NIM, and all
+7 models installed on LT's Ollama, using real keys the user generated
+and pasted for Gemini/OpenRouter/NIM.
+
+**Three real, live-confirmed bugs found and fixed:**
+
+1. **NIM's default model was dead.** `minimaxai/minimax-m3`
+   (`settings.py`'s `api_model` default) returned `410 Gone` — "has
+   reached its end of life" — retired by NVIDIA literally hours before
+   testing. Fixed by probing all ~80 models NVIDIA's own `/v1/models`
+   lists for the real account: only ~9 are actually invokable (most
+   404 "Function not found for account" — the public catalogue is not
+   a reliable guide to what an account can actually call), and of
+   those, most are reasoning/safety-classifier/embedding models unfit
+   for this app's job. `mistralai/mistral-nemotron` was the one
+   working, non-reasoning, general-purpose option — new default, along
+   with `api_timeout` bumped 30s→45s.
+
+2. **Gemini and NIM had no/weak anti-hallucination hardening.** Live
+   test: Gemini answered the Beethoven case *excellently* (correct
+   date, correct Battle of Hanau context, even a real, accurate Wagner
+   "apotheosis of the dance" quote) in 30-50s — then, on a fabricated
+   nonexistent artist/track, spent 50s inventing an entire fake
+   biography, discography-sounding details, and a fake genre with
+   total confidence. This is the key finding of the whole session:
+   **"good on famous things" and "safe on obscure/unknown things" are
+   different, uncorrelated properties** — a provider can excel at one
+   and completely fail the other, and only testing the hard case
+   (an unknown/fabricated track) reveals it. `textutil.py`'s
+   `MISTRAL_RULES` was renamed `CATEGORICAL_HALLUCINATION_RULES` (no
+   longer Mistral-specific in name or in fact) and `_CATEGORICAL_PROVIDERS`
+   extended from `{"mistral"}` to `{"mistral", "openai", "gemini"}`.
+   Verified live: Gemini's hallucination-trap answer went from a 50s
+   fake biography to a 1.3s honest "no confident details are
+   available" — and its well-documented-track answers got noticeably
+   *faster* too (30-50s → ~1s), since a shorter, more disciplined
+   target gives less to reason through either way. NIM
+   (`mistral-nemotron`) also passed the hallucination trap cleanly
+   after the same treatment (1.55s, correct decline), though it still
+   showed a softer residual risk on a REAL-but-obscure track (Yoron
+   Israel's "Picket Fences" — correctly identified the real, actual
+   jazz drummer, but invented a specific unverifiable year/city
+   "2010 in Boston" for the track itself) — the fix reduces but does
+   not eliminate fabrication on genuinely thin training data, same
+   conclusion as the original Mistral work.
+
+3. **OpenRouter's free auto-router was unreliable for this app's exact
+   job.** Live testing found most of its genuinely free models
+   (`nex-n2.5-mini`, `dots-studio`, `liquid/lfm-2.5-2.6b`,
+   `cohere/north-mini-code`, the auto-router itself on multiple runs)
+   are reasoning models whose chain-of-thought is billed against the
+   SAME `max_tokens` budget as the actual JSON reply, not a separate
+   field — at the app's original 1200-token budget, several exhausted
+   the whole budget on visible reasoning and returned `content: null`,
+   never reaching real output. Separately, `google/gemma-4-*:free`
+   variants hit a *different* failure: a shared upstream rate limit at
+   the Google AI Studio provider level (`limit_source:
+   upstream_provider_shared_pool`), independent of OpenRouter's own
+   quota — a live, real-time capacity problem outside this app's
+   control, not a bug in the app or the key. Fixed: bumped
+   `llm_openrouter()`'s `max_tokens` to 3000 (via a new optional
+   `max_tokens` param on the shared `_llm_openai_compatible()` helper,
+   default 1200 unchanged for NIM/Mistral/Gemini) and
+   `openrouter_timeout` to 90s (from 30s), plus added `"openrouter"` to
+   `_CATEGORICAL_PROVIDERS` — verified live that the shorter,
+   more-disciplined target the categorical rules produce is itself a
+   real lever for finishing within budget, not just the bigger token
+   ceiling: `nex-agi/nex-n2.5-pro:free` on the hallucination trap went
+   from 48s-then-null (with the OLD 1200-token budget, no hardening)
+   to 2.7s-correct (with BOTH fixes). Not a complete fix — the same
+   model on `openrouter/free`'s auto-router (not the direct pin) still
+   took 84s on one well-documented-track run even with both changes,
+   since which underlying model you land on each call is genuinely
+   unpredictable and out of this app's control. `openrouter_timeout`
+   was deliberately set generous (90s) rather than tight, since a slow-
+   but-eventually-correct answer beats a premature timeout that throws
+   away real work and falls through to the next provider needlessly.
+
+**What was NOT fixed / deliberately left alone**: `_CATEGORICAL_PROVIDERS`
+does not include `codex` or `grok` — both are subscription-backed,
+tied to the admin's own real paid account, and this failure mode
+wasn't tested against them this session; a behavior change there has a
+bigger blast radius (real money, not just quota) than for the free-tier
+providers, so it was left out deliberately rather than assumed safe by
+extension. `opencode`/`ollama` were also left out — self-hosted, no
+shared free-tier quota pressure creating the "must answer with
+something" incentive the cloud free tiers seem to have.
+
+**Ollama's own 7 installed models were also tested** on the P5000
+(same Beethoven prompt): only `qwen3:14b` (47.5s, mostly accurate) and
+`phi4-mini` (14.9s, fast but fabricated a fake dedicatee) produced
+usable output within a reasonable time. `gemma4:e4b-it-qat` (17.4s)
+got the premiere date wrong. `gpt-oss:20b` (32.6s, from earlier
+testing) got the date wrong and invented a venue. Three — `qwen3.5:9b`
+(137s), `phi4-reasoning:plus` (>2min), `translategemma:12b` (>2min,
+also just the wrong tool — a translation-specialized model) — never
+finished at all within any reasonable timeout. This Ollama work was
+diagnostic only; no default was changed and no new model was pulled
+beyond the `qwen3:14b`/`gpt-oss:20b` pulled in the earlier session — a
+real pending decision on whether/how to wire a P5000 model into the
+app remains open.
+
+**Verified before shipping**: every fix above confirmed with a real
+live API call against the actual production code path (imported
+`textutil.apply_provider_rules()` and `enricher._PROMPT_TEMPLATE`
+directly, not a hand-copied prompt string) — not just theorized.
+`python3 -m py_compile` on all touched backend files, `npm run build`
+clean (no frontend changes this session, backend-only fixes).
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

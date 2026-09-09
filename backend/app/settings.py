@@ -21,8 +21,24 @@ _DEFAULTS = {
     "ollama_gpu": -1,
     "api_base": "https://integrate.api.nvidia.com/v1",
     "api_key": "",
-    "api_model": "minimaxai/minimax-m3",
-    "api_timeout": 30,
+    # minimaxai/minimax-m3 (the old default) was retired by NVIDIA on
+    # 2026-09-09 (confirmed live: a real call returns 410 Gone, "has
+    # reached its end of life") — this app's NIM default sat broken
+    # until caught here. mistralai/mistral-nemotron confirmed live as
+    # a real, working replacement (3-11s response times), but a live
+    # probe of all 80 models NVIDIA's own /v1/models lists for a real
+    # account found only 9 actually invokable — most return 404
+    # "Function not found for account", and several of the 9 that DO
+    # work are reasoning models (nemotron-3-super-120b-a12b,
+    # nemotron-3.5-lightning-30b-a3b) that leak chain-of-thought into
+    # the reply and burn the token budget before reaching real JSON,
+    # the same failure mode seen on Mistral's flagship and OpenRouter's
+    # free auto-router. mistral-nemotron was the only non-reasoning,
+    # actually-working option found. If this model is ever retired
+    # too, re-probe NVIDIA's actual account-enabled model list rather
+    # than trusting the public /v1/models catalog — most of it 404s.
+    "api_model": "mistralai/mistral-nemotron",
+    "api_timeout": 45,
     "opencode": "",
     "opencode_timeout": 180,
     # "api_key" (metered, per-token) or "subscription" (OAuth against a
@@ -89,7 +105,17 @@ _DEFAULTS = {
     # (doesn't expire).
     "openrouter_api_key": "",
     "openrouter_model": "openrouter/free",
-    "openrouter_timeout": 30,
+    # 90s, not 30s — a live provider-comparison battery (2026-09-09)
+    # found the free lineup's actually-working models are reasoning
+    # models with real variance in how long they take: as fast as ~3s
+    # with the categorical hardening applied (see textutil.py's
+    # _CATEGORICAL_PROVIDERS), but the auto-router ("openrouter/free")
+    # was observed taking 84s on one run even with that same hardening
+    # — a shorter timeout would have thrown away a correct, complete
+    # answer and fallen through to the next provider unnecessarily. See
+    # providers.py's llm_openrouter() for the matching max_tokens bump
+    # — reasoning tokens count against the same budget as content.
+    "openrouter_timeout": 90,
     "openrouter_manually_enabled": True,
     # Mistral AI's La Plateforme "Experiment" free tier (2026-09-09) —
     # genuinely free, no card needed (phone verification only), not

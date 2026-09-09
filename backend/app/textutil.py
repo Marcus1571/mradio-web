@@ -27,9 +27,21 @@ SINCERITY_RULES = (
 )
 
 
-# Mistral-specific — arrived at by iterating live against the real API
-# (2026-09-09), well beyond SINCERITY_RULES alone. Three escalating
-# findings, in order:
+# Originally built Mistral-specific, extended to openai (NIM) and
+# gemini on 2026-09-09 after a live provider-comparison battery showed
+# BOTH of them fail the exact same hallucination trap Mistral did — a
+# fabricated nonexistent artist/track — despite Gemini having zero
+# hardening at the time and NIM only having the weaker SINCERITY_RULES.
+# Gemini in particular did excellently on well-documented material
+# (correct facts, even a real Wagner quote) but invented a complete
+# fake biography, discography-sounding details, and a fake genre for a
+# made-up composer/track — proof that "good on famous things" and
+# "safe on obscure/unknown things" are different, uncorrelated
+# properties, and every non-self-hosted provider needs the categorical
+# hardening below, not just whichever one happened to fail a spot-check
+# first. Arrived at by iterating live against the real API (2026-09-09),
+# well beyond SINCERITY_RULES alone. Three escalating findings, in
+# order:
 #
 # 1. A soft "only state confident facts" instruction (SINCERITY_RULES'
 #    own approach, and an early "confidence-gating" variant of this
@@ -82,13 +94,15 @@ SINCERITY_RULES = (
 # seen without this - not a perfect fix; residual risk on genuinely
 # thin training data is real and documented here rather than papered
 # over.
-_MISTRAL_LENGTH_OVERRIDE = (
+_CATEGORICAL_LENGTH_OVERRIDE = (
     "The 750-850 character target below does NOT apply to you — ignore "
     "it. Follow the fact-category allowlist and mandatory sentence "
     "structure given after these rules instead."
 )
 
-MISTRAL_RULES = (
+# Applied to mistral, openai (NIM), and gemini — see the comment above
+# for why this isn't Mistral-specific despite the name history.
+CATEGORICAL_HALLUCINATION_RULES = (
     '\n\nFACT-CATEGORY ALLOWLIST for "trivia" — you may ONLY include '
     "facts from these categories, and only if genuinely certain:\n"
     "  1. Year of composition/release/premiere (year only).\n"
@@ -172,30 +186,46 @@ MISTRAL_RULES = (
 )
 
 
+# Providers that get the full categorical-allowlist treatment (see
+# CATEGORICAL_HALLUCINATION_RULES' comment) on top of SINCERITY_RULES —
+# every non-self-hosted, non-subscription cloud provider tested has
+# shown real fabrication on unknown/obscure tracks, not just Mistral.
+# openrouter added 2026-09-09 alongside its max_tokens bump (see
+# providers.py's llm_openrouter()) — its free lineup's reasoning models
+# need every advantage to actually finish within budget, and a shorter
+# target (this rule set's real effect, independent of the hallucination
+# angle) means less to reason through before emitting real JSON.
+# Deliberately NOT applied to codex/grok (subscription-backed, the
+# admin's own paid account — not tested for this failure mode this
+# session, and a behavior change there is a bigger blast radius given
+# real money is involved) or opencode/ollama (self-hosted, no shared
+# free-tier quota pressure pushing toward a "must answer" instinct).
+_CATEGORICAL_PROVIDERS = frozenset({"mistral", "openai", "gemini", "openrouter"})
+
+
 def apply_provider_rules(prompt: str, provider: str) -> str:
-    """Provider-targeted prompt additions. openai (NIM) gets
-    SINCERITY_RULES. mistral gets SINCERITY_RULES, MISTRAL_RULES, AND a
-    length-target override — see MISTRAL_RULES' docstring-length
-    comment above for the full story: a competing "aim for 750-850
+    """Provider-targeted prompt additions. mistral/openai(NIM)/gemini/
+    openrouter get SINCERITY_RULES + CATEGORICAL_HALLUCINATION_RULES +
+    a length-target override — see CATEGORICAL_HALLUCINATION_RULES'
+    comment for the full story: a competing "aim for 750-850
     characters" instruction earlier in the prompt kept winning against
     a later "ignore that" rule unless the original instruction was
     replaced outright, not just argued with. opencode and ollama keep
-    the stock prompt."""
-    if provider == "mistral":
+    the stock prompt; codex/grok too (see _CATEGORICAL_PROVIDERS)."""
+    if provider in _CATEGORICAL_PROVIDERS:
         target = ("Aim for 750-850 characters with a hard "
                   "maximum of 850 — if your draft runs long, tighten it.")
         # Loud failure if _PROMPT_TEMPLATE's wording ever changes —
         # a silent no-op here would leave the conflicting length
         # instruction in place, which live testing showed reliably
-        # wins over a same-prompt override (see MISTRAL_RULES' comment).
+        # wins over a same-prompt override (see the comment above
+        # CATEGORICAL_HALLUCINATION_RULES).
         assert target in prompt, (
             "textutil.apply_provider_rules: expected length-target "
             "sentence not found in prompt — _PROMPT_TEMPLATE wording "
             "changed; update the .replace() target above to match.")
-        prompt = prompt.replace(target, _MISTRAL_LENGTH_OVERRIDE)
-        return prompt + SINCERITY_RULES + MISTRAL_RULES
-    if provider == "openai":
-        return prompt + SINCERITY_RULES
+        prompt = prompt.replace(target, _CATEGORICAL_LENGTH_OVERRIDE)
+        return prompt + SINCERITY_RULES + CATEGORICAL_HALLUCINATION_RULES
     return prompt
 
 

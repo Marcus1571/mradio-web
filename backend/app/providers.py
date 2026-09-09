@@ -246,13 +246,23 @@ async def llm_ollama(settings: dict, prompt: str) -> str | None:
 
 
 async def _llm_openai_compatible(base_url: str, model: str, api_key: str,
-                                 timeout: float, prompt: str) -> str | None:
+                                 timeout: float, prompt: str,
+                                 max_tokens: int = 1200) -> str | None:
     """Shared request/response shape for any OpenAI-compatible
     chat/completions endpoint — used by both llm_openai (NIM/generic) and
     llm_gemini (Google's own OpenAI-compat layer, confirmed live reachable
     at generativelanguage.googleapis.com/v1beta/openai/, a real documented
     endpoint, not a workaround). Kept as one function rather than two
-    near-identical copies now that a second real caller exists."""
+    near-identical copies now that a second real caller exists.
+
+    max_tokens defaults to 1200 (NIM/Mistral/Gemini's budget, confirmed
+    live to be enough for those). OpenRouter passes a higher value —
+    live testing (2026-09-09) found several of its free models are
+    reasoning models that put chain-of-thought INSIDE the completion
+    budget (not a separate field), so 1200 tokens is consumed entirely
+    by reasoning and the actual JSON reply never gets emitted at all
+    (content comes back null). A higher budget gives those models room
+    to finish reasoning and still produce real output."""
     base = api_endpoint(base_url, "chat/completions")
     payload = {
         "model": model,
@@ -264,7 +274,7 @@ async def _llm_openai_compatible(base_url: str, model: str, api_key: str,
             {"role": "user", "content": prompt},
         ],
         "temperature": 0.1,
-        "max_tokens": 1200,
+        "max_tokens": max_tokens,
     }
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
@@ -357,7 +367,22 @@ async def llm_openrouter(settings: dict, prompt: str) -> str | None:
     router that auto-picks among whichever models are currently free,
     rather than pinning to one specific free model ID that could be
     pulled from the free lineup later (a real, observed risk — see
-    findings.md's notes on how often the free-model roster changes)."""
+    findings.md's notes on how often the free-model roster changes).
+
+    max_tokens=3000, not the shared helper's 1200 default — a live
+    provider-comparison battery (2026-09-09) found every genuinely free
+    model tried (nex-n2.5-mini, dots-studio, liquid, cohere) is a
+    reasoning model whose chain-of-thought counts against max_tokens,
+    not a separate budget; at 1200 tokens the whole budget gets
+    consumed by reasoning and content comes back null before any JSON
+    is ever emitted. Confirmed live: nex-n2.5-pro at a higher budget
+    (used ~1200 total tokens for a full correct reply, including
+    reasoning) actually completed. Still not a guarantee — see
+    textutil.py's _CATEGORICAL_PROVIDERS for the matching prompt
+    hardening applied here, and providers.py's ADMIN_ONLY_PROVIDERS/
+    AUTO_HIDE_PROVIDERS for why this provider already has a shared-
+    quota admin-only restriction independent of this reliability
+    concern."""
     if not settings.get("openrouter_api_key"):
         return None
     return await _llm_openai_compatible(
@@ -366,6 +391,7 @@ async def llm_openrouter(settings: dict, prompt: str) -> str | None:
         settings["openrouter_api_key"],
         float(settings.get("openrouter_timeout", 30)),
         prompt,
+        max_tokens=3000,
     )
 
 

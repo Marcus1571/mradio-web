@@ -331,12 +331,17 @@ provider; nothing else in the app is affected.
   fresh install — NVIDIA's hosted NIM endpoint. Double-check the exact
   value on your build.nvidia.com API settings page if it's ever changed on
   their end, rather than trusting this blindly.
-- **Model**: defaults to `minimaxai/minimax-m3` on a fresh install — the
-  only free NIM model that reliably returns clean, strict JSON matching
-  this app's liner-notes schema (same reasoning as the original mradio
-  terminal app). The NIM catalogue changes often; other free models may
-  appear or disappear, or you can point this at any other model you have
-  access to.
+- **Model**: defaults to `mistralai/mistral-nemotron` on a fresh install
+  (changed 2026-09-09 — the previous default, `minimaxai/minimax-m3`,
+  was retired by NVIDIA and started returning `410 Gone`; confirmed
+  live). NVIDIA's `/v1/models` catalogue is a poor guide to what
+  actually works: a live probe of all ~80 models it lists for a real
+  account found only ~9 genuinely invokable, and most of those are
+  reasoning/safety-classifier/embedding models unsuited to this app's
+  strict single-JSON-object task. If this default ever breaks again,
+  re-probe the account's real model access rather than trusting the
+  public catalogue or picking a plausible-sounding name — most 404 with
+  "Function not found for account".
 - **API key**: paste the key from step 3 above. Stored server side; the
   settings page only ever shows it redacted after saving.
 
@@ -420,6 +425,22 @@ whichever model you name, across many underlying providers.
 added credit to the account, rising to 1,000/day (permanently) the
 first time you ever spend $10, whether or not you use paid models
 day-to-day. Both figures reset daily.
+
+**Reliability note** (2026-09-09): a live provider-comparison found
+several of OpenRouter's genuinely free models are reasoning models
+whose chain-of-thought is billed against the same `max_tokens` budget
+as the actual reply — at this app's original 1200-token budget, some
+would exhaust the whole budget reasoning and return empty content,
+never reaching real JSON. Fixed by bumping OpenRouter's `max_tokens` to
+3000 and its timeout to 90s (`providers.py`'s `llm_openrouter()`,
+`settings.py`), plus applying the same anti-hallucination prompt
+hardening Mistral/NIM/Gemini get (`textutil.py`'s
+`_CATEGORICAL_PROVIDERS`) — its shorter-answer structure also reduces
+how much a model needs to reason through, which helped completion
+times as much as the bigger token budget did in testing. Even with
+these fixes, response times on the free auto-router can vary widely
+(observed 3-84 seconds for different tracks) since it's genuinely
+unpredictable which underlying model you'll land on each call.
 
 **Under the hood:** standard OpenAI-compatible
 `chat/completions` shape (confirmed live) — reuses the same shared

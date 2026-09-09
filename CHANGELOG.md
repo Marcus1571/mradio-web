@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.15.0] - 2026-09-09
+
+Three real, live-confirmed provider fixes from a full provider-by-
+provider quality/speed comparison:
+
+- **NIM's default model was dead.** `minimaxai/minimax-m3` was retired
+  by NVIDIA hours before this was caught (confirmed live: `410 Gone`).
+  Replaced with `mistralai/mistral-nemotron`, the only genuinely
+  working non-reasoning model found after probing all ~80 models
+  NVIDIA's own catalogue lists for this account (most 404 as "not
+  found for account" — the public model list is not a reliable guide
+  to what's actually usable).
+- **Gemini and NIM had zero/weak anti-hallucination hardening.** A
+  live test found Gemini — despite excellent, fully accurate answers
+  on well-documented tracks — invented a complete fake biography for a
+  nonexistent artist/track, the same failure Mistral was hardened
+  against in 1.13.0. Extended that same category-based prompt hardening
+  (renamed `CATEGORICAL_HALLUCINATION_RULES`, no longer Mistral-only)
+  to `openai` (NIM) and `gemini`. Result: Gemini went from a 50s fully
+  fabricated answer to a 1.3s honest "no confident details available",
+  and got noticeably faster on well-documented tracks too (30-50s to
+  ~1s) since there's less to reason through with a shorter, more
+  disciplined target.
+- **OpenRouter's free auto-router was unreliable.** Live testing found
+  most of its genuinely free models are reasoning models whose
+  chain-of-thought counts against the same token budget as the reply —
+  at the app's original 1200-token budget, several exhausted the whole
+  budget reasoning and returned empty content, never reaching real
+  JSON. Bumped OpenRouter's `max_tokens` to 3000 and timeout to 90s,
+  and applied the same categorical hardening (which also reduces how
+  much reasoning is needed). One model (`nex-agi/nex-n2.5-pro:free`)
+  got every fact right on a well-documented test, including the
+  correct dedicatee no other provider that day got right — but took
+  84s on one run even with the fix, a real reminder that OpenRouter's
+  free-tier response times are genuinely unpredictable depending on
+  which underlying model you land on.
+
 ## [1.14.1] - 2026-09-09
 
 Fixed a wrong station logo: "Heart 70s (UK)" was showing the generic
