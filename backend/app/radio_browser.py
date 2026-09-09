@@ -291,8 +291,13 @@ async def _searxng_logo(
         host = (urllib.parse.urlparse(src).hostname or "").lower()
         if any(bad in host for bad in _IMAGE_SEARCH_NOISE_HOSTS):
             continue
+        # Every specific word must appear, not merely one — same subset
+        # rule as _wikipedia_logo/_first_working_favicon, for the same
+        # reason: sharing a single generic-ish token (e.g. "heart") is
+        # far too weak to distinguish sibling stations ("Heart 70s" vs
+        # plain "Heart").
         haystack = f"{item.get('title', '')} {src}".lower()
-        if not any(w in haystack for w in specific):
+        if not all(w in haystack for w in specific):
             continue
         candidates.append(src)
 
@@ -431,7 +436,15 @@ async def _first_working_favicon(
     a homepage per variant, which is what pushed one lookup past 90s."""
     fallback: str | None = None
     for r in results:
-        if require_words and not (_distinguishing_words(r.get("name", "")) & require_words):
+        # Subset, not intersection: a candidate must contain *every*
+        # distinguishing word, not just one. "Heart 70s" loosely
+        # searching "Heart" was matching plain "Heart" (or "Heart 80s",
+        # "Heart Dance", etc.) results, since any one shared word
+        # ("heart") used to be enough — even though the actually
+        # distinguishing word ("70s") never matched. Confirmed live:
+        # this is exactly what put the generic Heart brand-heart icon
+        # on the "Heart 70s" station instead of a decade-specific logo.
+        if require_words and not require_words <= _distinguishing_words(r.get("name", "")):
             continue
         homepage = r.get("homepage")
         if homepages is not None and homepage and homepage not in homepages:
