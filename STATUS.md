@@ -4672,6 +4672,56 @@ Take") also resolves correctly. Applies to every hardened provider
 since it's a change to the shared `CATEGORICAL_HALLUCINATION_RULES`
 constant.
 
+## Original-recording + notable-later-recordings fact category (fixed 2026-09-09, 1.16.4)
+
+User tried the 1.16.3 fix, said it "still feels thin" — 3 more tracks
+(Carpenters' "Superstar," Art Pepper's "Autumn Leaves," Monk's "Ruby,
+My Dear") all correctly used category 7 where applicable but read as
+uniformly short, same 3-sentence shape every time.
+
+Diagnosed live, same method as 1.16.3: asked Grok directly, outside
+the constrained prompt, whether it had more certain facts about "Ruby,
+My Dear" than the app surfaced — it confirmed real, checkable ones
+(first recorded 1947 for Blue Note Records; John Coltrane recorded a
+version in 1957 as part of Monk's quartet), and the same test on
+"Autumn Leaves" surfaced Miles Davis/Cannonball Adderley/Bill Evans as
+notable later performers. The gap: category 3 only covers performers
+on THIS specific recording, category 7 only covers THIS recording
+being a cover of something else — neither covers "who first recorded
+the underlying WORK" or "other notable artists who also recorded this
+WORK." Scoped deliberately narrow given this is adjacent to the vague
+"used in soundtracks/celebrations" filler the rules already forbid:
+category 8 allows (a) first recording's artist+year+label if certain,
+no venue, and (b) up to 2-3 OTHER notable artists who recorded the
+same work, name+era only — explicitly no anecdotes, no chart/award
+claims, no "best/definitive" ranking language, and only names the
+model is certain actually recorded this specific work. New SLOT 5
+added (kept separate from SLOT 4's cover-fact scope rather than
+overloading one slot with two unrelated fact types).
+
+**Verified live** via the same `docker cp`-into-running-container
+method (no downtime, no risk to served code, cleaned up after): "Ruby,
+My Dear" surfaced the real Blue Note/Coltrane facts on the first test
+run. Also confirmed the fabrication trap still declines correctly and
+the already-fixed Carpenters cover case still resolves correctly.
+
+**Known limitation, tested and reported honestly rather than
+oversold**: category 8 lands INCONSISTENTLY. Two more repeat runs on
+the exact same "Ruby, My Dear" track both skipped it and reverted to
+the thin 2-sentence answer, despite the model demonstrably having the
+knowledge (confirmed by the direct, unconstrained test above). No
+fabrication risk in either direction — skipping is always the safe
+outcome — but richness isn't guaranteed run-to-run for the same track.
+Presented this tradeoff to the user directly (ship an imperfect real
+improvement vs. spend more iteration trying to raise the hit rate) —
+user chose to ship now. A real, open follow-up if the inconsistency
+turns out to matter more in practice than in this session's spot
+checks: worth revisiting with stronger "actively check before
+skipping" wording, or possibly re-testing hit rate across many more
+tracks before concluding whether it's model temperature variance
+(0.1, not 0) or something structural about how deep in the prompt this
+slot sits.
+
 ## Where things live
 
 - `backend/app/` — one module per concern: `auth.py`/`users.py`/`db.py`
