@@ -8,7 +8,11 @@ messages and `KB.md` are for).
 
 Part of this project's governance layer — see `~/governance/GOVERNANCE.md`
 for how this file fits into the overall system, and `~/governance/USER.md`
-for the operator's cross-project preferences that apply here too.
+for the operator's cross-project preferences that apply here too. This
+file stays generic like every other committed doc (see `AGENTS.md`) — for
+the operator's real deployment specifics (actual hostnames, IPs, box
+names), see the operator's own private, cross-project infra notes, kept
+outside this repo and never duplicated in here.
 
 ## What this is
 
