@@ -430,6 +430,59 @@ key), so unlike NIM's Test button, OpenRouter's Test makes a real
 `chat/completions` call to actually verify the key — a bad key only
 ever surfaces as a `401` on that call, never on the models listing.
 
+### Mistral
+
+Not admin-only — free for everyone once configured, same as Gemini.
+Uses Mistral AI's free "Experiment" plan on La Plateforme (their
+developer API console, distinct from their consumer "Vibe" chat app).
+
+**Getting an API key:**
+
+1. Go to [console.mistral.ai](https://console.mistral.ai) and sign up —
+   no credit card needed, but a one-time phone number verification is
+   required.
+2. In the console, switch to **Docs & API** (not "Vibe" or "Studio")
+   and generate an API key.
+3. Paste it into mradio-web's **AI providers** page (user menu →
+   Settings → AI providers, admin only), in the Mistral section's API
+   key field, then **Save**.
+
+**Fields:**
+
+- **Model**: defaults to `open-mistral-nemo` (12B), not Mistral's
+  flagship `mistral-small-latest` — confirmed live (2026-09-09) that
+  Mistral Small is rate-limited to **0 requests/minute** on the free
+  Experiment tier, even with a valid key. `open-mistral-nemo` and the
+  Ministral family (`ministral-3b-latest`, `ministral-8b-latest`) all
+  get real free-tier quota instead (see below). To try a different free
+  model, check current availability via a real `chat/completions` call
+  first — a `GET /v1/models` listing succeeding doesn't mean the free
+  tier actually allows requests against that model.
+- **API key**: paste the key from step 2 above. Stored server side; the
+  settings page only ever shows it redacted after saving.
+
+**Free-tier limits**: confirmed live per-model, not shared account-wide
+— `open-mistral-nemo` and `ministral-8b-latest`: 625,000 tokens/min,
+188 requests/min. `ministral-3b-latest`: 1,300,000 tokens/min, 750
+requests/min. Very generous compared to Gemini's or OpenRouter's daily
+caps, on smaller models.
+
+**Accuracy note**: a live spot-check found `open-mistral-nemo` invented
+plausible-sounding but incorrect details (wrong dedicatee, an invented
+"three weeks" composition claim) on a well-documented classical work —
+this provider gets the same anti-hallucination prompt hardening as the
+NIM provider (see `textutil.py`'s `apply_provider_rules()`), but expect
+more hallucination risk than Gemini/OpenRouter's larger free models on
+niche facts.
+
+**Under the hood:** standard OpenAI-compatible `chat/completions` shape
+at `api.mistral.ai/v1` (confirmed live) — reuses the same shared
+request/response code as NIM and OpenRouter. Unlike OpenRouter, `GET
+/v1/models` *does* validate the key (401 on an invalid one), but that
+alone doesn't confirm the configured model has any free-tier quota —
+same as OpenRouter, the Test button makes a real `chat/completions`
+call rather than trusting the models listing.
+
 ### Ollama
 
 **Setting up Ollama:**

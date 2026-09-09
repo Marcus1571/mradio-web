@@ -125,6 +125,14 @@ const he: Dict = {
     openrouterNotePrefix: 'חדש ב-OpenRouter? ראה',
     openrouterNoteLink: '״Getting an API key״ ב-KB.md',
     openrouterNoteSuffix: 'להוראות קבלת מפתח API בחינם.',
+    mistralGroup: 'Mistral',
+    mistralIntro:
+      'המסלול החינמי "Experiment" של Mistral AI ב-La Plateforme — אין צורך בכרטיס אשראי, זמין לכולם לאחר ' +
+      'ההגדרה, לא רק למנהלים. כברירת מחדל משתמש במודל קטן יותר שנשאר בתוך המכסה של המסלול החינמי ' +
+      '(המודל הדגל שלהם אינו כלול במסלול הזה).',
+    mistralNotePrefix: 'חדש ב-Mistral? ראה',
+    mistralNoteLink: '״Getting an API key״ ב-KB.md',
+    mistralNoteSuffix: 'להוראות קבלת מפתח API בחינם.',
     providerEnableToggle: '״הצג בתפריט ה-AI של הנגן״',
     providerEnableToggleHint:
       'כבה כדי להסתיר מהתפריט הנפתח של כולם בלי להתנתק — שימושי כשמגיעים למכסת שימוש.',

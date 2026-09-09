@@ -127,6 +127,14 @@ const en = {
     openrouterNotePrefix: 'New to OpenRouter? See',
     openrouterNoteLink: '"Getting an API key" in KB.md',
     openrouterNoteSuffix: 'for how to get a free API key.',
+    mistralGroup: 'Mistral',
+    mistralIntro:
+      "Mistral AI's free \"Experiment\" tier on La Plateforme — no credit card required, available to " +
+      'everyone once configured, not admin-only. Defaults to a smaller model that stays within the free ' +
+      "tier's quota (their flagship model is not included on this tier).",
+    mistralNotePrefix: 'New to Mistral? See',
+    mistralNoteLink: '"Getting an API key" in KB.md',
+    mistralNoteSuffix: 'for how to get a free API key.',
     providerEnableToggle: 'Show in the player’s AI menu',
     providerEnableToggleHint:
       'Turn this off to hide it from everyone’s dropdown without disconnecting — handy once you’ve hit a usage quota.',

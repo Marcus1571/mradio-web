@@ -91,9 +91,24 @@ _DEFAULTS = {
     "openrouter_model": "openrouter/free",
     "openrouter_timeout": 30,
     "openrouter_manually_enabled": True,
+    # Mistral AI's La Plateforme "Experiment" free tier (2026-09-09) —
+    # genuinely free, no card needed (phone verification only), not
+    # admin-only (same reasoning as Gemini: not tied to anyone's
+    # personal paid subscription). Default model "open-mistral-nemo",
+    # not "mistral-small-latest": a live key check found Small gated to
+    # 0 requests/minute on this tier, while Nemo (12B) and the Ministral
+    # 3B/8B family get real quota (625K-1.3M tokens/min). A live
+    # spot-check also found real fabrication on niche classical-music
+    # facts at this model size, so it gets the same SINCERITY_RULES
+    # hardening as the NIM provider — see textutil.py.
+    "mistral_api_key": "",
+    "mistral_model": "open-mistral-nemo",
+    "mistral_timeout": 30,
+    "mistral_manually_enabled": True,
 }
 
-_SECRET_FIELDS = {"api_key", "grok_api_key", "gemini_api_key", "openrouter_api_key"}
+_SECRET_FIELDS = {"api_key", "grok_api_key", "gemini_api_key", "openrouter_api_key",
+                  "mistral_api_key"}
 
 
 def _seed_from_env() -> dict:

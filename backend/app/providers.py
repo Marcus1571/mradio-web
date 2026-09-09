@@ -17,7 +17,12 @@ from . import settings as settings_store
 
 logger = logging.getLogger("mradio.providers")
 
-PROVIDERS = ("codex", "grok", "opencode", "ollama", "openai", "gemini", "openrouter")
+# codex/grok first (subscription-backed, admin-only), then mistral —
+# user's explicit ordering request (2026-09-09): "the three with
+# subscription at the top, Mistral being the third" — a dropdown/list
+# order preference, not a functional grouping (mistral is a free-tier
+# key, not a subscription, and is NOT in ADMIN_ONLY_PROVIDERS below).
+PROVIDERS = ("codex", "grok", "mistral", "opencode", "ollama", "openai", "gemini", "openrouter")
 
 # Providers restricted to admins only. Two different reasons feed this
 # set: codex/grok (2026-09-07, user's explicit request) because a
@@ -68,7 +73,7 @@ def clear_offline() -> None:
 # check — no extra API calls for a provider nobody's using), and comes
 # back only after a real background retest passes, not blindly after a
 # timer (see health_retry_loop() below for the retest).
-AUTO_HIDE_PROVIDERS = frozenset({"codex", "grok", "gemini", "openrouter"})
+AUTO_HIDE_PROVIDERS = frozenset({"codex", "grok", "gemini", "openrouter", "mistral"})
 _RETRY_COOLDOWN_SECONDS = 30 * 60
 
 _provider_next_retry: dict[str, float] = {}
@@ -187,6 +192,8 @@ def provider_enabled(name: str, settings: dict) -> bool:
                   and settings.get("gemini_manually_enabled", True),
         "openrouter": bool(settings.get("openrouter_api_key"))
                       and settings.get("openrouter_manually_enabled", True),
+        "mistral": bool(settings.get("mistral_api_key"))
+                   and settings.get("mistral_manually_enabled", True),
     }
     # Auto-hide on failure (see AUTO_HIDE_PROVIDERS) is a separate gate
     # from the manual switch above — a provider that just failed a real
@@ -200,7 +207,7 @@ def ai_configured(settings: dict) -> bool:
     return bool(settings.get("ollama_url")) or bool(settings.get("api_key")) \
         or bool(oc_port(settings)) or bool(codex_settings.load().get("access_token")) \
         or grok_enabled(settings) or bool(settings.get("gemini_api_key")) \
-        or bool(settings.get("openrouter_api_key"))
+        or bool(settings.get("openrouter_api_key")) or bool(settings.get("mistral_api_key"))
 
 
 def api_endpoint(base: str, suffix: str) -> str:
@@ -352,6 +359,31 @@ async def llm_openrouter(settings: dict, prompt: str) -> str | None:
         settings.get("openrouter_model") or "openrouter/free",
         settings["openrouter_api_key"],
         float(settings.get("openrouter_timeout", 30)),
+        prompt,
+    )
+
+
+_MISTRAL_BASE = "https://api.mistral.ai/v1"
+
+
+async def llm_mistral(settings: dict, prompt: str) -> str | None:
+    """Mistral's La Plateforme "Experiment" free tier — genuinely
+    OpenAI-compatible (confirmed live), so this just reuses the shared
+    helper like OpenRouter. Default model "open-mistral-nemo": a live
+    key check (2026-09-09) found "mistral-small-latest" gated to 0
+    requests/minute on the free tier, while ministral-3b/8b and
+    open-mistral-nemo all get real, generous quota (625K-1.3M
+    tokens/min, 188-750 req/min) — Nemo (12B) is the largest model
+    that's actually open on this tier. See textutil.py's
+    apply_provider_rules() for the extra anti-hallucination prompt
+    rules this provider also gets."""
+    if not settings.get("mistral_api_key"):
+        return None
+    return await _llm_openai_compatible(
+        _MISTRAL_BASE,
+        settings.get("mistral_model") or "open-mistral-nemo",
+        settings["mistral_api_key"],
+        float(settings.get("mistral_timeout", 30)),
         prompt,
     )
 
@@ -795,6 +827,53 @@ async def _test_openrouter(settings: dict) -> tuple[bool, str]:
     return True, "Connected."
 
 
+async def _test_mistral(settings: dict) -> tuple[bool, str]:
+    """A real chat/completions call, not GET /models — Mistral's
+    /models does validate the key (confirmed live: 401 on a bad key,
+    unlike OpenRouter's public listing), but a valid key alone doesn't
+    mean the configured MODEL is actually usable: a live check
+    (2026-09-09) found "mistral-small-latest" returns a valid 200 from
+    /models yet is rate-limited to 0 requests/minute on the free
+    "Experiment" tier — only a real completion call surfaces that."""
+    api_key = settings.get("mistral_api_key")
+    if not api_key:
+        return False, "No API key configured."
+    model = settings.get("mistral_model") or "open-mistral-nemo"
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": 'Reply with exactly: {"trivia": "pong"}'}],
+        "temperature": 0.1,
+        "max_tokens": 1200,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=_TEST_TIMEOUT) as client:
+            r = await client.post(
+                api_endpoint(_MISTRAL_BASE, "chat/completions"),
+                json=payload, headers={"Authorization": f"Bearer {api_key}"})
+            if r.status_code != 200:
+                try:
+                    message = r.json().get("message") or ""
+                except ValueError:
+                    message = ""
+                if r.status_code in (401, 403):
+                    return False, "Mistral rejected the API key."
+                if r.status_code == 429:
+                    return False, (f'Mistral has this model rate-limited to 0 on '
+                                   f'the free tier — try a smaller model (e.g. '
+                                   f'"open-mistral-nemo").')
+                return False, (f"Mistral returned an error ({r.status_code}"
+                               f"{': ' + message if message else ''}).")
+            data = r.json()
+    except httpx.HTTPError as exc:
+        return False, f"Could not reach Mistral: {_exc_reason(exc)}"
+    except ValueError:
+        return False, "Mistral returned an unreadable response."
+    content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
+    if not content.strip():
+        return False, "Mistral returned an empty response."
+    return True, "Connected."
+
+
 async def _test_opencode(settings: dict) -> tuple[bool, str]:
     from . import enricher  # local import: avoids a circular import at module load
 
@@ -839,4 +918,6 @@ async def run_provider_test(provider: str, settings: dict) -> tuple[bool, str]:
         return await _test_gemini(settings)
     if provider == "openrouter":
         return await _test_openrouter(settings)
+    if provider == "mistral":
+        return await _test_mistral(settings)
     return False, "Unknown provider."

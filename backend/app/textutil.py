@@ -28,9 +28,14 @@ SINCERITY_RULES = (
 
 
 def apply_provider_rules(prompt: str, provider: str) -> str:
-    """Provider-targeted prompt additions. openai (NIM) gets extra
-    anti-hallucination rules; opencode and ollama keep the stock prompt."""
-    if provider == "openai":
+    """Provider-targeted prompt additions. openai (NIM) and mistral get
+    extra anti-hallucination rules — mistral's free-tier models (Ministral
+    3B/8B, Nemo; Mistral Small is gated off the free plan, see settings.py)
+    showed real fabrication in a live spot-check (wrong dedicatee, invented
+    "three weeks" composition claim) on a well-documented work, the same
+    failure mode SINCERITY_RULES exists to suppress for NIM. opencode and
+    ollama keep the stock prompt."""
+    if provider in ("openai", "mistral"):
         return prompt + SINCERITY_RULES
     return prompt
 

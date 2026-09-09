@@ -49,7 +49,7 @@ export interface Config {
 }
 
 export interface ProviderInfo {
-  name: 'opencode' | 'openai' | 'ollama' | 'codex' | 'grok' | 'gemini' | 'openrouter'
+  name: 'opencode' | 'openai' | 'ollama' | 'codex' | 'grok' | 'gemini' | 'openrouter' | 'mistral'
   enabled: boolean
   auto_hidden: boolean
 }
@@ -85,6 +85,10 @@ export interface AISettings {
   openrouter_model: string
   openrouter_timeout: number
   openrouter_manually_enabled: boolean
+  mistral_api_key: string
+  mistral_model: string
+  mistral_timeout: number
+  mistral_manually_enabled: boolean
 }
 
 export interface AITestResult {

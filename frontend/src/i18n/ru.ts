@@ -129,6 +129,14 @@ const ru: Dict = {
     openrouterNotePrefix: 'Впервые на OpenRouter? См.',
     openrouterNoteLink: '«Getting an API key» в KB.md',
     openrouterNoteSuffix: 'о том, как получить бесплатный API-ключ.',
+    mistralGroup: 'Mistral',
+    mistralIntro:
+      'Бесплатный уровень "Experiment" от Mistral AI на La Plateforme — банковская карта не требуется, ' +
+      'доступен всем после настройки, не только администраторам. По умолчанию используется модель меньшего ' +
+      'размера, укладывающаяся в квоту бесплатного уровня (их флагманская модель на этом уровне недоступна).',
+    mistralNotePrefix: 'Впервые в Mistral? См.',
+    mistralNoteLink: '«Getting an API key» в KB.md',
+    mistralNoteSuffix: 'о том, как получить бесплатный API-ключ.',
     providerEnableToggle: '«Показывать в ИИ-меню плеера»',
     providerEnableToggleHint:
       'Отключите, чтобы скрыть из выпадающего меню у всех, не отключая — удобно при достижении лимита использования.',

@@ -3942,6 +3942,125 @@ extra wrapper this time — `AuthProvider` — since `UsersPage` calls
 harnesses with whatever context providers the target component
 actually depends on, not just stub `fetch`.
 
+## Mistral AI added as 8th AI provider (added 2026-09-09, 1.12.0)
+
+User asked for two things researched: a better Ollama model for the
+home server's P5000 GPU, and a "not sexy anymore" free AI provider.
+Researched the P5000 (16GB GDDR5X, 288GB/s, Pascal, no tensor cores —
+recommended `qwen3:14b` at Q5_K_M or `gpt-oss:20b` as A/B candidates
+against the current `gemma3:4b` default, not yet built/tested — a
+recommendation only) and identified Mistral AI as the provider: once
+the open-weights mindshare leader, now overshadowed by Llama/Qwen/
+Gemini, but their La Plateforme "Experiment" free tier is still live.
+
+User pasted a real API key mid-conversation from Mistral's "Docs & API"
+console section (not "Vibe", their separate consumer chat app with a
+$10/mo credit cap that would've been the wrong fit for a backend
+enrichment service). Verified live before building anything, per this
+project's established discipline (the Groq/Cerebras research earlier
+this project turned out wrong from secondhand summaries alone):
+
+- `GET /v1/models` and a real `POST /chat/completions` both work with
+  the key.
+- **`mistral-small-latest` (their flagship free-tier-adjacent model)
+  returns a valid 200 from `/models` but is rate-limited to `0`
+  requests/minute** (`x-ratelimit-limit-req-minute: 0` in the response
+  headers) — a `/models` check alone would have missed this; only a
+  real completions call surfaced it.
+- `open-mistral-nemo` (12B), `ministral-8b-latest`, and
+  `ministral-3b-latest` all have real, generous quota instead: Nemo/8B
+  get 625,000 tokens/min + 188 req/min; 3B gets 1,300,000 tokens/min +
+  750 req/min. The most generous free quota of any provider in this
+  app, just on smaller models than the flagship.
+- A live quality spot-check (asking `open-mistral-nemo` for trivia
+  about Beethoven's Symphony No. 7) found two failure modes: a US/EU
+  date-format mixup ("August 8" instead of "8 December" — the model
+  had the right facts but wrote the date American-style, which the
+  user correctly diagnosed as an easily-prompted-around ambiguity, not
+  real hallucination) AND genuine fabrication (wrong dedicatee,
+  invented "three weeks" composition-time claim) verified wrong via a
+  real web search against the actual history. Both got fixed at the
+  prompt level rather than shipping without hardening.
+
+**Ordering**: user's explicit request — "the three with subscription at
+the top, Mistral being the third" — clarified via `AskUserQuestion`
+into: dropdown/settings-page order is Codex, Grok, Mistral first (not a
+functional admin-only grouping; Mistral is NOT in
+`ADMIN_ONLY_PROVIDERS`, it's free-for-everyone same as Gemini/
+OpenRouter — purely a list-position preference). `PROVIDERS` tuple in
+`providers.py` reordered to `("codex", "grok", "mistral", "opencode",
+"ollama", "openai", "gemini", "openrouter")`; the Mistral
+`ProviderBubble` in `AISettingsPage.tsx` placed right after Grok's,
+before Gemini's.
+
+**Backend**: `providers.py` gets `llm_mistral()` (reuses the shared
+`_llm_openai_compatible()` helper — genuinely OpenAI-compatible,
+`api.mistral.ai/v1`, no dedicated request/response code needed, same
+pattern as OpenRouter) and a dedicated `_test_mistral()` (a real
+completions call, not `GET /models` — unlike OpenRouter's public
+listing, Mistral's `/models` DOES validate the key with a real 401 on
+a bad one, but that alone doesn't prove the configured *model* has any
+free-tier quota, which is exactly what bit `mistral-small-latest`).
+Added to `ADMIN_ONLY_PROVIDERS`? No. Added to `AUTO_HIDE_PROVIDERS`?
+Yes — same reasoning as Gemini: free-for-everyone but still a
+quota-hitable free tier, gets the manual enable/disable toggle
+(`mistral_manually_enabled`) and auto-hide-on-failure with background
+retest, both already-shared infrastructure from 1.7.1/1.8.0. Default
+model `open-mistral-nemo`, default timeout 30s.
+
+**Anti-hallucination hardening**: `textutil.py`'s
+`apply_provider_rules()` now applies `SINCERITY_RULES` (the same
+never-invent-facts prompt block NIM already got) to `mistral` too, since
+the live spot-check showed real fabrication risk at this model size —
+comment in that function documents exactly which facts were wrong in
+the test case, so a future reader doesn't have to re-derive why this
+provider needed the same treatment as NIM but Ollama/opencode didn't.
+Separately, `enricher.py`'s shared `_PROMPT_TEMPLATE` (used by every
+provider, not just Mistral) gained one new rule: dates must be written
+unambiguously ("8 December 1813", never "12/8/1813" or "August 8") —
+this fixes the date-format confusion for every provider, not just the
+one that happened to surface it in testing, since US/EU date-format
+ambiguity is a shared risk regardless of which model is answering.
+
+**Frontend**: new `MistralIcon` in `Icons.tsx` (a three-swoop
+wind/gust motif — Mistral is also the name of a wind — distinct from
+`OpenRouterIcon`'s converging-paths mark and `GeminiIcon`'s diamond).
+`AISettingsPage.tsx` gets a new `ProviderBubble` cloned structurally
+from OpenRouter's (model + API key fields, manual-enable toggle,
+auto-hidden note, `KbNote` linking to KB.md's new Mistral section, Test
+button) — no OAuth/subscription-mode complexity, matching OpenRouter's
+shape more than Grok's. `types.ts`'s `ProviderInfo`/`AISettings`,
+`NowPlayingPanel.tsx`'s `_PROVIDER_LABEL` (`mistral: 'Mistral'`), and
+`routers/settings.py`'s test-endpoint `Literal` type all updated to
+include `'mistral'` — `routers/enrich.py`'s `/api/enrich/providers`
+endpoint needed NO change, since it already iterates generically over
+`providers.PROVIDERS`.
+
+**i18n**: added `aiSettings.mistralGroup`/`mistralIntro`/
+`mistralNotePrefix`/`mistralNoteLink`/`mistralNoteSuffix` (5 keys) to
+all 15 language files — `en.ts` is the strict TypeScript source-of-
+truth type here (confirmed live: `tsc -b` hard-fails the whole build
+if any other locale file's `aiSettings` object doesn't have identical
+keys to `en.ts`'s, a real safety net this session leaned on rather
+than manually cross-checking 15 files by eye).
+
+**Verified before shipping**: real headless-Chrome screenshot of the
+new Mistral bubble, both collapsed (confirming dropdown order: Codex,
+Grok, **Mistral**, Gemini, OpenRouter, OpenCode, Ollama, NIM) and
+expanded (confirming intro copy, enable toggle, KB.md link, model field
+defaulting to `open-mistral-nemo`, API key field, Test button, green
+status dot) — via the same throwaway-harness technique used all
+project, main.tsx fully reverted and the harness file deleted
+afterward. `KB.md` gained a full "### Mistral" section mirroring
+OpenRouter's structure (signup steps via console.mistral.ai's "Docs &
+API" tab — explicitly not "Vibe" — fields, free-tier limits, the
+0-req/min gotcha, accuracy caveat, technical notes).
+
+**Not yet done**: the P5000 Ollama model upgrade (`qwen3:14b` vs
+`gpt-oss:20b` A/B test against the current `gemma3:4b` default) was
+researched and recommended in the same conversation but not
+implemented — a real pending follow-up, not forgotten scope.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically

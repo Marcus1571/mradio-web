@@ -71,6 +71,10 @@ class AISettingsUpdate(BaseModel):
     openrouter_model: str | None = None
     openrouter_timeout: int | None = None
     openrouter_manually_enabled: bool | None = None
+    mistral_api_key: str | None = None
+    mistral_model: str | None = None
+    mistral_timeout: int | None = None
+    mistral_manually_enabled: bool | None = None
 
 
 class ProviderSwitchRequest(BaseModel):

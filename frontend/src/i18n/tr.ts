@@ -129,6 +129,14 @@ const tr: Dict = {
     openrouterNotePrefix: 'OpenRouter’a yeni misiniz? Bakın:',
     openrouterNoteLink: 'KB.md içindeki "Getting an API key"',
     openrouterNoteSuffix: 'bölümüne bakın — ücretsiz API anahtarı nasıl alınır orada anlatılıyor.',
+    mistralGroup: 'Mistral',
+    mistralIntro:
+      'Mistral AI’ın La Plateforme üzerindeki ücretsiz "Experiment" katmanı — kredi kartı gerekmez, ' +
+      'yapılandırıldıktan sonra herkes kullanabilir, sadece yöneticilere özel değil. Varsayılan olarak ücretsiz ' +
+      'katmanın kotası içinde kalan daha küçük bir model kullanır (amiral gemisi modelleri bu katmana dahil değildir).',
+    mistralNotePrefix: 'Mistral’a yeni misiniz? Bakın:',
+    mistralNoteLink: 'KB.md içindeki "Getting an API key"',
+    mistralNoteSuffix: 'bölümüne bakın — ücretsiz API anahtarı nasıl alınır orada anlatılıyor.',
     providerEnableToggle: '“Oynatıcının yapay zeka menüsünde göster”',
     providerEnableToggleHint:
       'Bağlantıyı kesmeden herkesin açılır menüsünden gizlemek için kapatın — bir kullanım kotasına ulaşıldığında kullanışlıdır.',

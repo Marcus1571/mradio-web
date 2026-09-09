@@ -129,6 +129,14 @@ const nl: Dict = {
     openrouterNotePrefix: 'Nieuw met OpenRouter? Zie',
     openrouterNoteLink: '„Getting an API key" in KB.md',
     openrouterNoteSuffix: 'om een gratis API-sleutel te krijgen.',
+    mistralGroup: 'Mistral',
+    mistralIntro:
+      'Het gratis "Experiment"-niveau van Mistral AI op La Plateforme — geen creditcard nodig, beschikbaar ' +
+      'voor iedereen zodra ingesteld, niet alleen voor beheerders. Gebruikt standaard een kleiner model dat ' +
+      'binnen het quotum van het gratis niveau blijft (hun topmodel is niet inbegrepen op dit niveau).',
+    mistralNotePrefix: 'Nieuw met Mistral? Zie',
+    mistralNoteLink: '„Getting an API key" in KB.md',
+    mistralNoteSuffix: 'om een gratis API-sleutel te krijgen.',
     providerEnableToggle: '‘Weergeven in het AI-menu van de speler’',
     providerEnableToggleHint:
       'Zet uit om het voor iedereen uit het dropdownmenu te verbergen zonder te verbreken — handig zodra een gebruikslimiet is bereikt.',

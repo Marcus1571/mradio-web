@@ -125,6 +125,13 @@ const ja: Dict = {
     openrouterNotePrefix: 'OpenRouterが初めてですか？KB.mdの',
     openrouterNoteLink: '「Getting an API key」',
     openrouterNoteSuffix: 'をご覧ください。無料APIキーの取得方法が書かれています。',
+    mistralGroup: 'Mistral',
+    mistralIntro:
+      'Mistral AIのLa Plateformeにおける無料の「Experiment」プラン — クレジットカード不要、設定すれば管理者以外も' +
+      '全員利用可能です。デフォルトでは無料プランの利用枠に収まる小型モデルを使用します（フラッグシップモデルはこのプランには含まれません）。',
+    mistralNotePrefix: 'Mistralが初めてですか？KB.mdの',
+    mistralNoteLink: '「Getting an API key」',
+    mistralNoteSuffix: 'をご覧ください。無料APIキーの取得方法が書かれています。',
     providerEnableToggle: '「プレーヤーのAIメニューに表示」',
     providerEnableToggleHint:
       'オフにすると接続を切らずに全員のドロップダウンから非表示にできます。利用上限に達したときに便利です。',

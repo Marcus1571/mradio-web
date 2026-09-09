@@ -52,6 +52,9 @@ _PROMPT_TEMPLATE = (
     'headings, no labels). Aim for 750-850 characters with a hard '
     'maximum of 850 — if your draft runs long, tighten it. Always end '
     'on a complete, natural final sentence; never trail off mid-thought.\n'
+    '- Any date given as day/month/year: write it as "8 December 1813", '
+    'never "12/8/1813" or "August 8" — do not silently swap day and '
+    'month between US (MM/DD) and international (DD/MM) conventions.\n'
     "{language_instruction}"
     "Output the JSON object and nothing else."
 )
@@ -366,6 +369,8 @@ class Enricher:
                 out = await providers.llm_gemini(settings, prompt)
             elif name == "openrouter":
                 out = await providers.llm_openrouter(settings, prompt)
+            elif name == "mistral":
+                out = await providers.llm_mistral(settings, prompt)
             elif name == "opencode":
                 out = await _opencode.ask(settings, prompt)
             else:

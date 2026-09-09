@@ -196,6 +196,18 @@ export function OpenRouterIcon({ className }: IconProps) {
   )
 }
 
+export function MistralIcon({ className }: IconProps) {
+  // A wind/gust motif (three curved swoops), echoing "Mistral" the wind —
+  // distinct from OpenRouterIcon's converging paths and GeminiIcon's diamond.
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M2.5 5.5h8.2a1.8 1.8 0 1 0-1.5-2.8" strokeLinecap="round" />
+      <path d="M2.5 8h10.4a1.8 1.8 0 1 1-1.5 2.8" strokeLinecap="round" />
+      <path d="M2.5 10.5h6.2a1.8 1.8 0 1 0-1.5 2.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function OllamaIcon({ className }: IconProps) {
   // A llama silhouette abstracted to two ears and a muzzle.
   return (

@@ -4,14 +4,14 @@ import { ApiError, api } from '../api/client'
 import type { AISettings, AITestResult, CodexConnectResponse, GrokConnectResponse } from '../api/types'
 import { IDLE_TEST, KbNote, ProviderBubble, TestBadge } from '../components/AdminSettingsShared'
 import type { TestState } from '../components/AdminSettingsShared'
-import { ChatGPTIcon, GeminiIcon, GrokIcon, NimIcon, OllamaIcon, OpenCodeIcon, OpenRouterIcon } from '../components/Icons'
+import { ChatGPTIcon, GeminiIcon, GrokIcon, MistralIcon, NimIcon, OllamaIcon, OpenCodeIcon, OpenRouterIcon } from '../components/Icons'
 import { useCodexStatus } from '../hooks/useCodexStatus'
 import { useGrokStatus } from '../hooks/useGrokStatus'
 import { useProviders } from '../hooks/useProviders'
 import type { TFunction } from '../i18n'
 import '../styles/admin.css'
 
-type Provider = 'ollama' | 'openai' | 'opencode' | 'codex' | 'grok' | 'gemini' | 'openrouter'
+type Provider = 'ollama' | 'openai' | 'opencode' | 'codex' | 'grok' | 'gemini' | 'openrouter' | 'mistral'
 
 export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunction }) {
   const [settings, setSettings] = useState<AISettings | null>(null)
@@ -19,6 +19,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
   const [grokApiKeyInput, setGrokApiKeyInput] = useState('')
   const [geminiApiKeyInput, setGeminiApiKeyInput] = useState('')
   const [openrouterApiKeyInput, setOpenrouterApiKeyInput] = useState('')
+  const [mistralApiKeyInput, setMistralApiKeyInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
@@ -29,6 +30,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
   const [grokTest, setGrokTest] = useState<TestState>(IDLE_TEST)
   const [geminiTest, setGeminiTest] = useState<TestState>(IDLE_TEST)
   const [openrouterTest, setOpenrouterTest] = useState<TestState>(IDLE_TEST)
+  const [mistralTest, setMistralTest] = useState<TestState>(IDLE_TEST)
   const { status: codexStatus, refresh: refreshCodexStatus } = useCodexStatus()
   const [codexConnecting, setCodexConnecting] = useState(false)
   const [codexPromptResult, setCodexPromptResult] = useState<CodexConnectResponse | null>(null)
@@ -82,12 +84,15 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
       else delete body.gemini_api_key
       if (openrouterApiKeyInput) body.openrouter_api_key = openrouterApiKeyInput
       else delete body.openrouter_api_key
+      if (mistralApiKeyInput) body.mistral_api_key = mistralApiKeyInput
+      else delete body.mistral_api_key
       const res = await api.patch<AISettings>('/api/settings/ai', body)
       setSettings(res)
       setApiKeyInput('')
       setGrokApiKeyInput('')
       setGeminiApiKeyInput('')
       setOpenrouterApiKeyInput('')
+      setMistralApiKeyInput('')
       setSaved(true)
       await refreshProviders()
       window.setTimeout(() => setSaved(false), 2500)
@@ -168,6 +173,12 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
 
   async function setOpenrouterManuallyEnabled(value: boolean) {
     const res = await api.patch<AISettings>('/api/settings/ai', { openrouter_manually_enabled: value })
+    setSettings(res)
+    await refreshProviders()
+  }
+
+  async function setMistralManuallyEnabled(value: boolean) {
+    const res = await api.patch<AISettings>('/api/settings/ai', { mistral_manually_enabled: value })
     setSettings(res)
     await refreshProviders()
   }
@@ -429,6 +440,70 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                   </button>
                 </div>
               )}
+            </ProviderBubble>
+
+            <ProviderBubble
+              icon={<MistralIcon className="provider-mark" />}
+              name={t('aiSettings.mistralGroup')}
+              enabled={isEnabled('mistral')}
+              defaultOpen={isEnabled('mistral')}
+            >
+              <p className="admin-note">{t('aiSettings.mistralIntro')}</p>
+              <label className="provider-enable-toggle">
+                <input
+                  type="checkbox"
+                  checked={settings.mistral_manually_enabled}
+                  onChange={(e) => void setMistralManuallyEnabled(e.target.checked)}
+                />
+                {t('aiSettings.providerEnableToggle')}
+              </label>
+              <p className="admin-note admin-note-hint">{t('aiSettings.providerEnableToggleHint')}</p>
+              {isAutoHidden('mistral') && <p className="auto-hidden-note">{t('aiSettings.autoHiddenNote')}</p>}
+              <KbNote
+                prefix={t('aiSettings.mistralNotePrefix')}
+                linkLabel={t('aiSettings.mistralNoteLink')}
+                anchor="mistral"
+                suffix={t('aiSettings.mistralNoteSuffix')}
+              />
+              <div className="settings-row">
+                <label htmlFor="mistral_model">{t('aiSettings.model')}</label>
+                <input
+                  id="mistral_model"
+                  value={settings.mistral_model}
+                  onChange={(e) => field('mistral_model', e.target.value)}
+                />
+              </div>
+              <div className="settings-row">
+                <label htmlFor="mistral_api_key">{t('aiSettings.apiKey')}</label>
+                <input
+                  id="mistral_api_key"
+                  type="password"
+                  placeholder={settings.mistral_api_key || t('aiSettings.apiKeyNotSet')}
+                  value={mistralApiKeyInput}
+                  onChange={(e) => setMistralApiKeyInput(e.target.value)}
+                />
+              </div>
+              <div className="test-actions">
+                <button
+                  className="test-btn"
+                  type="button"
+                  disabled={mistralTest.status === 'testing'}
+                  onClick={() =>
+                    void testProvider(
+                      'mistral',
+                      {
+                        mistral_model: settings.mistral_model,
+                        mistral_timeout: settings.mistral_timeout,
+                        ...(mistralApiKeyInput ? { mistral_api_key: mistralApiKeyInput } : {}),
+                      },
+                      setMistralTest,
+                    )
+                  }
+                >
+                  {mistralTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
+                </button>
+                <TestBadge state={mistralTest} t={t} />
+              </div>
             </ProviderBubble>
 
             <ProviderBubble

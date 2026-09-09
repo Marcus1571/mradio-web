@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.12.0] - 2026-09-09
+
+Added **Mistral AI** as an 8th AI liner-notes provider — their free
+"Experiment" tier on La Plateforme, no credit card required, not
+admin-only (free for everyone once configured, same as Gemini/
+OpenRouter). Dropdown/settings order is now Codex, Grok, Mistral,
+OpenCode, Ollama, NIM, Gemini, OpenRouter — the two subscription
+providers first, per explicit request.
+
+Checked live before building (same discipline as the OpenRouter/Gemini
+research): Mistral's flagship `mistral-small-latest` returns a valid
+200 from `GET /v1/models` but is rate-limited to **0 requests/minute**
+on this free tier — a live completions call is the only way to catch
+that, so defaults to `open-mistral-nemo` (12B) instead, which along
+with the Ministral 3B/8B family gets real, generous quota (625K-1.3M
+tokens/min, 188-750 requests/min — the most generous free quota of any
+provider in the app, just on smaller models). The Test button makes a
+real completion call rather than trusting `/models`, for the same
+reason OpenRouter's does.
+
+A live spot-check also found real fabrication on niche classical-music
+facts at this model size (wrong dedicatee, an invented "three weeks"
+composition claim) despite an accurate-sounding reply — Mistral gets
+the same anti-hallucination `SINCERITY_RULES` prompt hardening the NIM
+provider already had. Separately hardened the shared prompt template
+for every provider to spell out dates unambiguously ("8 December 1813",
+never "12/8" or "8/12") after that same spot-check produced a US/EU
+day-month mixup on an otherwise-correct date.
+
 ## [1.11.0] - 2026-09-09
 
 - **Auto-generated temporary passwords for email invites**: when an admin
