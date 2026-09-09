@@ -4458,6 +4458,66 @@ padding, no invented specifics).
   the fallback-chain ordering in `active_provider()`/`_llm()` too) for a
   problem already solved for the reported symptom.
 
+## Ollama model dropdown + per-bubble Save buttons (added 2026-09-09, 1.16.0)
+
+Two follow-ups to the Ollama hallucination-hardening fix, both prompted
+by the user seeing the settings page after that fix and asking whether
+the model picker could be smarter, plus separately noticing the single
+bottom Save button meant scrolling past every bubble to save one change.
+
+**Ollama model dropdown**: `providers.py` gained
+`list_ollama_models(url)` — a thin wrapper around the same `GET
+/api/tags` call `_test_ollama()` already made, returning `[{"name":
+..., "size": ...}]` for whatever's actually pulled on that server.
+`routers/settings.py` exposes it at `GET
+/api/settings/ai/ollama-models?url=...`, taking the URL as a query
+param (not always the saved setting) so it can probe a URL the admin
+just typed but hasn't saved yet — same pattern the Test button already
+uses for overrides. Frontend: `AISettingsPage.tsx`'s Server URL field
+re-probes on blur; the Model field renders a `<select>` (sorted
+largest-first, each option showing its size in GB) once models are
+known, falling back to the original plain text `<input>` if the probe
+fails or hasn't run yet — so a manually-typed model name still works
+before the first successful probe, or if the server's genuinely
+unreachable.
+
+**Deliberately did NOT hardcode a "best model" recommendation.** User's
+own suggestion was to bold a suggested entry with an explanatory
+message — asked and answered directly, but pushed back on the specific
+mechanism: this session's own testing found `qwen3:14b` (9.3GB) more
+accurate than `gpt-oss:20b` (13.8GB) on the same tracks, so "biggest =
+best" is a false signal this app's own data already contradicts.
+Settled on: label the largest model as "largest installed" (a factual,
+size-only observation) plus an explicit note that size doesn't predict
+accuracy and the Test button is the real way to compare — real signal,
+no manufactured confidence.
+
+**Per-bubble Save buttons**: `AdminSettingsShared.tsx`'s `ProviderBubble`
+took new optional `saveLabel`/`saveBusyLabel`/`saveBusy` props — when
+set, renders a `type="submit"` button in the header next to the
+collapse chevron, `stopPropagation`'d so clicking it doesn't also
+toggle the bubble's own expand/collapse. Required restructuring the
+header: it used to BE the collapse-toggle `<button>` itself
+(`.settings-group-head-toggle`), which can't contain another real
+`<button>` (invalid HTML, and the inner click would also fire the
+outer collapse handler) — split into an outer `<div
+className="settings-group-head">` holding both the collapse-toggle
+button (now scoped to just the icon/name/chevron) and the sibling Save
+button. All 8 bubbles in `AISettingsPage.tsx` wired to the same shared
+`busy`/`onSubmit` state the original bottom-of-page Save button
+already used — this is the exact same save action in 9 places, not 9
+independent ones, so there's nothing new to keep in sync if the save
+logic ever changes.
+
+**Verified visually** via the same throwaway-harness technique used all
+project — screenshotted the collapsed bubble list (confirmed every
+bubble has its own Save button, consistent styling) and dumped the
+rendered DOM to confirm the Ollama dropdown's exact option order/labels
+(`gpt-oss:20b (13.8 GB) — largest installed` first, down to `phi4-mini:
+latest (2.5 GB)` last, with the configured `gemma4:e4b-it-qat`
+correctly pre-selected) — not just trusting the JSX. `main.tsx` fully
+reverted and the harness file deleted afterward.
+
 ## Where things live
 
 - `backend/app/` — one module per concern: `auth.py`/`users.py`/`db.py`

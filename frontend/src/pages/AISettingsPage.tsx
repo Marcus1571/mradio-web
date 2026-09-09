@@ -20,6 +20,8 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
   const [geminiApiKeyInput, setGeminiApiKeyInput] = useState('')
   const [openrouterApiKeyInput, setOpenrouterApiKeyInput] = useState('')
   const [mistralApiKeyInput, setMistralApiKeyInput] = useState('')
+  const [ollamaModels, setOllamaModels] = useState<{ name: string; size: number | null }[]>([])
+  const [ollamaModelsStatus, setOllamaModelsStatus] = useState<'idle' | 'loading' | 'unreachable'>('idle')
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
@@ -48,7 +50,10 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
   }
 
   useEffect(() => {
-    api.get<AISettings>('/api/settings/ai').then(setSettings)
+    api.get<AISettings>('/api/settings/ai').then((res) => {
+      setSettings(res)
+      if (res.ollama_url) void refreshOllamaModels(res.ollama_url)
+    })
   }, [])
 
   useEffect(() => {
@@ -100,6 +105,25 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
       setError(err instanceof ApiError ? err.message : t('aiSettings.errorFallback'))
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function refreshOllamaModels(url: string) {
+    if (!url) {
+      setOllamaModels([])
+      setOllamaModelsStatus('idle')
+      return
+    }
+    setOllamaModelsStatus('loading')
+    try {
+      const res = await api.get<{ models: { name: string; size: number | null }[]; reachable: boolean }>(
+        `/api/settings/ai/ollama-models?url=${encodeURIComponent(url)}`,
+      )
+      setOllamaModels(res.reachable ? res.models : [])
+      setOllamaModelsStatus(res.reachable ? 'idle' : 'unreachable')
+    } catch {
+      setOllamaModels([])
+      setOllamaModelsStatus('unreachable')
     }
   }
 
@@ -249,6 +273,9 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               name={t('aiSettings.codexGroup')}
               enabled={isEnabled('codex')}
               defaultOpen={isEnabled('codex') || codexStatus?.pending === true}
+              saveLabel={t('common.save')}
+              saveBusyLabel={t('common.saving')}
+              saveBusy={busy}
             >
               <p className="admin-note">{t('aiSettings.codexIntro')}</p>
               <label className="provider-enable-toggle">
@@ -312,6 +339,9 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               name={t('aiSettings.grokGroup')}
               enabled={isEnabled('grok')}
               defaultOpen={isEnabled('grok') || grokStatus?.pending === true}
+              saveLabel={t('common.save')}
+              saveBusyLabel={t('common.saving')}
+              saveBusy={busy}
             >
               <p className="admin-note">{t('aiSettings.grokIntro')}</p>
               <label className="provider-enable-toggle">
@@ -447,6 +477,9 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               name={t('aiSettings.mistralGroup')}
               enabled={isEnabled('mistral')}
               defaultOpen={isEnabled('mistral')}
+              saveLabel={t('common.save')}
+              saveBusyLabel={t('common.saving')}
+              saveBusy={busy}
             >
               <p className="admin-note">{t('aiSettings.mistralIntro')}</p>
               <label className="provider-enable-toggle">
@@ -511,6 +544,9 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               name={t('aiSettings.geminiGroup')}
               enabled={isEnabled('gemini')}
               defaultOpen={isEnabled('gemini')}
+              saveLabel={t('common.save')}
+              saveBusyLabel={t('common.saving')}
+              saveBusy={busy}
             >
               <p className="admin-note">{t('aiSettings.geminiIntro')}</p>
               <label className="provider-enable-toggle">
@@ -575,6 +611,9 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               name={t('aiSettings.openrouterGroup')}
               enabled={isEnabled('openrouter')}
               defaultOpen={isEnabled('openrouter')}
+              saveLabel={t('common.save')}
+              saveBusyLabel={t('common.saving')}
+              saveBusy={busy}
             >
               <p className="admin-note">{t('aiSettings.openrouterIntro')}</p>
               <label className="provider-enable-toggle">
@@ -639,6 +678,9 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               name={t('aiSettings.opencodeGroup')}
               enabled={isEnabled('opencode')}
               defaultOpen={isEnabled('opencode')}
+              saveLabel={t('common.save')}
+              saveBusyLabel={t('common.saving')}
+              saveBusy={busy}
             >
               <div className="settings-row">
                 <label htmlFor="opencode">{t('aiSettings.opencodeEnable')}</label>
@@ -668,6 +710,9 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               name={t('aiSettings.ollamaGroup')}
               enabled={isEnabled('ollama')}
               defaultOpen={isEnabled('ollama')}
+              saveLabel={t('common.save')}
+              saveBusyLabel={t('common.saving')}
+              saveBusy={busy}
             >
               <KbNote
                 prefix={t('aiSettings.ollamaNotePrefix')}
@@ -682,16 +727,48 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                   placeholder="e.g. http://192.168.1.12:11434"
                   value={settings.ollama_url}
                   onChange={(e) => field('ollama_url', e.target.value)}
+                  onBlur={(e) => void refreshOllamaModels(e.target.value)}
                 />
               </div>
               <div className="settings-row">
                 <label htmlFor="ollama_model">{t('aiSettings.model')}</label>
-                <input
-                  id="ollama_model"
-                  value={settings.ollama_model}
-                  onChange={(e) => field('ollama_model', e.target.value)}
-                />
+                {ollamaModels.length > 0 ? (
+                  <select
+                    id="ollama_model"
+                    value={settings.ollama_model}
+                    onChange={(e) => field('ollama_model', e.target.value)}
+                  >
+                    {!ollamaModels.some((m) => m.name === settings.ollama_model) && (
+                      <option value={settings.ollama_model}>{settings.ollama_model}</option>
+                    )}
+                    {ollamaModels
+                      .slice()
+                      .sort((a, b) => (b.size ?? 0) - (a.size ?? 0))
+                      .map((m) => (
+                        <option key={m.name} value={m.name}>
+                          {m.name}
+                          {m.size ? ` (${(m.size / 1e9).toFixed(1)} GB)` : ''}
+                          {m.name === ollamaModels[0]?.name ? ` — ${t('aiSettings.ollamaLargestModelHint')}` : ''}
+                        </option>
+                      ))}
+                  </select>
+                ) : (
+                  <input
+                    id="ollama_model"
+                    value={settings.ollama_model}
+                    onChange={(e) => field('ollama_model', e.target.value)}
+                  />
+                )}
               </div>
+              {ollamaModelsStatus === 'loading' && (
+                <p className="admin-note">{t('aiSettings.ollamaModelsLoading')}</p>
+              )}
+              {ollamaModelsStatus === 'unreachable' && (
+                <p className="admin-note">{t('aiSettings.ollamaModelsUnreachable')}</p>
+              )}
+              {ollamaModels.length > 0 && (
+                <p className="admin-note admin-note-hint">{t('aiSettings.ollamaSizeHintNote')}</p>
+              )}
               <div className="test-actions">
                 <button
                   className="test-btn"
@@ -721,6 +798,9 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
               name={t('aiSettings.openaiGroup')}
               enabled={isEnabled('openai')}
               defaultOpen={isEnabled('openai')}
+              saveLabel={t('common.save')}
+              saveBusyLabel={t('common.saving')}
+              saveBusy={busy}
             >
               <KbNote
                 prefix={t('aiSettings.nimNotePrefix')}

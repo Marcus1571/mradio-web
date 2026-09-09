@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.16.0] - 2026-09-09
+
+Two AI providers page usability improvements, both user-requested:
+
+- **Ollama's "Model" field is now a dropdown** of whatever's actually
+  installed on the configured server, instead of a name typed by
+  hand. Probes the server's real model list (size included) whenever
+  the Server URL field is saved or blurred; falls back to a plain text
+  field if the server isn't reachable yet. Sorted largest-first with a
+  "largest installed" label on that one — deliberately NOT framed as a
+  quality recommendation, since size doesn't predict which model
+  answers best (this session's own testing found a smaller model more
+  accurate than a larger one on the same tracks). A note next to the
+  dropdown says so directly and points at the existing Test button as
+  the real way to compare.
+- **Every provider bubble now has its own Save button** in its header,
+  not just one at the very bottom of the page — the same single form
+  submit as before (no new save path), just reachable without
+  scrolling past every other bubble after tweaking one.
+
 ## [1.15.1] - 2026-09-09
 
 Extended the same anti-hallucination prompt hardening (v1.15.0) to

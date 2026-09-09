@@ -706,6 +706,32 @@ def _exc_reason(exc: Exception) -> str:
     return str(exc) or type(exc).__name__
 
 
+async def list_ollama_models(url: str) -> list[dict] | None:
+    """GET /api/tags against a given Ollama server URL, returning each
+    installed model's name and size in bytes — used by the AI settings
+    page's model dropdown so an admin can pick from what's actually
+    pulled on that server instead of typing an exact name by hand.
+    Takes the URL directly (not the whole settings dict) since the
+    admin may be probing a URL they haven't saved yet. Returns None on
+    any failure (server unreachable, bad JSON) rather than raising —
+    the caller decides how to surface that, same convention as the
+    llm_*() functions."""
+    if not url:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=_TEST_TIMEOUT) as client:
+            r = await client.get(api_endpoint(url, "api/tags"))
+            r.raise_for_status()
+            data = r.json()
+    except (httpx.HTTPError, ValueError):
+        return None
+    models = data.get("models")
+    if not isinstance(models, list):
+        return None
+    return [{"name": m.get("name"), "size": m.get("size")}
+            for m in models if m.get("name")]
+
+
 async def _test_ollama(settings: dict) -> tuple[bool, str]:
     url = settings.get("ollama_url")
     if not url:

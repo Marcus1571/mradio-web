@@ -18,36 +18,63 @@ const KB_URL = 'https://github.com/Marcus1571/mradio-web/blob/main/KB.md'
  * deliberately collapsed it (e.g. right after a successful Connect);
  * that would fight a manual collapse. Callers that want "snap open on
  * connect" handle that themselves by keying this component to remount,
- * same as any other defaultProp-seeded state in React. */
+ * same as any other defaultProp-seeded state in React.
+ *
+ * saveLabel/saveBusy/onSave add a redundant Save button at the top of
+ * the header, next to the collapse chevron — the page's one real Save
+ * action (a single form submit covering every bubble) lived only at
+ * the very bottom, so tweaking one bubble meant scrolling past every
+ * other one to save it. This button is `type="submit"` inside that
+ * same form (no separate save path to keep in sync) with
+ * `stopPropagation` so clicking it doesn't also toggle collapse — the
+ * header itself remains the collapse control everywhere else. */
 export function ProviderBubble({
   icon,
   name,
   enabled,
   defaultOpen,
+  saveLabel,
+  saveBusyLabel,
+  saveBusy,
   children,
 }: {
   icon: ReactNode
   name: string
   enabled: boolean
   defaultOpen: boolean
+  saveLabel?: string
+  saveBusyLabel?: string
+  saveBusy?: boolean
   children: ReactNode
 }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
     <div className="settings-group">
-      <button
-        type="button"
-        className="settings-group-head settings-group-head-toggle"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-      >
-        <h2>
-          {icon}
-          <span className={`provider-status-dot ${enabled ? 'on' : ''}`} aria-hidden="true" />
-          {name}
-        </h2>
-        <ChevronDownIcon className={`provider-collapse-chevron ${open ? 'open' : ''}`} />
-      </button>
+      <div className="settings-group-head">
+        <button
+          type="button"
+          className="settings-group-head-toggle"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+        >
+          <h2>
+            {icon}
+            <span className={`provider-status-dot ${enabled ? 'on' : ''}`} aria-hidden="true" />
+            {name}
+          </h2>
+          <ChevronDownIcon className={`provider-collapse-chevron ${open ? 'open' : ''}`} />
+        </button>
+        {saveLabel && (
+          <button
+            className="admin-submit provider-bubble-save"
+            type="submit"
+            disabled={saveBusy}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {saveBusy ? saveBusyLabel : saveLabel}
+          </button>
+        )}
+      </div>
       {open && <div className="provider-bubble-body">{children}</div>}
     </div>
   )

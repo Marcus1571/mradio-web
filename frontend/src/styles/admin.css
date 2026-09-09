@@ -247,11 +247,18 @@
   gap: var(--space-sm);
 }
 
-/* The whole header row doubles as the collapse/expand control (see
-   ProviderBubble) — resets it back to looking like a plain row, not a
-   button, then adds the chevron's rotation on open. */
+/* The icon/name/chevron portion of the header doubles as the
+   collapse/expand control (see ProviderBubble) — resets it back to
+   looking like a plain row, not a button. A sibling Save button (when
+   present) sits outside this element so it isn't also part of the
+   collapse toggle's hit area. */
 .settings-group-head-toggle {
-  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  flex: 1;
+  min-width: 0;
   background: none;
   border: none;
   padding: 0;
@@ -259,6 +266,10 @@
   color: inherit;
   font: inherit;
   text-align: left;
+}
+
+.provider-bubble-save {
+  flex-shrink: 0;
 }
 
 .provider-collapse-chevron {
@@ -329,7 +340,8 @@
   color: var(--ink-2);
 }
 
-.settings-row input {
+.settings-row input,
+.settings-row select {
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);

@@ -87,6 +87,11 @@ const en = {
     ollamaNotePrefix: 'New to Ollama? See',
     ollamaNoteLink: '"Setting up Ollama" in KB.md',
     ollamaNoteSuffix: 'for how to install it and pull a model.',
+    ollamaModelsLoading: 'Checking which models are installed…',
+    ollamaModelsUnreachable: "Could not reach this server — showing whatever model name was last saved. Save a valid URL to pick from what's actually installed.",
+    ollamaLargestModelHint: 'largest installed',
+    ollamaSizeHintNote:
+      "Size alone doesn't predict which model answers best — a bigger model can still be less accurate on a given track. Use Test to compare before committing to one.",
     serverUrl: 'Server URL',
     model: 'Model',
     openaiGroup: 'OpenAI-compatible (NIM, etc.)',

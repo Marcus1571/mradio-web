@@ -15,6 +15,20 @@ async def get_ai_settings(admin: dict = Depends(require_admin)):
     return settings_store.redacted(settings_store.load())
 
 
+@router.get("/ai/ollama-models")
+async def list_ollama_models(url: str | None = None, admin: dict = Depends(require_admin)):
+    """Backs the AI providers page's Ollama model dropdown. Takes an
+    optional `url` query param rather than always reading the saved
+    setting — mirrors the Test button's own pattern of probing
+    whatever's currently typed in the form, including a URL the admin
+    hasn't saved yet."""
+    target = url or settings_store.load().get("ollama_url") or ""
+    models = await providers.list_ollama_models(target)
+    if models is None:
+        return {"models": [], "reachable": False}
+    return {"models": models, "reachable": True}
+
+
 @router.patch("/ai")
 async def update_ai_settings(body: AISettingsUpdate, admin: dict = Depends(require_admin)):
     fields = body.model_dump(exclude_unset=True)

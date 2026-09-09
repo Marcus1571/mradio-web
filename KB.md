@@ -518,16 +518,26 @@ call rather than trusting the models listing.
 4. If the app and Ollama run on different machines, make sure Ollama
    accepts connections from the network (not just `localhost`) and that
    any firewall allows the port.
-5. Paste the server URL and model name into mradio-web's **AI providers**
-   page (user menu → Settings → AI providers, admin only), then **Save**.
+5. Paste the server URL into mradio-web's **AI providers** page (user
+   menu → Settings → AI providers, admin only), then click away from
+   the field (or **Save**) — the page probes that URL's `/api/tags`
+   and turns the **Model** field into a dropdown of whatever's
+   actually installed there, instead of a name you'd otherwise have to
+   type by hand.
 
 **Fields:**
 
 - **Server URL**: e.g. `http://192.168.1.10:11434` for an Ollama instance
   running on your LAN, or `http://localhost:11434` if it's on the same
   host.
-- **Model**: whatever you've pulled on that Ollama instance (mradio
-  defaulted to `gemma3:4b` — keep that or change it).
+- **Model**: a dropdown once the server above is reachable, listing
+  every installed model with its size, largest first (with a "largest
+  installed" label on that one) — sizes and this label are informational
+  only, not a quality recommendation. A bigger model isn't necessarily a
+  more accurate one for this app's liner-notes task; use the **Test**
+  button to actually compare before committing to one. If the server
+  isn't reachable yet (or hasn't been saved), this falls back to a plain
+  text field showing whatever model name was last saved.
 
 Whether this points at an existing Ollama/NIM setup you already run for
 other things, or a dedicated instance just for this app, is entirely up
