@@ -4239,6 +4239,23 @@ existed. SMTP network connectivity from LT to `smtp.gmail.com:587`
 out a firewall/DNS problem but not a login-credential/quota issue on
 that specific send.
 
+**Deployed and verified working, same session**: pulled + rebuilt on
+LT, confirmed the container came back healthy, then actually called
+`POST /api/users/24/resend-invite` against production — returned
+`{"sent": true}`, and the log line `mradio.users INFO invite email
+sent to user_id=24` appeared exactly as designed, closing the loop for
+`ackei30`'s corrected address. One infra gotcha hit along the way,
+worth remembering: **mradio-web's published host port on LT is
+`8123`, not `8000`** — `docker port mradio-web` is the source of
+truth; `curl localhost:8000` on the host hits some *other* service
+(response headers looked like a Java/Spring gateway, not uvicorn) and
+silently 401s with an unrelated `"Authentication required"` body that
+doesn't even appear anywhere in this app's own code — a red herring
+that looks exactly like a bad password if you don't check which
+process actually owns the port first. [[infra_landscape]]'s "host port
+8000" note for mradio-web is now wrong and should be corrected to
+8123 next time that file is touched.
+
 ## Known unknowns
 
 - NIM's exact API base URL is asserted in `KB.md` as "typically
