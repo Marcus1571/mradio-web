@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.16.2] - 2026-09-09
+
+Extended the anti-hallucination categorical rules (already applied to
+Mistral/NIM/Gemini/OpenRouter/Ollama) to Grok. Caught live: on a Kora
+Jazz Trio cover of "Chan Chan," Grok gave a confident, detailed
+biography of the original composer (Compay Segundo) and the original
+1990s recording's history — richer-sounding than the other providers,
+but none of it re-verified, and about the wrong recording (the
+original, not the cover actually playing). Grok now gets the same
+fact-category allowlist, worked examples, and mandatory-slot structure
+as every other cloud provider. One-line change
+(`_CATEGORICAL_PROVIDERS` frozenset in `textutil.py`) — no other code
+needed, since `apply_provider_rules()` already gates generically on
+provider name.
+
 ## [1.16.1] - 2026-09-09
 
 Fixed a real, previously undiagnosed failure mode for the `gpt-oss:20b`

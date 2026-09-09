@@ -4594,6 +4594,45 @@ live call through the actual wired production functions
 imported directly, not a hand-copied prompt), not just the standalone
 scratch script used for initial diagnosis. No frontend changes.
 
+## Grok added to the categorical hallucination hardening (fixed 2026-09-09, 1.16.2)
+
+User caught this live in the app, same session as the gpt-oss fix
+above: comparing Ollama/Mistral/Grok side by side on a Kora Jazz Trio
+cover of "Chan Chan," Ollama gave a short generic answer and Mistral
+correctly declined (no confident match for this exact cover), but Grok
+gave a full, confident, well-written biography — Compay Segundo's
+birth year (1907), the song's 1940s composition, its 1997 Buena Vista
+Social Club rediscovery — none of it re-verified in that session, and
+all of it about the ORIGINAL composer/recording rather than the actual
+cover version playing. User found the hardened providers' answers
+comparatively "dry" but, after the tradeoff was explained (thinner but
+more trustworthy vs. richer but unverified), chose to extend the same
+hardening to Grok rather than loosen the existing rules or leave the
+gap as-is.
+
+Same pattern as adding openrouter/ollama to `_CATEGORICAL_PROVIDERS`
+in 1.13.0/1.15.1: `grok` added to the frozenset in `textutil.py`, no
+other code change needed since `apply_provider_rules()` already gates
+generically on provider name and `enricher.py` already passes
+`self.provider` through without a grok-specific branch.
+
+**Verification differs from every other provider fix this project has
+shipped**: grok uses subscription OAuth tokens stored server-side
+(`grok_oauth.ensure_fresh_token()`) or an admin-typed API key — neither
+reachable from a standalone test script the way Ollama's open LAN
+endpoint or Mistral's/Gemini's public API keys were. Per the user's
+explicit choice, this shipped without a pre-merge live API test and
+was verified instead through the real app/account after deploying —
+the same "render and look at it" standard already used for UI changes,
+applied here to a backend prompt change because the credential access
+model made the usual live-iteration method impractical. The prior
+exemption for codex/grok ("subscription-backed, admin's own paid
+account, bigger blast radius if changed") was a real caution against
+shipping an UNTESTED change to a paid account — grok's specific
+fabrication risk is no longer hypothetical after this incident, so the
+caution now argues for fixing it, not for leaving it exempt forever.
+codex remains exempted, genuinely untested for this failure mode.
+
 ## Where things live
 
 - `backend/app/` — one module per concern: `auth.py`/`users.py`/`db.py`
