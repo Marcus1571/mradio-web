@@ -21,10 +21,10 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 - **v0.1.1 tagged and released, not pre-release.** `docker compose build
   && docker compose up` has now been run end-to-end for real (2026-09-05,
-  on LT/UNRAID via Tailscale SSH) — the sandbox limitation that blocked
+  on the server/Unraid via Tailscale SSH) — the sandbox limitation that blocked
   this for v0.1.0 (couldn't reach Docker Hub's blob CDN) doesn't apply
   outside that sandbox. Deployed behind Nginx Proxy Manager at
-  `mradioweb.legba.myddns.rocks`, logged in, played a stream, got AI
+  `radio.example.com`, logged in, played a stream, got AI
   liner notes via opencode — all confirmed working, not just built.
 - Merged to `main` via PR #1. The `claude/hallmark-skills-package-81d0hb`
   branch it was built on is now just history — develop from `main` going
@@ -79,7 +79,7 @@ were reviewed and left alone on purpose, not overlooked.
   update path. This also means **GitHub Releases are decorative here** —
   nothing in the app reads them, unlike mradio where every release had to
   exist or the self-update check would never see it.
-- **No mpv, no server-side audio.** LT is headless. Playback moved to the
+- **No mpv, no server-side audio.** The server is headless. Playback moved to the
   browser's own `<audio>` element. ICY "now playing" metadata, which mpv
   used to hand over via its IPC socket, is now parsed directly out of the
   proxied stream bytes (`backend/app/icy.py`).
@@ -163,10 +163,10 @@ were reviewed and left alone on purpose, not overlooked.
 ## Next steps (in order)
 
 1. ~~`docker compose build && docker compose up` end-to-end~~ — done
-   2026-09-05 on LT.
+   2026-09-05 on the server.
 2. ~~Confirm working, drop pre-release~~ — done via the `0.1.1` release.
 3. ~~Deploy per `KB.md`~~ — done: NPM proxy host at
-   `mradioweb.legba.myddns.rocks`, port 8123 on LT (8000 was already
+   `radio.example.com`, port 8123 on the server (8000 was already
    taken by StirlingPDF), websockets + `proxy_buffering off` both set.
 4. Configure AI providers beyond the bundled opencode from the admin page
    (NIM/Ollama), if desired — not yet done.
@@ -177,7 +177,7 @@ were reviewed and left alone on purpose, not overlooked.
    `minimaxai/minimax-m3`, matching mradio's own reasoning for that model
    choice), genre-tag/station-name spacing in the favorites grid, and a
    missing stream-metadata row (bitrate/sample-rate/format/cache/elapsed)
-   in the now-playing panel. Redeployed to LT same day.
+   in the now-playing panel. Redeployed to the server same day.
 7. Fixed 2026-09-05 (0.1.3), found immediately after deploying 0.1.2:
    stations could get stuck on "Connecting…" forever (audio played fine,
    only the metadata UI hung) — a pre-existing race between the audio
@@ -251,7 +251,7 @@ were reviewed and left alone on purpose, not overlooked.
 
 **Fixed 2026-09-05 (production data, not a code change):** the Ollama
 provider was failing on every call in production
-(`POST http://192.168.88.8:11434/api/generate` → 404) because the
+(`POST http://192.168.1.10:11434/api/generate` → 404) because the
 configured model `gemma3:4b` was never pulled on that Ollama instance
 (stale default, copied from the original terminal app's docs) — silently
 falling back to opencode every time (visible in logs as the
@@ -266,7 +266,7 @@ unwrapped JSON for this app's exact prompt shape, then updated the saved
 function the admin API itself calls) — not a code default change, since
 `_DEFAULTS["ollama_model"]` in `settings.py` only seeds brand-new
 installs and wouldn't have touched the already-persisted `settings.json`
-on LT. Test-connection now reports Ollama as `True, "Connected."`.
+on the server. Test-connection now reports Ollama as `True, "Connected."`.
 `_DEFAULTS` itself is left as `gemma3:4b` deliberately — that's still
 correct as a generic fresh-install default; it just needs pulling before
 use, same as any Ollama model does.
@@ -274,7 +274,7 @@ use, same as any Ollama model does.
 ## ChatGPT/Codex subscription as a 4th AI provider (2026-09-06, 0.5.23; timeout fixed 0.5.24; 4-way comparison + settings redesign 0.5.25)
 
 **Real-production timing data, first day**: user tested two real liner
-notes live on LT after connecting their own ChatGPT Go account. Log
+notes live on the server after connecting their own ChatGPT Go account. Log
 timestamps (title-detected → `httpx` POST completion) showed 23s and
 69s — both noticeably slower and more variable than NIM/Ollama's usual
 5-20s, consistent with this call being routed through OpenAI's own
@@ -374,7 +374,7 @@ recreates npm's own symlink (`ln -s .../codex/bin/codex.js
 first draft did this with a shell script; simplified after confirming
 npm's own approach works and is simpler). **Verified with a real
 Docker build**, both natively (arm64, this dev machine) and cross-built
-for `linux/amd64` (LT's actual architecture) via `docker build
+for `linux/amd64` (the server's actual architecture) via `docker build
 --platform linux/amd64` — confirmed `codex --version` and a real device
 login attempt both work inside the actual final image on the actual
 target architecture before deploying, not assumed. `python:3.11-slim`
@@ -422,7 +422,7 @@ in a chat transcript.
 **4-way real-production comparison (0.5.25)**: user's explicit bar —
 "I accept the OpenAI dependency risk only if it delivers a substantial
 improvement over the other three free providers." Ran a one-off
-diagnostic script directly on LT (cleaned up after, no trace left in
+diagnostic script directly on the server (cleaned up after, no trace left in
 app state) firing the same 6 real tracks through opencode/ollama/openai
 (NIM)/codex and comparing timing + quality. Findings: **NIM failed on
 every single call** ("no response") — a real, separate, still-unfixed
@@ -1478,7 +1478,7 @@ where that feature was designed to accommodate it.
 **Real follow-up (fixed 2026-09-06, 0.5.2)**: the placeholder fix above
 appeared "not to work" for the user even after the 0.5.1 deploy —
 investigated thoroughly rather than assuming user error: confirmed via
-direct `curl` against the live LT container that the deployed CSS bundle
+direct `curl` against the live the server container that the deployed CSS bundle
 genuinely contained the fix, and via a fresh Playwright render + pixel
 sampling (darkest pixel in the placeholder text vs. real text: `rgb(118,
 123, 130)` vs `rgb(24, 29, 38)` — a large, real, correctly-applied
@@ -1516,7 +1516,7 @@ filename: `manifest.webmanifest`, `favicon.svg`, `apple-touch-icon.png`,
 "mradio" → "mradio web") and the OS install prompt kept quoting the old
 name even after uninstalling and retrying — confirmed the server was
 serving the correct new manifest content the whole time
-(`curl` against LT showed `"name": "mradio web"`), so the only
+(`curl` against the server showed `"name": "mradio web"`), so the only
 explanation left was the browser never re-fetching the manifest at
 all, which a 1-year `immutable` `Cache-Control` on it fully explains.
 Fixed by checking for `/assets/` in the path explicitly (verified via
@@ -1715,7 +1715,7 @@ better signal exists, not a bug to keep chasing.
 permanently caches a miss as `{"logo": None}` specifically so a
 no-logo station never gets re-queried on every play — which means
 every station this fix improves needs its stale `None` entry manually
-cleared on LT once after deploying, or it'll keep serving the old
+cleared on the server once after deploying, or it'll keep serving the old
 (wrong) answer from cache forever. This is a one-time data fix, not a
 recurring task — same category as the Heart 70s genre fix and the
 favorites reset, not a precedent for routinely editing production data.
@@ -2109,7 +2109,7 @@ hunt would never end.
 
 **Self-hosted SearXNG closes the search-engine gap (0.5.43)**: after
 Google/DDG/Brave were each ruled out, user pointed out they *run
-SearXNG on LT* — which invalidates every objection at once: no API
+SearXNG on the server* — which invalidates every objection at once: no API
 key, no CAPTCHA, no third-party terms, and it aggregates Bing/Brave/
 DDG results anyway. Correct call, and a reminder to ask what's already
 on the box before concluding a capability is unavailable.
@@ -2126,7 +2126,7 @@ then `docker restart SearXNG` (container is named `SearXNG`, not
 
 Wired in as `MRADIO_SEARXNG_URL`, **optional and unset by default** —
 nobody else running this app has a SearXNG, and the tier is simply
-skipped when empty (verified). On LT it lives in the untracked
+skipped when empty (verified). On the server it lives in the untracked
 `docker-compose.override.yml`, keeping the LAN IP out of the repo.
 Compose *appends* `environment:` lists, so the base file's admin vars
 survive.
@@ -2347,7 +2347,7 @@ should publish one. Reviewed and **deliberately declined** — worth
 recording so it isn't reopened without new reasons.
 
 Why there's no image today (it follows from the setup, not oversight):
-- Deploys are `git pull && docker compose build` on LT, ~30-60s. A
+- Deploys are `git pull && docker compose build` on the server, ~30-60s. A
   registry saves no meaningful time for a single operator.
 - Host-specific config (port 8123, appdata path, `MRADIO_SEARXNG_URL`)
   lives in an untracked `docker-compose.override.yml`. Nothing about
@@ -2370,7 +2370,7 @@ revisits this:
   argument does not hold. The two points above still do.
 
 **The strongest argument was never speed — it was CI.** With no build
-job, a broken Dockerfile surfaces mid-deploy on LT rather than on
+job, a broken Dockerfile surfaces mid-deploy on the server rather than on
 push; several Dockerfile edits (the `codex-build` stage, the GeoLite2
 fetch) could have failed there. If this is revisited, **start with a
 build-only CI job and leave publishing out of it** — that captures
@@ -2518,7 +2518,7 @@ sat on "Asking the AI provider…" and a real network call fired again.
 Reported as happening with any language, not just Hebrew.
 
 **Investigated against real production data, not assumption**: pulled
-`cache.json` from LT (`docker exec mradio-web python3 -c "..."`) and
+`cache.json` from the server (`docker exec mradio-web python3 -c "..."`) and
 found the exact Hebrew entry for the exact track already cached, valid,
 non-`fail`, under the correct `codex::he::<raw_title>` key — so the
 cache write path and key format were both already correct (as they
@@ -2599,7 +2599,7 @@ the same delivery mechanism, not just here.
 
 User reported this as a major bug, explicitly refusing "just reload the
 page" as an acceptable answer. Investigated against real production
-logs on LT, not assumption — pulled 600+ lines around the actual
+logs on the server, not assumption — pulled 600+ lines around the actual
 reported sequence (Heart 70s (UK), Stop, Play again) and found the
 concrete evidence for two separate, real bugs, both fixed together.
 
@@ -2795,7 +2795,7 @@ provider's field). But selecting **Subscription** and clicking
 **Connect** is a self-contained action from the admin's point of
 view — it completes real OAuth and writes real tokens to
 `grok_settings.json` immediately, with no expectation that Save also
-needs a separate click afterward. Confirmed live on LT:
+needs a separate click afterward. Confirmed live on the server:
 `settings.json`'s `grok_mode` was `None` (defaulting to `"api_key"` at
 load time) while `grok_settings.json` showed a genuinely connected
 subscription — `_test_grok()` correctly reads the *saved* mode, saw
@@ -2807,7 +2807,7 @@ before starting the OAuth flow — the one deliberate exception to
 write to the server outside the form's own save cycle, same as
 `grok_settings.json`/`codex_settings.json` always have. The
 already-broken production account's `settings.json` was patched
-directly on LT (`grok_mode: "api_key"` → `"subscription"`, the one-line
+directly on the server (`grok_mode: "api_key"` → `"subscription"`, the one-line
 fix matching what Connect should have written the first time) since
 the code fix alone only prevents this for future connections, not
 retroactively for an account already stuck in the broken state.
@@ -3106,7 +3106,7 @@ wrong (expired token, network error, rate limit, real quota exhaustion).
 User reported the Test button failing ("ChatGPT/Codex did not respond.")
 while their own check of the real Codex CLI's `/usage` screen showed
 quota was fine. Root-caused by replicating the exact request
-`llm_codex()` makes directly inside the LT container and inspecting the
+`llm_codex()` makes directly inside the the server container and inspecting the
 full response for once: a genuine `429` with
 `error.type: "usage_limit_reached"`, `plan_type: "go"`, and a
 `resets_at` Unix timestamp ~28 days out. Confirmed via response headers
@@ -3130,7 +3130,7 @@ fallback-chain path) is untouched — it still just returns `None` on
 failure, since that path only needs pass/fail, not a human message.
 
 Verified live before release: hot-patched the fixed `providers.py` into
-the running LT container (`docker cp` to a differently-named module,
+the running the server container (`docker cp` to a differently-named module,
 imported and called directly) against the real, still-exhausted quota —
 confirmed it now returns the specific usage-limit message with the
 correct reset date instead of the old generic string, before doing the
@@ -3322,7 +3322,7 @@ integration had gotten wrong from the start:
 project's standing rule against shipping unverified external-API
 integrations) — a real curl round-trip against
 `https://generativelanguage.googleapis.com/v1beta/interactions` using
-the user's actual key, run from inside the LT container (not the
+the user's actual key, run from inside the the server container (not the
 Mac dev machine — see the network-flakiness note below):
 - Success: `200`, `gemini-3.8-flash` genuinely works — confirming the
   compat shim's stale `/models` listing was the real bug, not the model
@@ -3346,7 +3346,7 @@ Mac dev machine — see the network-flakiness note below):
 
 **Apparent "network flakiness" during this verification, corrected**:
 `POST /v1beta/interactions` intermittently hung for 20-60s (both from
-the Mac dev machine and, later, from inside the LT container) while
+the Mac dev machine and, later, from inside the the server container) while
 `GET /v1beta/models` on the same hostname and other HTTPS hosts (x.ai,
 google.com) all returned in under 0.5s. First assumed to be generic
 network flakiness — wrong. Root cause, found by testing the same POST
@@ -3419,7 +3419,7 @@ everywhere it was hardcoded (`settings.py`'s `_DEFAULTS`, both
 `llm_gemini()`'s and `_test_gemini()`'s `or "gemini-3.8-flash"`
 fallbacks in `providers.py`) — verified live via `_test_gemini()`
 itself (not just assumed) that the new model name works before
-committing. Also directly patched LT's already-saved
+committing. Also directly patched the server's already-saved
 `gemini_model: "gemini-3.8-flash"` in production `settings.json` via
 `settings.save()`, the same "code default alone isn't retroactive for
 existing saved data" pattern as the 1.1.1 Grok-mode-persistence fix —
@@ -3655,7 +3655,7 @@ switched off. Added to all four `AUTO_HIDE_PROVIDERS` bubbles
 `.auto-hidden-note` CSS reusing the existing `--accent`/`--accent-soft`
 tokens (no new color introduced for one small note).
 
-Verified live on LT before deploying: hot-patched the real
+Verified live on the server before deploying: hot-patched the real
 `providers.py`/`enricher.py` into the running container, confirmed the
 full cycle — `mark_provider_failed('gemini')` → correctly hidden →
 `providers_due_for_retry()` correctly lists it once the cooldown is
@@ -3784,8 +3784,8 @@ turn muddy at small sizes and that needed verifying separately.
 
 **Also caught while verifying**: the send-a-real-test-email step used
 a stale domain from this project's own memory file
-(`radio.legba.myddns.rocks`) instead of the real one
-(`mradioweb.legba.myddns.rocks`, confirmed live in NPM) — the memory
+(`radio-old.example.com`) instead of the real one
+(`radio.example.com`, confirmed live in NPM) — the memory
 was simply wrong, not stale-but-once-correct. Corrected
 `infra_landscape.md` directly. Lesson already logged generally
 elsewhere in this project (verify memory against current reality
@@ -4204,7 +4204,7 @@ genre. Fixed to a genre-neutral phrasing across all 4 sites.
 Found while investigating a real report: the user created `ackei30`
 with `ackei30@yahoo.es`, then changed the email to
 `alejandraconesakeiser@gmail.com` via the Users admin page's edit
-form, and wasn't sure the invite ever went out. Checked LT's live
+form, and wasn't sure the invite ever went out. Checked the server's live
 `mradio-web` logs — the `POST /api/users 201` line was there, but
 **zero** log output existed for the SMTP attempt itself: no recipient,
 no host, no success/failure. Root cause: `routers/users.py`'s
@@ -4239,18 +4239,18 @@ said 4).
 send in production actually succeeded or failed is unknowable in
 retrospect — that's exactly the gap this fix closes going forward, but
 it can't retroactively explain what happened before the logging
-existed. SMTP network connectivity from LT to `smtp.gmail.com:587`
+existed. SMTP network connectivity from the server to `smtp.gmail.com:587`
 (STARTTLS) was confirmed working at investigation time, which rules
 out a firewall/DNS problem but not a login-credential/quota issue on
 that specific send.
 
 **Deployed and verified working, same session**: pulled + rebuilt on
-LT, confirmed the container came back healthy, then actually called
+the server, confirmed the container came back healthy, then actually called
 `POST /api/users/24/resend-invite` against production — returned
 `{"sent": true}`, and the log line `mradio.users INFO invite email
 sent to user_id=24` appeared exactly as designed, closing the loop for
 `ackei30`'s corrected address. One infra gotcha hit along the way,
-worth remembering: **mradio-web's published host port on LT is
+worth remembering: **mradio-web's published host port on the server is
 `8123`, not `8000`** — `docker port mradio-web` is the source of
 truth; `curl localhost:8000` on the host hits some *other* service
 (response headers looked like a Java/Spring gateway, not uvicorn) and
@@ -4299,7 +4299,7 @@ confirmed-but-wrong hit look identical to the cache (see
 `station_logos.py`'s own docstring: "stops a station from being looked
 up twice"). Shipping the matching-logic fix alone does nothing for
 already-cached stations; the bad `Heart70sMP3` entry has to be evicted
-from the live `station_logos.json` on LT (or the whole cache file
+from the live `station_logos.json` on the server (or the whole cache file
 cleared) for the new logic to actually run for it again.
 
 ## Full provider-by-provider comparison; three real bugs fixed (2026-09-09, 1.15.0)
@@ -4315,7 +4315,7 @@ free-tier eligibility, unresolved response envelope, no first-party
 latency data). Ran the same Beethoven Symphony No. 7 / Miles Davis
 "So What" / Josef Suk Asrael Symphony / fabricated-nonexistent-track
 battery from the Mistral work against Gemini, OpenRouter, NIM, and all
-7 models installed on LT's Ollama, using real keys the user generated
+7 models installed on the server's Ollama, using real keys the user generated
 and pasted for Gemini/OpenRouter/NIM.
 
 **Three real, live-confirmed bugs found and fixed:**
@@ -4426,7 +4426,7 @@ clean (no frontend changes this session, backend-only fixes).
 ## Ollama added to the categorical hallucination hardening (fixed 2026-09-09, 1.15.1)
 
 User caught a real example live in the app: with Ollama selected
-(`gemma4:e4b-it-qat` at `192.168.88.8:11434`), a genuinely real Robert
+(`gemma4:e4b-it-qat` at `192.168.1.10:11434`), a genuinely real Robert
 Glasper track ("Yes I'm Country (And That's OK)") got real facts
 right (born Houston 1978, blends jazz/hip-hop/R&B, worked with Herbie
 Hancock/Kendrick Lamar — all true) but padded with unverifiable filler
