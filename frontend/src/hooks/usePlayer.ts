@@ -78,6 +78,14 @@ export function usePlayer(initialVolume?: number) {
   // changes.
   const audioReconnectRef = useRef<() => void>(() => undefined)
   const audioReconnectTimerRef = useRef<number | null>(null)
+  // Retry-with-backoff for automatic stream recovery, mirroring the WS
+  // reconnect loop above — added after a real dropout confirmed that a
+  // failed audio.play() during auto-recovery (rejected promise, no new
+  // native error/stalled event to re-trigger onFailure) left playback
+  // silently dead with no further retry, requiring a manual Stop/Play.
+  // Reset to 0 whenever a retry actually starts playing successfully.
+  const audioRetryAttemptRef = useRef(0)
+  const MAX_AUDIO_RETRIES = 6
   // connectWsRef always points at the WS effect's own connectWs() (defined
   // inside that effect, closed over wsRef/reconnectAttemptRef/etc.) — see
   // ensureWsConnected() below for why play()/reconnect() need this.
@@ -86,6 +94,47 @@ export function usePlayer(initialVolume?: number) {
     ...INITIAL_STATE,
     volume: initialVolume ?? INITIAL_STATE.volume,
   })
+
+  // Fire-and-forget — a logging call must never itself block or break
+  // playback recovery, so failures here are swallowed silently rather
+  // than surfaced (there's nowhere useful to surface them to).
+  const logClientEvent = useCallback(
+    (event: string, extra?: { detail?: string; attempt?: number }) => {
+      void api
+        .post('/api/stream/client-event', { sid: sidRef.current, event, ...extra })
+        .catch(() => undefined)
+    },
+    [],
+  )
+
+  // The shared retry-with-backoff loop for automatic stream recovery —
+  // called from two different triggers: onFailure() below (a native
+  // error/stalled event fired on the <audio> element) and reconnect()'s
+  // own play().catch() (a rejected play() promise, which does NOT fire a
+  // new native error/stalled event — see reconnect()'s docstring). Without
+  // this shared path, a play() rejection during auto-recovery previously
+  // had nothing left to retry it, ending the retry loop permanently and
+  // requiring a manual Stop/Play — the actual bug this fixes.
+  const retryAudioAfterPlayFailure = useCallback(
+    (triggerEvent: string) => {
+      if (!wantsConnectionRef.current) return
+      const attempt = ++audioRetryAttemptRef.current
+      logClientEvent('retry_triggered', { detail: triggerEvent, attempt })
+      if (attempt > MAX_AUDIO_RETRIES) {
+        logClientEvent('retry_exhausted', { attempt })
+        return
+      }
+      const delay = Math.min(2000 * 2 ** (attempt - 1), 30000)
+      logClientEvent('retry_scheduled', { detail: `${delay}ms`, attempt })
+      audioReconnectTimerRef.current = window.setTimeout(() => {
+        audioReconnectTimerRef.current = null
+        if (!wantsConnectionRef.current) return
+        logClientEvent('retry_attempt', { attempt })
+        audioReconnectRef.current()
+      }, delay)
+    },
+    [logClientEvent],
+  )
 
   useEffect(() => {
     const audio = new Audio()
@@ -105,13 +154,11 @@ export function usePlayer(initialVolume?: number) {
       }
       setState((s) => ({ ...s, elapsed: audio.currentTime, bufferedAhead }))
     }
-    const onFailure = () => {
+    const onFailure = (ev: Event) => {
       if (!wantsConnectionRef.current) return // user pressed Stop — leave it alone
+      logClientEvent(ev.type === 'stalled' ? 'audio_stalled' : 'audio_error')
       if (audioReconnectTimerRef.current !== null) return // a retry is already queued
-      audioReconnectTimerRef.current = window.setTimeout(() => {
-        audioReconnectTimerRef.current = null
-        if (wantsConnectionRef.current) audioReconnectRef.current()
-      }, 2000)
+      retryAudioAfterPlayFailure(ev.type)
     }
     audio.addEventListener('play', onPlay)
     audio.addEventListener('timeupdate', onTimeUpdate)
@@ -329,7 +376,12 @@ export function usePlayer(initialVolume?: number) {
 
   /** Re-establish the connection to the current station — the web
    * equivalent of mradio's `r` reconnect key, which killed and relaunched
-   * mpv. A stalled live stream has no other recovery than a fresh request. */
+   * mpv. A stalled live stream has no other recovery than a fresh request.
+   * A rejected play() here (e.g. an interrupted-request or autoplay-policy
+   * DOMException — these do NOT fire a new native error/stalled event, see
+   * retryAudioAfterPlayFailure()'s docstring) chains into the backoff retry
+   * loop instead of failing silently — the actual fix for dropouts that
+   * previously needed a manual Stop/Play to recover from. */
   const reconnect = useCallback(() => {
     const audio = audioRef.current
     if (!audio || !state.station) return
@@ -337,8 +389,18 @@ export function usePlayer(initialVolume?: number) {
     setState((s) => ({ ...s, hasIcy: null, rawTitle: '', artist: '', title: '', performer: '' }))
     audio.src = streamUrl(state.station)
     audio.load()
-    void audio.play().catch(() => undefined)
-  }, [state.station, streamUrl, ensureWsConnected])
+    audio
+      .play()
+      .then(() => {
+        audioRetryAttemptRef.current = 0
+        logClientEvent('play_resolved')
+      })
+      .catch((err: unknown) => {
+        const name = err instanceof DOMException ? err.name : String(err)
+        logClientEvent('play_rejected', { detail: name })
+        retryAudioAfterPlayFailure(`play_rejected:${name}`)
+      })
+  }, [state.station, streamUrl, ensureWsConnected, logClientEvent, retryAudioAfterPlayFailure])
 
   useEffect(() => {
     audioReconnectRef.current = reconnect

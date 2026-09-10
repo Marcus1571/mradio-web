@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.16.7] - 2026-09-10
+
+Fixed a real playback-recovery bug: an audio dropout would sometimes
+require a manual Stop/Play to recover from, instead of the app's
+automatic recovery kicking in. Root cause — the automatic retry called
+`audio.play().catch(() => undefined)`, silently discarding the
+rejection. A rejected `play()` promise (interrupted request, autoplay
+policy, etc.) does NOT fire a new native `error`/`stalled` event, so
+nothing was left to trigger another retry attempt; playback just
+stayed dead. Fixed with a shared retry-with-backoff loop (mirroring
+the existing WebSocket reconnect pattern) that both the native
+`error`/`stalled` listener and a rejected `play()` now feed into,
+capped at 6 attempts with exponential backoff (2s up to 30s).
+
+Also added light client-side event logging for this exact retry state
+machine (`POST /api/stream/client-event`, relayed into the same server
+log as everything else) — rare, state-transition events only (a
+handful of lines per real incident, never steady-state ticks), so a
+future dropout can be diagnosed end-to-end instead of only from the
+server's side of the connection.
+
 ## [1.16.6] - 2026-09-10
 
 Fixed a real, silent analytics gap: the Dashboard's "Live now" panel and

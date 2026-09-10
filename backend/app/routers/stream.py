@@ -17,12 +17,41 @@ from fastapi.responses import StreamingResponse
 from .. import history, nowplaying, stations
 from ..deps import get_active_user
 from ..icy import IcyDemuxer, parse_metaint
+from ..models import ClientStreamEventRequest
 
 logger = logging.getLogger("mradio.stream")
 
 router = APIRouter(prefix="/api", tags=["stream"])
 
 _USER_AGENT = "mradio-web/1.0"
+
+# Event names the client (usePlayer.ts) is expected to send — not enforced
+# strictly (an unrecognized event still logs, just without special
+# handling), but kept here as the authoritative list of what the retry
+# state machine actually reports, so a reader of one side can find the
+# other. See usePlayer.ts's onFailure()/reconnect() for where each fires.
+_KNOWN_CLIENT_EVENTS = frozenset({
+    "audio_error", "audio_stalled", "retry_scheduled", "retry_attempt",
+    "play_resolved", "play_rejected", "retry_exhausted",
+})
+
+
+@router.post("/stream/client-event", status_code=204)
+async def client_stream_event(body: ClientStreamEventRequest,
+                              user: dict = Depends(get_active_user)) -> None:
+    """Relays a client-side audio-element lifecycle event into the same
+    server log every other stream/session event already lands in —
+    without this, a playback dropout is only ever visible from the
+    server's side (proxy connect/disconnect), which tells you nothing
+    about whether the browser's own retry logic ran, or why it gave up.
+    Kept to rare, state-transition events only (never steady-state ticks)
+    so this stays a handful of log lines per real incident, not a flood."""
+    level = logging.WARNING if body.event in (
+        "play_rejected", "retry_exhausted") else logging.INFO
+    logger.log(
+        level, "client sid=%s user=%s event=%s attempt=%s detail=%r",
+        body.sid, user["username"], body.event, body.attempt, body.detail,
+    )
 
 
 async def _reject_private_targets(hostname: str) -> None:

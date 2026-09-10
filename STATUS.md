@@ -4818,6 +4818,55 @@ happens right after this entry, per the established pattern) — the
 next real session should show a live-session/history row it wouldn't
 have before.
 
+## Audio dropout sometimes needed a manual Stop/Play instead of self-recovering (fixed 2026-09-10, 1.16.7)
+
+User reported real, repeated dropouts on a live station — one recovered
+on its own, one needed a manual Stop/Play. Server-side logs showed
+only clean disconnect/reconnect pairs, no errors — pointing at the
+client's own recovery logic, not a backend crash.
+
+Found the bug in `usePlayer.ts`: the automatic audio-stream recovery
+(`onFailure()`, triggered by the `<audio>` element's native `error`/
+`stalled` events) scheduled exactly one retry, then called `reconnect()`
+which did `void audio.play().catch(() => undefined)` — silently
+discarding the rejection. A rejected `play()` promise (interrupted
+request, autoplay-policy `DOMException`, etc.) does NOT fire a new
+native `error`/`stalled` event — confirmed against MDN/Chrome docs,
+these are two structurally separate failure signals. So if that one
+retry's own `play()` call failed for a reason that wasn't itself a new
+native event, nothing was left to trigger another attempt: playback
+stayed silently dead until the user intervened. This cleanly explains
+both halves of what was reported — one dropout's retry `play()`
+happened to resolve (self-recovered), the other's didn't (required
+manual Stop/Play).
+
+**Fix**: a shared `retryAudioAfterPlayFailure()` retry-with-backoff
+loop, fed by BOTH triggers (the native event listener AND `reconnect()`'s
+own `.catch()`), mirroring the exponential-backoff pattern the
+WebSocket reconnect logic in the same file already used — 2s initial
+delay, doubling up to a 30s cap, giving up after 6 attempts (logged as
+`retry_exhausted` rather than failing silently forever).
+
+**Also added**: light client-side event logging for this exact state
+machine — `POST /api/stream/client-event` (new endpoint, `stream.py`),
+relayed into the same server log as every other stream event. Answers
+a real question raised alongside the bug report ("is it going to be a
+flood, is it useful, can it show which side of the pipeline broke") —
+kept deliberately to rare, state-transition events only (`audio_error`/
+`audio_stalled`/`play_resolved`/`play_rejected`/`retry_scheduled`/
+`retry_attempt`/`retry_exhausted`, never steady-state ticks like
+`timeupdate`), so a real incident produces a handful of log lines, not
+a flood, and now shows the client-side decision tree (did the retry
+fire, did play() resolve or reject and with what `DOMException` name)
+alongside the server's own connect/disconnect view — closing the "which
+side of the supply chain" visibility gap the user asked about directly.
+
+Verified: `python3 -m py_compile` + `npm run build` + `npm run lint`
+all clean. Not yet observed live against a real dropout post-deploy —
+the next real stall should now either self-recover via the backoff
+loop or, if it genuinely exhausts all 6 attempts, log that clearly
+instead of just going quiet.
+
 ## Where things live
 
 - `backend/app/` — one module per concern: `auth.py`/`users.py`/`db.py`

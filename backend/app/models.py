@@ -10,6 +10,20 @@ class LoginRequest(BaseModel):
     remember_me: bool = True
 
 
+class ClientStreamEventRequest(BaseModel):
+    """Client-side audio-element lifecycle events (error/stalled/retry/
+    play-outcome), relayed to the server log so a playback dropout can be
+    diagnosed end-to-end — see usePlayer.ts's onFailure()/reconnect() for
+    the full retry-with-backoff state machine this reports on. Deliberately
+    rare/event-driven (state transitions only, never steady-state ticks
+    like timeupdate) so this doesn't flood the log the way per-frame
+    client telemetry would."""
+    sid: str
+    event: str
+    detail: str | None = None
+    attempt: int | None = None
+
+
 class UserOut(BaseModel):
     id: int
     username: str
