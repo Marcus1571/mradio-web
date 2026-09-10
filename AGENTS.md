@@ -156,7 +156,11 @@ Never add curated items (e.g. default station lists) on the agent's own initiati
 the operator personally approves every one. User-owned data files are never touched
 by releases.
 
-## Never run the operator's own update/installer for them
+## Deploy is part of the job, not the operator's to do by hand
 
-After cutting a release, commit and push — the operator updates their own running
-instance. Don't "fix" a missing feature by installing it locally on their behalf.
+Corrected 2026-09-10 — an earlier version of this file said to stop at commit/push
+and leave deployment to the operator. That was wrong; the operator's explicit,
+standing instruction is the opposite: after cutting a release, deploy it to the
+running instance too (`git pull && docker compose build && docker compose up -d`
+over SSH, or whatever the real deploy path is) and verify it's live — same as every
+release this whole project. Don't stop short of that without being asked to.
