@@ -59,7 +59,8 @@ async def now_playing_ws(websocket: WebSocket, sid: str = Query(...)):
             return
         await trivia_history.record(
             user["id"], raw_title, state["station_name"], state["artist"],
-            state["title"], state["performer"], item)
+            state["title"], state["performer"], item,
+            provider=item.get("provider") or "")
 
     async def push_enrichment(raw_title: str, item: dict) -> None:
         if raw_title != state["raw_title"]:

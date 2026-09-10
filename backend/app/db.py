@@ -108,6 +108,14 @@ async def init_db():
     await _db.execute("PRAGMA foreign_keys = ON")
     await _db.executescript(SCHEMA)
     await _ensure_column(_db, "users", "full_name", "TEXT")
+    # Added 2026-09-10 — trivia_history predates provider tagging, so
+    # existing installs need a live ALTER TABLE, not just a fresh
+    # CREATE TABLE clause (which only fires on a brand-new DB file).
+    # Old rows get '' (unknown), not NULL — matches this file's
+    # NOT NULL DEFAULT convention and keeps "no data" query-friendly
+    # (WHERE provider != '') instead of needing NULL-handling everywhere
+    # it's read. See AI.md / trivia_history.py.
+    await _ensure_column(_db, "trivia_history", "provider", "TEXT NOT NULL DEFAULT ''")
     await _db.commit()
 
 

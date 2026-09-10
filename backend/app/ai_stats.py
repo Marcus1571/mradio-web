@@ -91,6 +91,24 @@ async def recent_summary(since: str | None = None) -> dict[str, dict]:
         return out
 
 
+async def trivia_history_provider_counts() -> dict[str, int]:
+    """Per-provider count of stored trivia_history rows (see
+    trivia_history.py, provider column added 2026-09-10) — a cheap
+    cross-check against ai_requests' success counts from a second,
+    independent table. The two won't match exactly: ai_requests logs
+    every attempt (including ones that later got evicted from
+    trivia_history's 100-row-per-user cap, or came from a user who
+    hasn't had a real trivia lookup recorded), trivia_history only
+    logs final successful answers actually shown to a user. Divergence
+    here isn't a bug — it's two different denominators."""
+    async with aiosqlite.connect(DB_PATH) as conn:
+        conn.row_factory = aiosqlite.Row
+        cur = await conn.execute(
+            "SELECT provider, COUNT(*) as c FROM trivia_history "
+            "WHERE provider != '' GROUP BY provider ORDER BY provider")
+        return {r["provider"]: r["c"] for r in await cur.fetchall()}
+
+
 def _print_summary(summary: dict[str, dict]) -> None:
     if not summary:
         print("No ai_requests rows yet — nothing to summarize.")
@@ -107,5 +125,14 @@ def _print_summary(summary: dict[str, dict]) -> None:
         print(f"{provider}: success_rate={rate_str}, {lat_str}")
 
 
+async def _main() -> None:
+    _print_summary(await recent_summary())
+    counts = await trivia_history_provider_counts()
+    if counts:
+        print("\nStored trivia_history answers by provider (cross-check, see AI.md):")
+        for provider, count in counts.items():
+            print(f"  {provider}: {count}")
+
+
 if __name__ == "__main__":
-    _print_summary(asyncio.run(recent_summary()))
+    asyncio.run(_main())

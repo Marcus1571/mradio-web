@@ -43,7 +43,21 @@ deliberately **not** blended into a single number:
   check specific claims against real sources, the same way the OpenCode
   and Mistral fact-checks below were done. Stays a manual, evidence-based
   process logged in `findings.md`; this file only summarizes the
-  verdict and sample size.
+  verdict and sample size. `trivia_history` (per-user SQLite, see
+  `backend/app/trivia_history.py`) now tags every stored answer with the
+  provider that actually produced it (`provider` column, added
+  2026-09-10 via `db.py`'s `_ensure_column`) — this is where real
+  production answers worth fact-checking can be pulled from. Storage
+  retains up to 100 rows per user (`STORAGE_LIMIT`); the UI only shows
+  the most recent 10 by default (`RECENT_DEFAULT_LIMIT`) — the wider
+  retention exists specifically so there's enough real material to
+  sample from for this investigation without changing what a normal
+  user sees. `ai_stats.trivia_history_provider_counts()` gives a quick
+  per-provider row count as a cross-check against `ai_requests`' own
+  numbers (the two won't match exactly — `ai_requests` logs every
+  attempt including ones a fallback chain moved past, `trivia_history`
+  only logs final answers actually shown to a user — divergence between
+  them isn't a bug).
 
 Why not combine them: a fast, reliable, confidently-**wrong** provider
 (raw/unhardened Mistral, before its prompt hardening shipped) would

@@ -188,3 +188,6 @@ class TriviaHistoryEntry(BaseModel):
     trivia: str
     wiki: str
     created_at: str
+    # "" for rows recorded before 2026-09-10 (provider tagging added
+    # then) — see db.py's _ensure_column call and trivia_history.py.
+    provider: str = ""

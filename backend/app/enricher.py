@@ -143,7 +143,7 @@ _LANGUAGE_INSTRUCTIONS = {
     ),
 }
 
-_FAIL_ITEM = {"work": "", "trivia": "", "wiki": "", "movement": 0, "fail": True}
+_FAIL_ITEM = {"work": "", "trivia": "", "wiki": "", "movement": 0, "fail": True, "provider": ""}
 
 # One shared opencode subprocess for the whole app (opencode config is
 # global, same as every other provider here).
@@ -383,16 +383,25 @@ class Enricher:
             self.provider,
             model=settings.get("ollama_model", "") if self.provider == "ollama" else "",
         )
-        raw = await self._llm(settings, prompt)
-        if raw is None:
+        result = await self._llm(settings, prompt)
+        if result is None:
             return None
+        raw, won_provider = result
         item = extract_json_item(raw)
         if not item["movement"]:
             item["work"] = ""
         item["trivia"] = elide((item["trivia"] or "").replace('"', ""))
+        # Application-set, never from the LLM's own JSON — extract_json_item()
+        # only ever returns its fixed {work, trivia, wiki, movement} allowlist,
+        # so there's no risk of the model's text overwriting this. Recorded
+        # here (not guessed from self.provider/active_provider(), both of
+        # which can diverge from which provider actually won a fallback
+        # chain) so trivia_history.py can tag "which provider's answer is
+        # this" with the one value that's actually correct — see AI.md.
+        item["provider"] = won_provider
         return item
 
-    async def _llm(self, settings: dict, prompt: str) -> str | None:
+    async def _llm(self, settings: dict, prompt: str) -> tuple[str, str] | None:
         usable = self._usable_providers()
         order = ([self.provider] if self.provider in usable
                  and providers.provider_enabled(self.provider, settings)
@@ -424,7 +433,7 @@ class Enricher:
             if out:
                 if name in providers.AUTO_HIDE_PROVIDERS:
                     providers.mark_provider_recovered(name)
-                return out
+                return out, name
             if name in providers.AUTO_HIDE_PROVIDERS:
                 providers.mark_provider_failed(name)
         return None
