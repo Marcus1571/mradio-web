@@ -2,7 +2,10 @@
 
 Research log for options considered but not (yet) built — one entry per
 question researched, with the verdict and why. Not a full history;
-`STATUS.md`/`CHANGELOG.md` cover what actually shipped.
+`STATUS.md`/`CHANGELOG.md` cover what actually shipped. For the
+distilled, currently-adopted per-provider AI strategy derived from this
+research, see `AI.md` — this file stays raw evidence, `AI.md` is the
+"what we decided" layer.
 
 ## Additional free AI providers for liner-notes enrichment (researched 2026-09-07)
 

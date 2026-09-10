@@ -1,8 +1,8 @@
 # AGENTS.md — mradio-web
 
 Permanent rules for working in this project. Changes rarely — this is not where
-current status lives (see `STATUS.md`) or where research findings live (see
-`findings.md`).
+current status lives (see `STATUS.md`), where research findings live (see
+`findings.md`), or where per-provider AI strategy lives (see `AI.md`).
 
 This file is part of the operator's cross-project governance system — see
 `~/governance/GOVERNANCE.md` for how it fits together, and `~/governance/USER.md`
