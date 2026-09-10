@@ -6,15 +6,21 @@ and Wikipedia lookup are the slow part, and a track queried by one user
 benefits every other user on the same provider."""
 
 import asyncio
+import logging
 import time
+from datetime import datetime, timezone
+
 from typing import Awaitable, Callable
 
 from . import cache as cache_store
+from . import db
 from . import providers
 from . import settings as settings_store
 from . import wiki
 from .textutil import apply_provider_rules, elide, extract_json_item
 from .userdata import load_cfg, persist_cfg
+
+logger = logging.getLogger("mradio.enricher")
 
 PROVIDERS = providers.PROVIDERS
 
@@ -142,6 +148,41 @@ _FAIL_ITEM = {"work": "", "trivia": "", "wiki": "", "movement": 0, "fail": True}
 # One shared opencode subprocess for the whole app (opencode config is
 # global, same as every other provider here).
 _opencode = providers.OpencodeSession()
+
+# settings.py's model keys aren't a uniform "{provider}_model" pattern
+# (openai's is "api_model", not "openai_model"; codex/opencode have no
+# configurable model at all — codex is a fixed subscription model,
+# opencode picks its own). Explicit map instead of guessing the key.
+_MODEL_SETTINGS_KEY = {
+    "ollama": "ollama_model",
+    "openai": "api_model",
+    "grok": "grok_model",
+    "gemini": "gemini_model",
+    "openrouter": "openrouter_model",
+    "mistral": "mistral_model",
+}
+
+
+async def _record_ai_request(provider: str, model: str, elapsed_ms: int, outcome: str) -> None:
+    """Best-effort stats logging for AI.md's speed/reliability numbers —
+    see backend/app/ai_stats.py for the reader side. Every llm_* function
+    already catches its own exceptions and returns None on any failure
+    (HTTP error, timeout, parse error alike — see providers.py), so from
+    here a call is only ever `success` or `no_output`; the DB schema
+    keeps room for a finer-grained outcome if a provider function is
+    later changed to surface the real failure reason instead of
+    swallowing it. Never allowed to break enrichment itself — a stats
+    write failing is a lost data point, not a reason to fail the user's
+    trivia request."""
+    try:
+        async with db.tx() as conn:
+            await conn.execute(
+                "INSERT INTO ai_requests (provider, model, started_at, elapsed_ms, outcome) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (provider, model, datetime.now(timezone.utc).isoformat(), elapsed_ms, outcome),
+            )
+    except Exception:
+        logger.warning("failed to record ai_requests row for provider=%s", provider, exc_info=True)
 
 
 class Enricher:
@@ -358,6 +399,7 @@ class Enricher:
                  else []) + [n for n in usable
                              if n != self.provider and providers.provider_enabled(n, settings)]
         for name in order:
+            started = time.perf_counter()
             if name == "ollama":
                 out = await providers.llm_ollama(settings, prompt)
             elif name == "openai":
@@ -376,6 +418,9 @@ class Enricher:
                 out = await _opencode.ask(settings, prompt)
             else:
                 out = None
+            elapsed_ms = round((time.perf_counter() - started) * 1000)
+            model = settings.get(_MODEL_SETTINGS_KEY.get(name, ""), "")
+            await _record_ai_request(name, model, elapsed_ms, "success" if out else "no_output")
             if out:
                 if name in providers.AUTO_HIDE_PROVIDERS:
                     providers.mark_provider_recovered(name)

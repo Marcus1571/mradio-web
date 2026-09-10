@@ -67,6 +67,16 @@ CREATE TABLE IF NOT EXISTS password_resets (
     used_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
+CREATE TABLE IF NOT EXISTS ai_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    provider TEXT NOT NULL,
+    model TEXT,
+    started_at TEXT NOT NULL,
+    elapsed_ms INTEGER NOT NULL,
+    outcome TEXT NOT NULL,
+    error_detail TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ai_requests_provider ON ai_requests(provider, started_at);
 """
 
 _db: aiosqlite.Connection | None = None
