@@ -240,7 +240,8 @@ export function usePlayer(initialVolume?: number) {
   const streamUrl = useCallback(
     (station: Station) =>
       `/api/stream?url=${encodeURIComponent(station.url)}&sid=${sidRef.current}` +
-      `&genre=${encodeURIComponent(station.genre)}`,
+      `&genre=${encodeURIComponent(station.genre)}` +
+      `&station_name=${encodeURIComponent(station.name)}`,
     [],
   )
 

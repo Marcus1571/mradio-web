@@ -4779,6 +4779,45 @@ already-known artist-level information on any track the model didn't
 recognize by exact title, which is a far more common case than any
 single missing fact category.
 
+## Live-session/history tracking silently skipped most real sessions (fixed 2026-09-10, 1.16.6)
+
+User flagged the Dashboard's Analytics page (Live now panel + listener
+map) showing nobody listening despite active use. Root cause found in
+`routers/stream.py`: history/live-session tracking (both
+`history.start_session()` and `nowplaying.session_started()`) was
+gated behind `if station_name:`, where `station_name` was ONLY ever
+the origin stream's `icy-name` header value — never anything else.
+Confirmed live via real container logs (`docker logs mradio-web`):
+the large majority of actual sessions on this deployment show
+`station=''`, meaning the origin stream simply never sends an
+`icy-name` header, despite streaming fine with working `StreamTitle`
+metadata elsewhere in the same connection. This wasn't a rare edge
+case — it was silently dropping tracking for most real listening.
+
+**Fix**: the frontend already knows each station's name from the
+curated/favorites list at the moment it calls `/api/stream` (the same
+way it already passes `genre`) — `usePlayer.ts`'s `streamUrl()` now
+also sends `&station_name=...`. The backend's `/api/stream` gained a
+matching `station_name` query param and a new `tracked_name = (
+station_name or icy_name or "").strip()` — the curated name is
+preferred, ICY is the fallback only when the app doesn't have a name
+(shouldn't currently happen in practice, since every station played
+through `usePlayer.ts` has a real `Station.name`, but kept as a
+defensive fallback rather than an assumption). `tracked_name` is what
+gates and feeds history/live-session tracking and genre resolution now
+— the raw ICY-derived value (renamed `icy_name` for clarity) is left
+untouched for its other, separate use: the WS `"station"` event, which
+reflects what the stream itself reports, a different concern from what
+gates analytics.
+
+**Verified**: real container log excerpt captured showing multiple
+genuine sessions with `station=''` before the fix, confirming this
+wasn't hypothetical. `python3 -m py_compile` + `npm run build` + `npm
+run lint` all clean; not yet re-verified live post-deploy (deploy
+happens right after this entry, per the established pattern) — the
+next real session should show a live-session/history row it wouldn't
+have before.
+
 ## Where things live
 
 - `backend/app/` — one module per concern: `auth.py`/`users.py`/`db.py`

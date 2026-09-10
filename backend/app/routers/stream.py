@@ -52,6 +52,15 @@ async def stream(request: Request,
                      None, description="the station's known genre, if any "
                      "(favorites/curated list already have one — avoids "
                      "re-guessing it from the station name for analytics)"),
+                 station_name: str | None = Query(
+                     None, description="the station's known name, if any "
+                     "(favorites/curated list already have one) — many real "
+                     "stations never send an icy-name header at all "
+                     "(confirmed live: the majority of observed sessions have "
+                     "an empty ICY name), which used to silently skip history/"
+                     "live-session tracking entirely for those; this lets the "
+                     "frontend's own known name stand in so those sessions "
+                     "still get recorded"),
                  user: dict = Depends(get_active_user)):
     parsed = urlparse(url)
     if parsed.scheme not in ("http", "https") or not parsed.hostname:
@@ -75,12 +84,24 @@ async def stream(request: Request,
 
     metaint = parse_metaint(upstream.headers)
     content_type = upstream.headers.get("content-type") or "audio/mpeg"
-    station_name = (upstream.headers.get("icy-name") or "").strip()
+    icy_name = (upstream.headers.get("icy-name") or "").strip()
     icy_br = upstream.headers.get("icy-br")
     icy_sr = upstream.headers.get("icy-sr")
+    # The name actually used for history/live-session tracking and genre
+    # resolution below — prefers the frontend's own known name (curated/
+    # favorites list) over whatever the origin stream's icy-name header
+    # says, or lack thereof. Confirmed live: most real stations here send
+    # an empty icy-name (station='' in the logs) despite streaming fine
+    # and sending real StreamTitle metadata — the old `if station_name:`
+    # gate (station_name being the ICY value alone) silently skipped
+    # history/live tracking for the majority of actual listening
+    # sessions, not just an edge case. The ICY value is still used as-is
+    # for the WS "station" event below (a different concern — reflecting
+    # what the stream itself reports, not what gates analytics).
+    tracked_name = (station_name or icy_name or "").strip()
     logger.info(
         "connected sid=%s station=%r bitrate=%s sample_rate=%s format=%s metaint=%s",
-        sid, station_name, icy_br, icy_sr, content_type, metaint,
+        sid, icy_name, icy_br, icy_sr, content_type, metaint,
     )
     # A fresh generation per connection: `sid` is reused across station
     # switches (see nowplaying.py docstring), and setting it here — before
@@ -89,10 +110,10 @@ async def stream(request: Request,
     # buffered bytes in the background, so a stale title/station event it
     # emits after this point gets dropped instead of overwriting this one's.
     gen = nowplaying.begin_generation(sid) if sid else None
-    if sid and station_name:
+    if sid and icy_name:
         nowplaying.publish(sid, {
             "type": "station",
-            "name": station_name,
+            "name": icy_name,
             "bitrate": icy_br,
             "sample_rate": icy_sr,
             "format": content_type,
@@ -100,20 +121,20 @@ async def stream(request: Request,
         })
 
     history_row_id: int | None = None
-    if station_name:
+    if tracked_name:
         client_ip = request.client.host if request.client else None
-        resolved_genre = genre if genre in stations.GENRES else stations.genre_of(station_name)
+        resolved_genre = genre if genre in stations.GENRES else stations.genre_of(tracked_name)
         history_row_id, loc = await history.start_session(
-            user["id"], station_name, url, resolved_genre, client_ip)
+            user["id"], tracked_name, url, resolved_genre, client_ip)
         if sid:
             nowplaying.session_started(
-                sid, user["id"], user["username"], station_name, resolved_genre,
+                sid, user["id"], user["username"], tracked_name, resolved_genre,
                 (loc or {}).get("city"), (loc or {}).get("country"),
                 (loc or {}).get("lat"), (loc or {}).get("lon"),
                 full_name=user["full_name"])
 
     async def cleanup():
-        logger.info("disconnected sid=%s station=%r", sid, station_name)
+        logger.info("disconnected sid=%s station=%r", sid, tracked_name)
         if history_row_id is not None:
             await history.end_session(history_row_id)
         if sid:
@@ -162,7 +183,7 @@ async def stream(request: Request,
                           and sid and nowplaying.is_current_generation(sid, gen)):
                         no_title_reported = True
                         logger.info("no usable title sid=%s station=%r — "
-                                    "station sends empty StreamTitle", sid, station_name)
+                                    "station sends empty StreamTitle", sid, tracked_name)
                         nowplaying.publish(sid, {"type": "no_title"})
                     if audio:
                         yield audio

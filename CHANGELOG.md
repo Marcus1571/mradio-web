@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.16.6] - 2026-09-10
+
+Fixed a real, silent analytics gap: the Dashboard's "Live now" panel and
+listener map showed nobody listening even during active sessions.
+Root cause — `routers/stream.py`'s history/live-session tracking only
+fired `if station_name:`, where that name came solely from the origin
+stream's `icy-name` header. Confirmed live via container logs: the
+large majority of real sessions on this deployment have a blank
+`icy-name` (`station=''`), despite the stream playing fine with real
+`StreamTitle` metadata — so most actual listening was never recorded
+at all, not just an edge case. Fix: the frontend now also sends the
+station's own known name (from the curated/favorites list, already
+known client-side) as a new `station_name` query param on
+`/api/stream`; the backend prefers that over the ICY-derived name for
+history/live-session tracking and genre resolution, falling back to
+ICY only when the app doesn't have one. The ICY-derived name is
+unchanged for its other use (the WS "station" event).
+
 ## [1.16.5] - 2026-09-09
 
 Fixed a real, root-cause bug in the categorical hallucination rules
