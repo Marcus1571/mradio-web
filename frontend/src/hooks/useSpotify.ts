@@ -81,7 +81,7 @@ export function useSpotify(rawTitle: string) {
   const connect = useCallback(async () => {
     try {
       const res = await api.get<{ url: string }>('/api/spotify/auth-url')
-      const features = 'noopener,noreferrer,width=500,height=700'
+      const features = 'noopener,noreferrer,width=700,height=600'
       const win = window.open(res.url, '_blank', features)
       if (!win) {
         setState((s) => ({

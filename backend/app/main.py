@@ -118,18 +118,7 @@ _SPOTIFY_CALLBACK_HTML = """<!DOCTYPE html>
 <body>
   <p id="msg"><!--MESSAGE--></p>
   <button id="close" type="button" style="display:none">Close this window</button>
-  <script>
-    (function () {
-      var closeBtn = document.getElementById('close');
-      closeBtn.onclick = function () { window.close(); };
-      window.close();
-      // If the browser refused the scripted close, show the button and a hint.
-      setTimeout(function () {
-        document.getElementById('msg').textContent += ' Please close this window to return to the player.';
-        closeBtn.style.display = 'inline-block';
-      }, 300);
-    })();
-  </script>
+  <script><!--SCRIPT--></script>
 </body>
 </html>"""
 
@@ -150,10 +139,27 @@ if STATIC_DIR.is_dir():
     async def spotify_callback_page(status: str = "connected", detail: str = ""):
         if status == "connected":
             message = "Spotify connected."
+            script = """
+    (function () {
+      var closeBtn = document.getElementById('close');
+      closeBtn.onclick = function () { window.close(); };
+      window.close();
+      setTimeout(function () {
+        document.getElementById('msg').textContent += ' Please close this window to return to the player.';
+        closeBtn.style.display = 'inline-block';
+      }, 400);
+    })();
+    """
         else:
             message = "Spotify connection failed" + (": " + detail if detail else "") + "."
+            script = """
+    (function () {
+      document.getElementById('close').style.display = 'inline-block';
+      document.getElementById('close').onclick = function () { window.close(); };
+    })();
+    """
         return HTMLResponse(
-            _SPOTIFY_CALLBACK_HTML.replace("<!--MESSAGE-->", message),
+            _SPOTIFY_CALLBACK_HTML.replace("<!--MESSAGE-->", message).replace("<!--SCRIPT-->", script),
             headers={"Cache-Control": "no-store"},
         )
 

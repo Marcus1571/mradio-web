@@ -14,6 +14,7 @@ be editable from the UI."""
 from __future__ import annotations
 
 import base64
+import logging
 import os
 import re
 import secrets
@@ -31,6 +32,8 @@ from . import settings as settings_store
 from .crypto import decrypt, encrypt
 from .db import get_db
 from .textutil import split_title
+
+logger = logging.getLogger("mradio.spotify")
 
 # Spotify endpoints
 SPOTIFY_ACCOUNTS = "https://accounts.spotify.com"
@@ -92,6 +95,7 @@ def authorization_url(state: str) -> str | None:
         "redirect_uri": redirect,
         "scope": REQUIRED_SCOPES,
         "state": state,
+        "show_dialog": "true",
     }
     return f"{SPOTIFY_ACCOUNTS}/authorize?{urllib.parse.urlencode(params)}"
 
@@ -110,6 +114,9 @@ async def _token_request(data: dict[str, str]) -> dict[str, Any] | None:
             headers={"Authorization": f"Basic {auth}"},
         )
     if r.status_code != 200:
+        logger.warning(
+            "spotify token endpoint returned %s: %s", r.status_code, r.text[:500]
+        )
         return None
     return r.json()
 
@@ -308,6 +315,9 @@ async def _api(
 async def get_profile(access_token: str) -> dict[str, Any] | None:
     r = await _api(access_token, "GET", "/me")
     if r.status_code != 200:
+        logger.warning(
+            "spotify /v1/me returned %s: %s", r.status_code, r.text[:500]
+        )
         return None
     return r.json()
 
@@ -654,13 +664,21 @@ async def user_status(user_id: int) -> dict[str, Any]:
 async def connect_user(user_id: int, code: str) -> bool:
     token_resp = await exchange_code(code)
     if not token_resp:
+        logger.warning("spotify connect_user: token exchange failed for user_id=%s", user_id)
         return False
     access = token_resp["access_token"]
     refresh = token_resp["refresh_token"]
     expires_in = token_resp.get("expires_in", 3600)
+    granted_scopes = token_resp.get("scope", "")
+    logger.info(
+        "spotify connect_user: tokens received for user_id=%s scopes=%s",
+        user_id,
+        granted_scopes,
+    )
 
     profile = await get_profile(access)
     if not profile:
+        logger.warning("spotify connect_user: /v1/me failed for user_id=%s", user_id)
         return False
     market = (profile.get("country") or "").upper()
     spotify_user_id = profile.get("id")

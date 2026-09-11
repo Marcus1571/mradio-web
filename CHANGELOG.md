@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.17.6] - 2026-09-12
+
+Spotify OAuth logging and error visibility.
+
+- Added structured logging in `backend/app/spotify.py` for the token exchange,
+  `/v1/me` profile fetch, and connection outcome so we can see why Spotify
+  rejects the connection.
+- Added `show_dialog=true` to the Spotify authorization URL to force a fresh
+  approval dialog and avoid stale/incomplete scopes from a previous grant.
+- `backend/app/main.py`: on OAuth errors the callback page now stays open and
+  shows the failure detail instead of closing immediately.
+- `frontend/src/hooks/useSpotify.ts`: made the auth popup wider (700×600).
+
 ## [1.17.5] - 2026-09-12
 
 Spotify OAuth callback page fix.
