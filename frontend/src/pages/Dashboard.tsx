@@ -5,6 +5,7 @@ import { NowPlayingPanel } from '../components/NowPlayingPanel'
 import { StationBrowserPanel } from '../components/StationBrowserPanel'
 import { TopBar } from '../components/TopBar'
 import type { Page } from '../components/TopBar'
+import { useAuth } from '../hooks/useAuth'
 import { useInitialConfig } from '../hooks/useConfig'
 import { usePlayer } from '../hooks/usePlayer'
 import { LANGUAGES, applyDirection, useTranslation } from '../i18n'
@@ -21,19 +22,34 @@ import '../styles/dashboard.css'
 export function Dashboard() {
   const config = useInitialConfig()
   const player = usePlayer(config?.volume)
+  const { user } = useAuth()
   const [theme, setTheme] = useState<'dark' | 'light'>('light')
   const [language, setLanguageState] = useState<Language>('en')
   const [page, setPage] = useState<Page>('dashboard')
   const resumedRef = useRef(false)
   const t = useTranslation(language)
 
+  const ADMIN_PAGES: Page[] = [
+    'settings',
+    'users',
+    'ai-settings',
+    'email-settings',
+    'spotify-settings',
+    'analytics',
+  ]
+
+  useEffect(() => {
+    if (!user) return
+    if (ADMIN_PAGES.includes(page) && !user.is_admin) {
+      setPage('dashboard')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, page])
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (window.location.pathname === '/settings' || params.has('spotify')) {
+    if (window.location.pathname === '/settings' && params.has('spotify')) {
       setPage('spotify-settings')
-      if (params.get('spotify') === 'connected') {
-        // The status will refresh from the settings page; no toast needed.
-      }
     }
   }, [])
 
