@@ -81,7 +81,15 @@ export function useSpotify(rawTitle: string) {
   const connect = useCallback(async () => {
     try {
       const res = await api.get<{ url: string }>('/api/spotify/auth-url')
-      window.open(res.url, '_blank', 'noopener,noreferrer')
+      const features = 'noopener,noreferrer,width=500,height=700'
+      const win = window.open(res.url, '_blank', features)
+      if (!win) {
+        setState((s) => ({
+          ...s,
+          error: 'Popup blocked. Allow popups for this site and try again.',
+        }))
+        return
+      }
       setPendingAuth(true)
     } catch (err) {
       setState((s) => ({ ...s, error: err instanceof ApiError ? err.message : 'spotify error' }))

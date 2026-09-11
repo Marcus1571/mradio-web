@@ -23,11 +23,15 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.17.4 tagged and released, not pre-release.** Fixes the Spotify OAuth
+  popup so it closes after authorization instead of dumping the user on the
+  Settings → Spotify admin page inside the popup. Added `/spotify-callback`,
+  redirected the backend callback there, removed the stale
+  `/settings?spotify=connected` handling, and surfaced a popup-blocked error.
 - **v1.17.3 tagged, released, and deployed, not pre-release.** Completes the
   v1.17.2 Spotify OAuth return fix: the SPA fallback now catches the right
-  exception class, so `/settings?spotify=connected` serves `index.html` and the
-  OAuth popup loads the Settings → Spotify page after authorization instead of
-  a 404. Smoke-tested on LT: root, `/assets/index-*.js`, and
+  exception class, so `/settings?spotify=connected` serves `index.html` instead
+  of a 404. Smoke-tested on LT: root, `/assets/index-*.js`, and
   `/settings?spotify=connected` all return `200`; unauthenticated
   `/api/spotify/status` returns `401` as expected.
 - **v1.17.2 tagged and released, not pre-release.** Spotify OAuth return fix

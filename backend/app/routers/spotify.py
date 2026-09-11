@@ -3,19 +3,11 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
 from .. import spotify as spotify_client
-from ..db import get_db
 from ..deps import get_active_user, require_admin
 
 router = APIRouter(prefix="/api/spotify", tags=["spotify"])
 
-_FRONTEND_SETTINGS_PATH = "/settings"
-
-
-async def _is_admin(user_id: int) -> bool:
-    db = get_db()
-    cur = await db.execute("SELECT is_admin FROM users WHERE id = ?", (user_id,))
-    row = await cur.fetchone()
-    return bool(row and row["is_admin"])
+_FRONTEND_CALLBACK_PATH = "/spotify-callback"
 
 
 class ToggleRequest(BaseModel):
@@ -41,26 +33,25 @@ async def spotify_auth_url(user: dict = Depends(get_active_user)):
 
 @router.get("/callback")
 async def spotify_callback(code: str = "", state: str = "", error: str = ""):
-    """OAuth redirect handler. Spotify sends the user here with `code` and
+    """OAuth redirect handler. Spotify sends the browser here with `code` and
     `state`; we resolve the mradio session cookie independently and validate
-    that the state belongs to the same user."""
+    that the state belongs to the same user. After handling the result we
+    redirect to a tiny page that closes the popup, so the player stays open
+    and its polling loop updates the star."""
     if error:
-        return RedirectResponse(f"{_FRONTEND_SETTINGS_PATH}?spotify=error&detail={error}")
+        return RedirectResponse(f"{_FRONTEND_CALLBACK_PATH}?status=error&detail={error}")
     if not code or not state:
-        return RedirectResponse(f"{_FRONTEND_SETTINGS_PATH}?spotify=error&detail=missing_params")
+        return RedirectResponse(f"{_FRONTEND_CALLBACK_PATH}?status=error&detail=missing_params")
 
     await spotify_client.delete_expired_oauth_states()
     user_id = await spotify_client.consume_oauth_state(state)
     if not user_id:
-        return RedirectResponse(f"{_FRONTEND_SETTINGS_PATH}?spotify=error&detail=invalid_state")
-
-    admin = await _is_admin(user_id)
-    redirect_path = _FRONTEND_SETTINGS_PATH if admin else "/"
+        return RedirectResponse(f"{_FRONTEND_CALLBACK_PATH}?status=error&detail=invalid_state")
 
     ok = await spotify_client.connect_user(user_id, code)
     if not ok:
-        return RedirectResponse(f"{redirect_path}?spotify=error&detail=connect_failed")
-    return RedirectResponse(f"{redirect_path}?spotify=connected")
+        return RedirectResponse(f"{_FRONTEND_CALLBACK_PATH}?status=error&detail=connect_failed")
+    return RedirectResponse(f"{_FRONTEND_CALLBACK_PATH}?status=connected")
 
 
 @router.post("/disconnect")

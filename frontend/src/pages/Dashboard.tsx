@@ -47,13 +47,6 @@ export function Dashboard() {
   }, [user, page])
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (window.location.pathname === '/settings' && params.has('spotify')) {
-      setPage('spotify-settings')
-    }
-  }, [])
-
-  useEffect(() => {
     if (!config) return
     // Light is now the default for anyone with no saved preference yet
     // (a fresh config.json, or one that predates the theme key) —

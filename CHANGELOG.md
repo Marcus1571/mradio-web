@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.17.4] - 2026-09-12
+
+Spotify OAuth popup close fix.
+
+- Added a dedicated `/spotify-callback` page that closes the OAuth popup after
+  Spotify redirects back, instead of leaving the user on the Settings → Spotify
+  admin page inside the popup. The player stays open and its polling loop
+  updates the star button.
+- `backend/app/routers/spotify.py`: callback now redirects every user to
+  `/spotify-callback?status=...`; removed the admin-vs-non-admin redirect split.
+- `frontend/src/pages/Dashboard.tsx`: removed the stale effect that opened the
+  Spotify settings page from `/settings?spotify=connected`.
+- `frontend/src/hooks/useSpotify.ts`: open the auth popup as a sized window and
+  surface a clear error if the browser blocks it.
+
 ## [1.17.3] - 2026-09-12
 
 Spa fallback class fix.

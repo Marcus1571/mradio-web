@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.types import Scope
@@ -104,6 +104,36 @@ class _CacheAwareStaticFiles(StaticFiles):
             raise
 
 
+_SPOTIFY_CALLBACK_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spotify — mradio web</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 2rem; text-align: center; color: #333; }
+  button { margin-top: 1rem; padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; }
+</style>
+</head>
+<body>
+  <p id="msg">{message}</p>
+  <button id="close" type="button" style="display:none">Close this window</button>
+  <script>
+    (function () {
+      var closeBtn = document.getElementById('close');
+      closeBtn.onclick = function () { window.close(); };
+      window.close();
+      // If the browser refused the scripted close, show the button and a hint.
+      setTimeout(function () {
+        document.getElementById('msg').textContent += ' Please close this window to return to the player.';
+        closeBtn.style.display = 'inline-block';
+      }, 300);
+    })();
+  </script>
+</body>
+</html>"""
+
+
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 if STATIC_DIR.is_dir():
     # A reset-password link clicked from an email is a real GET to this
@@ -113,5 +143,18 @@ if STATIC_DIR.is_dir():
     @app.get("/reset-password", include_in_schema=False)
     async def reset_password_page():
         return FileResponse(STATIC_DIR / "index.html", headers={"Cache-Control": "no-cache"})
+
+    # The Spotify OAuth popup needs to close after authorization instead of
+    # leaving the user on a settings page inside the popup.
+    @app.get("/spotify-callback", include_in_schema=False)
+    async def spotify_callback_page(status: str = "connected", detail: str = ""):
+        if status == "connected":
+            message = "Spotify connected."
+        else:
+            message = "Spotify connection failed" + (": " + detail if detail else "") + "."
+        return HTMLResponse(
+            _SPOTIFY_CALLBACK_HTML.format(message=message),
+            headers={"Cache-Control": "no-store"},
+        )
 
     app.mount("/", _CacheAwareStaticFiles(directory=STATIC_DIR, html=True), name="static")
