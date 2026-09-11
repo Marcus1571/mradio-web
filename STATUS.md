@@ -23,11 +23,13 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
-- **v1.17.2 tagged and released, not pre-release.** Spotify OAuth return fix:
-  the backend now serves `index.html` for direct links to frontend routes such
-  as `/settings?spotify=connected`, so the OAuth popup no longer lands on a
-  404 after the user authorizes Spotify. This sits on top of the v1.17.1 popup
-  fix and the v1.17.0 per-user playlist integration.
+- **v1.17.3 tagged and released, not pre-release.** Completes the v1.17.2
+  Spotify OAuth return fix: the SPA fallback now catches the right exception
+  class, so `/settings?spotify=connected` serves `index.html` and the OAuth
+  popup loads the Settings → Spotify page after authorization instead of a 404.
+- **v1.17.2 tagged and released, not pre-release.** Spotify OAuth return fix
+  (attempted): intended to serve `index.html` for direct links to frontend
+  routes, but caught the wrong exception class and still returned 404.
 - **v1.17.1 tagged and released, not pre-release.** Spotify OAuth popup fix:
   authorization now opens in a new browser tab so the player stays open, and
   the player polls status until the popup returns.

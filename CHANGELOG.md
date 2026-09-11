@@ -1,14 +1,21 @@
 # Changelog
 
+## [1.17.3] - 2026-09-12
+
+Spa fallback class fix.
+
+- `backend/app/main.py`: the SPA fallback added in v1.17.2 now catches
+  `starlette.exceptions.HTTPException` (the one `StaticFiles` raises) instead
+  of FastAPI's subclass, so `/settings?spotify=connected` actually serves
+  `index.html`.
+
 ## [1.17.2] - 2026-09-12
 
-Spotify OAuth return fix.
+Spotify OAuth return fix (partial).
 
 - `backend/app/main.py`: added an SPA fallback to the static-files handler
-  so direct GETs to frontend routes (e.g. `/settings?spotify=connected`, the
-  Spotify OAuth return URL) serve `index.html` instead of a 404. This fixes
-  the popup showing `{"detail":"Not Found"}` after the user authorizes
-  Spotify.
+  intended to make direct GETs to frontend routes serve `index.html` instead
+  of a 404. Caught the wrong exception class, so v1.17.3 finishes the fix.
 
 ## [1.17.1] - 2026-09-12
 
