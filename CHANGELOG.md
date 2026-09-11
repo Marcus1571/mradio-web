@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.16.8] - 2026-09-11
+
+AI liner-notes grounding + provider hardening.
+
+- Added English Wikipedia snippet grounding for every hardened AI
+  provider. `backend/app/wiki.py` resolves the played work to a Wikipedia
+  article, fetches the intro extract (~600 chars), and `enricher.py`
+  prepends it to the prompt as "GROUNDING CONTEXT". The resolver uses a
+  1-hour in-memory cache, a 1-second API throttle, 429/5xx retry,
+  title-first search, and scoring that strongly prefers exact title
+  matches (+1000) and music-specific articles (+200) while penalizing
+  disambiguation pages (-300). This eliminates the most egregious
+  fabrications on less-documented tracks (e.g. Gemini's invented "1978
+  Los Angeles" date for Maria Muldaur's "Empty Bed Blues").
+- Fixed `_llm_openai_compatible()` in `backend/app/providers.py` crashing
+  with `AttributeError` when a provider returns `"content": null`
+  (observed with OpenRouter reasoning outputs); it now coerces `None`
+  to `""` before `.strip()`. Applied the same fix to `llm_grok()`.
+- Replaced the EOL NVIDIA NIM default model
+  (`minimaxai/minimax-m3`, HTTP 410) with
+  `meta/llama-3.2-11b-vision-instruct`, the only model that was both
+  account-invokable and returning valid JSON within the timeout in live
+  probing.
+
 ## [1.16.7] - 2026-09-10
 
 Fixed a real playback-recovery bug: an audio dropout would sometimes
