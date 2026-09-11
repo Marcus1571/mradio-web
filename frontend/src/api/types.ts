@@ -89,6 +89,27 @@ export interface AISettings {
   mistral_model: string
   mistral_timeout: number
   mistral_manually_enabled: boolean
+  spotify_client_id: string
+  spotify_client_secret: string
+}
+
+export interface SpotifyStatus {
+  configured: boolean
+  connected: boolean
+  playlist_id?: string
+  market?: string
+}
+
+export interface SpotifyMembership {
+  in_playlist: boolean
+  track_id: string | null
+}
+
+export interface SpotifyToggleResult {
+  ok: boolean
+  in_playlist: boolean
+  track_id: string | null
+  message?: string
 }
 
 export interface AITestResult {

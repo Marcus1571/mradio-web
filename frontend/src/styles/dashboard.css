@@ -443,6 +443,32 @@
   margin: 0 0 var(--space-3xs);
 }
 
+.np-track-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-3xs);
+}
+
+.np-track-row .np-track {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.spotify-star {
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+
+.spotify-star.active {
+  color: var(--accent);
+}
+
+.spotify-star.busy {
+  opacity: 0.6;
+}
+
 .np-performer {
   font-size: var(--text-sm);
   color: var(--ink-3);

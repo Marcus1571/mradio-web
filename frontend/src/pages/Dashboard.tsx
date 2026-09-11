@@ -14,6 +14,7 @@ import { AISettingsPage } from './AISettingsPage'
 import { AnalyticsPage } from './AnalyticsPage'
 import { EmailSettingsPage } from './EmailSettingsPage'
 import { SettingsPage } from './SettingsPage'
+import { SpotifySettingsPage } from './SpotifySettingsPage'
 import { UsersPage } from './UsersPage'
 import '../styles/dashboard.css'
 
@@ -25,6 +26,16 @@ export function Dashboard() {
   const [page, setPage] = useState<Page>('dashboard')
   const resumedRef = useRef(false)
   const t = useTranslation(language)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (window.location.pathname === '/settings' || params.has('spotify')) {
+      setPage('spotify-settings')
+      if (params.get('spotify') === 'connected') {
+        // The status will refresh from the settings page; no toast needed.
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!config) return
@@ -117,6 +128,7 @@ export function Dashboard() {
       {page === 'users' && <UsersPage onBack={() => setPage('settings')} t={t} />}
       {page === 'ai-settings' && <AISettingsPage onBack={() => setPage('settings')} t={t} />}
       {page === 'email-settings' && <EmailSettingsPage onBack={() => setPage('settings')} t={t} />}
+      {page === 'spotify-settings' && <SpotifySettingsPage onBack={() => setPage('settings')} t={t} />}
       {page === 'analytics' && <AnalyticsPage t={t} />}
     </div>
   )

@@ -7,6 +7,7 @@ export function SettingsPage({ onNavigate, t }: { onNavigate: (page: Page) => vo
     { page: 'users', title: t('settings.usersTitle'), description: t('settings.usersDescription') },
     { page: 'ai-settings', title: t('settings.aiTitle'), description: t('settings.aiDescription') },
     { page: 'email-settings', title: t('settings.emailTitle'), description: t('settings.emailDescription') },
+    { page: 'spotify-settings', title: t('settings.spotifyTitle'), description: t('settings.spotifyDescription') },
   ]
 
   return (

@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.17.0] - 2026-09-12
+
+Spotify per-user playlist integration.
+
+- Added per-user Spotify playlist support. Admin enters the Spotify app
+  credentials in Settings; each listener connects their own account from the
+  player and gets a private "mradio-web" playlist.
+- Added a star button to the Now Playing panel that adds or removes the
+  currently-playing track. The star is filled when the track is already in the
+  user's playlist.
+- Implemented executive-decision track matching in `backend/app/spotify.py`:
+  multi-query Spotify search, ISRC deduplication, title/artist/performer
+  scoring, album-type preference (album > single > compilation), popularity
+  tiebreaker, and a conservative acceptance threshold.
+- Mirrored playlist contents in `spotify_playlist_tracks` so the filled-star
+  state is instant and doesn't hit Spotify on every UI tick.
+- Encrypted refresh tokens at rest with `cryptography.fernet` using the
+  `MRADIO_SPOTIFY_TOKEN_KEY` env var; falls back to "plain:" when no key is
+  configured (development only).
+- Auto-detected the user's Spotify market from the OAuth profile for
+  region-aware search and track relinking.
+- Added OAuth state cleanup (`delete_expired_oauth_states`) in the Spotify
+  callback handler.
+
 ## [1.16.9] - 2026-09-11
 
 Wikipedia grounding speed fix.

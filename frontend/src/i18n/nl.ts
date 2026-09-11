@@ -30,7 +30,25 @@ const nl: Dict = {
     aiTitle: 'AI-providers',
     aiDescription: 'OpenCode, Ollama, ChatGPT en OpenAI-compatibele endpoints.',
     emailTitle: 'E-mail (SMTP)',
-    emailDescription: 'Verzending van wachtwoordherstel.',
+    emailDescription: 'Forgot-password delivery.',
+    spotifyTitle: 'Spotify',
+    spotifyDescription: 'Per-user playlist integration.',
+  },
+  spotifySettings: {
+    title: 'Spotify',
+    intro:
+      'Client credentials for the Spotify per-user playlist integration. Each listener connects their own ' +
+      'Spotify account from the player and gets a private "mradio-web" playlist.',
+    credsGroup: 'App credentials',
+    clientId: 'Client ID',
+    clientSecret: 'Client secret',
+    redirectUriNote:
+      'The redirect URI and token encryption key are set via environment variables on the server — ' +
+      'see the deployment notes.',
+    save: 'Save',
+    saved: 'Saved',
+    saving: 'Saving…',
+    errorFallback: 'Could not save settings.',
   },
   changePassword: {
     title: 'Wachtwoord wijzigen',
@@ -234,7 +252,10 @@ const nl: Dict = {
     volume: 'Volume',
     aiProvider: 'AI-provider',
     none: 'geen',
-    historyTitle: 'Onlangs afgespeeld',
+    historyTitle: 'Recently played',
+    addToSpotify: 'Add to Spotify playlist',
+    removeFromSpotify: 'Remove from Spotify playlist',
+    connectSpotify: 'Connect Spotify to save tracks',
   },
   analytics: {
     title: 'Analyse',

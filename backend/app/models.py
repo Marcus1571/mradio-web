@@ -89,6 +89,8 @@ class AISettingsUpdate(BaseModel):
     mistral_model: str | None = None
     mistral_timeout: int | None = None
     mistral_manually_enabled: bool | None = None
+    spotify_client_id: str | None = None
+    spotify_client_secret: str | None = None
 
 
 class ProviderSwitchRequest(BaseModel):

@@ -31,6 +31,7 @@ from .routers import favorites as favorites_router
 from .routers import grok as grok_router
 from .routers import settings as settings_router
 from .routers import smtp as smtp_router
+from .routers import spotify as spotify_router
 from .routers import stations as stations_router
 from .routers import stream as stream_router
 from .routers import users as users_router
@@ -64,6 +65,7 @@ app.include_router(stations_router.router)
 app.include_router(config_router.router)
 app.include_router(ws_router.router)
 app.include_router(analytics_router.router)
+app.include_router(spotify_router.router)
 
 class _CacheAwareStaticFiles(StaticFiles):
     """Only files actually under /assets/* are Vite-content-hashed (a new

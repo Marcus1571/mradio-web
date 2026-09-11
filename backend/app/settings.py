@@ -133,10 +133,15 @@ _DEFAULTS = {
     "mistral_model": "open-mistral-nemo",
     "mistral_timeout": 30,
     "mistral_manually_enabled": True,
+    # Spotify per-user playlist integration — client credentials are
+    # admin-managed here; the OAuth redirect URI is env-only (must match
+    # exactly what's registered in the Spotify app dashboard).
+    "spotify_client_id": "",
+    "spotify_client_secret": "",
 }
 
 _SECRET_FIELDS = {"api_key", "grok_api_key", "gemini_api_key", "openrouter_api_key",
-                  "mistral_api_key"}
+                  "mistral_api_key", "spotify_client_secret"}
 
 
 def _seed_from_env() -> dict:

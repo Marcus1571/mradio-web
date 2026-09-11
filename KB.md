@@ -721,3 +721,71 @@ not an error:
 
 Play history and stats have no such limitation — they work regardless of
 where a listener connects from.
+
+## 12. Spotify playlist integration (optional)
+
+Each listener can connect their own Spotify account and save tracks to a
+private "mradio-web" playlist straight from the player. Configuration is
+split: the Spotify **app credentials** live in mradio-web's Settings UI, but
+the **redirect URI** and **token-encryption key** are environment variables
+on the server because they're infrastructure-level values that shouldn't be
+editable from the UI.
+
+### 12.1 Create a Spotify app
+
+1. Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+   and create an app.
+2. Add the redirect URI:
+   ```
+   https://<your-domain>/api/spotify/callback
+   ```
+   Use the same domain listeners reach the app on (e.g. `https://radio.example.com`).
+3. Note the **Client ID** and **Client Secret**.
+
+### 12.2 Configure the server
+
+Add these environment variables in `docker-compose.yml` (or an override):
+
+```yaml
+environment:
+  - MRADIO_SPOTIFY_REDIRECT_URI=https://<your-domain>/api/spotify/callback
+  - MRADIO_SPOTIFY_TOKEN_KEY=<a 32-byte Fernet key>
+```
+
+- `MRADIO_SPOTIFY_REDIRECT_URI` must match exactly what you entered in the
+  Spotify app settings, including `https://`.
+- `MRADIO_SPOTIFY_TOKEN_KEY` encrypts refresh tokens at rest. Generate one
+  with:
+  ```bash
+  python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+  ```
+  If unset, refresh tokens are still stored but only obfuscated as
+  `plain:<token>` — fine for local development, not for production.
+
+Restart the container after changing env vars:
+
+```bash
+docker compose up -d
+```
+
+### 12.3 Enter app credentials in mradio-web
+
+From the user menu → **Settings** → **Spotify** (admin only):
+
+- Paste the **Client ID** and **Client Secret** from the Spotify app.
+- Save.
+
+Once this is done, every user sees a star icon next to the currently-playing
+track. A hollow star means the track isn't in their playlist yet; a filled
+star means it is. Clicking it connects Spotify if needed, then adds or
+removes the track.
+
+### 12.4 How tracks are matched
+
+The app searches Spotify using the ICY metadata (artist and title parsed from
+the stream), deduplicates by ISRC, and picks the best candidate with a
+conservative score combining title similarity, artist/performer presence,
+album type (album preferred over single over compilation), and popularity.
+If no good match is found, the star action reports that the track wasn't
+found. The playlist contents are mirrored locally so the filled-star state
+is instant.

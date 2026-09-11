@@ -11,6 +11,7 @@ export type Page =
   | 'users'
   | 'ai-settings'
   | 'email-settings'
+  | 'spotify-settings'
   | 'analytics'
   | 'change-password'
 

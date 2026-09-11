@@ -4,6 +4,7 @@ import type { Station, TriviaHistoryEntry } from '../api/types'
 import type { TFunction } from '../i18n'
 import type { PlayerState } from '../hooks/usePlayer'
 import { useProviders } from '../hooks/useProviders'
+import { useSpotify } from '../hooks/useSpotify'
 import { useStationLogo } from '../hooks/useStationLogo'
 import { formatCache, formatElapsed, formatKHz, formatKbps } from '../utils/format'
 import {
@@ -13,6 +14,7 @@ import {
   PlayIcon,
   RefreshIcon,
   SparkleIcon,
+  StarIcon,
   StopIcon,
   VolumeIcon,
 } from './Icons'
@@ -110,6 +112,7 @@ export function NowPlayingPanel({
   t: TFunction
 }) {
   const { providers, active, activate } = useProviders()
+  const spotify = useSpotify(state.rawTitle)
   const [providerOpen, setProviderOpen] = useState(false)
   const [triviaExpanded, setTriviaExpanded] = useState(true)
   const providerRef = useRef<HTMLDivElement | null>(null)
@@ -171,7 +174,27 @@ export function NowPlayingPanel({
               <span className="np-metric">{formatElapsed(state.elapsed)}</span>
             </div>
             {state.artist && <p className="np-composer">{state.artist}</p>}
-            <h1 className="np-track">{state.title || state.rawTitle}</h1>
+            <div className="np-track-row">
+              <h1 className="np-track">{state.title || state.rawTitle}</h1>
+              {spotify.configured && (
+                <button
+                  className={`icon-btn spotify-star ${spotify.inPlaylist ? 'active' : ''} ${spotify.toggling || spotify.loading ? 'busy' : ''}`}
+                  type="button"
+                  onClick={() => void spotify.toggle()}
+                  disabled={spotify.toggling || spotify.loading}
+                  aria-label={spotify.inPlaylist ? t('nowPlaying.removeFromSpotify') : t('nowPlaying.addToSpotify')}
+                  title={
+                    spotify.connected
+                      ? spotify.inPlaylist
+                        ? t('nowPlaying.removeFromSpotify')
+                        : t('nowPlaying.addToSpotify')
+                      : t('nowPlaying.connectSpotify')
+                  }
+                >
+                  <StarIcon filled={spotify.inPlaylist} />
+                </button>
+              )}
+            </div>
             {state.performer && <p className="np-performer">{state.performer}</p>}
 
             <div className="trivia-label">

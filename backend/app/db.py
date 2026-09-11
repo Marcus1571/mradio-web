@@ -77,6 +77,35 @@ CREATE TABLE IF NOT EXISTS ai_requests (
     error_detail TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_ai_requests_provider ON ai_requests(provider, started_at);
+CREATE TABLE IF NOT EXISTS spotify_tokens (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    access_token TEXT NOT NULL,
+    refresh_token TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    market TEXT NOT NULL DEFAULT '',
+    playlist_id TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_spotify_tokens_user ON spotify_tokens(user_id);
+CREATE TABLE IF NOT EXISTS spotify_playlist_tracks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    spotify_track_id TEXT NOT NULL,
+    isrc TEXT NOT NULL DEFAULT '',
+    added_at TEXT NOT NULL,
+    UNIQUE(user_id, spotify_track_id)
+);
+CREATE INDEX IF NOT EXISTS idx_spotify_playlist_tracks_user ON spotify_playlist_tracks(user_id);
+CREATE INDEX IF NOT EXISTS idx_spotify_playlist_tracks_isrc ON spotify_playlist_tracks(user_id, isrc);
+CREATE TABLE IF NOT EXISTS spotify_oauth_states (
+    state TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_spotify_oauth_states_user ON spotify_oauth_states(user_id);
+CREATE INDEX IF NOT EXISTS idx_spotify_oauth_states_expires ON spotify_oauth_states(expires_at);
 """
 
 _db: aiosqlite.Connection | None = None

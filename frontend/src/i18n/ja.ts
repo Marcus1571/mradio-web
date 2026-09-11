@@ -30,7 +30,25 @@ const ja: Dict = {
     aiTitle: 'AIプロバイダー',
     aiDescription: 'OpenCode、Ollama、ChatGPT、OpenAI互換エンドポイント。',
     emailTitle: 'メール（SMTP）',
-    emailDescription: 'パスワード再設定メールの送信。',
+    emailDescription: 'Forgot-password delivery.',
+    spotifyTitle: 'Spotify',
+    spotifyDescription: 'Per-user playlist integration.',
+  },
+  spotifySettings: {
+    title: 'Spotify',
+    intro:
+      'Client credentials for the Spotify per-user playlist integration. Each listener connects their own ' +
+      'Spotify account from the player and gets a private "mradio-web" playlist.',
+    credsGroup: 'App credentials',
+    clientId: 'Client ID',
+    clientSecret: 'Client secret',
+    redirectUriNote:
+      'The redirect URI and token encryption key are set via environment variables on the server — ' +
+      'see the deployment notes.',
+    save: 'Save',
+    saved: 'Saved',
+    saving: 'Saving…',
+    errorFallback: 'Could not save settings.',
   },
   changePassword: {
     title: 'パスワードを変更',
@@ -229,7 +247,10 @@ const ja: Dict = {
     volume: '音量',
     aiProvider: 'AIプロバイダー',
     none: 'なし',
-    historyTitle: '再生履歴',
+    historyTitle: 'Recently played',
+    addToSpotify: 'Add to Spotify playlist',
+    removeFromSpotify: 'Remove from Spotify playlist',
+    connectSpotify: 'Connect Spotify to save tracks',
   },
   analytics: {
     title: '統計',

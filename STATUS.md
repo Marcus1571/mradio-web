@@ -23,6 +23,16 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.17.0 in progress — Spotify per-user playlist integration implemented.**
+  Each user connects their own Spotify account, gets a private "mradio-web"
+  playlist, and can add/remove the currently-playing track with a star button
+  in the player. Track matching is an executive-decision search + score
+  combining title similarity, artist/performer presence, album-type preference,
+  and popularity. Refresh tokens are encrypted at rest with
+  `MRADIO_SPOTIFY_TOKEN_KEY` via Fernet; market is auto-detected from the
+  Spotify profile. Client credentials live in the Settings UI, while the
+  redirect URI stays an env var (`MRADIO_SPOTIFY_REDIRECT_URI`). Frontend,
+  backend, and i18n all build clean; not yet deployed.
 - **v1.16.9 tagged and released, not pre-release.** Optimizes Wikipedia
   snippet grounding lookups in the AI liner-notes pipeline (batched extracts,
   coalesced concurrent lookups, reduced throttle). Verified end-to-end:
