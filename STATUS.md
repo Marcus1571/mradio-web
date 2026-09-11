@@ -23,10 +23,13 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
-- **v1.17.3 tagged and released, not pre-release.** Completes the v1.17.2
-  Spotify OAuth return fix: the SPA fallback now catches the right exception
-  class, so `/settings?spotify=connected` serves `index.html` and the OAuth
-  popup loads the Settings → Spotify page after authorization instead of a 404.
+- **v1.17.3 tagged, released, and deployed, not pre-release.** Completes the
+  v1.17.2 Spotify OAuth return fix: the SPA fallback now catches the right
+  exception class, so `/settings?spotify=connected` serves `index.html` and the
+  OAuth popup loads the Settings → Spotify page after authorization instead of
+  a 404. Smoke-tested on LT: root, `/assets/index-*.js`, and
+  `/settings?spotify=connected` all return `200`; unauthenticated
+  `/api/spotify/status` returns `401` as expected.
 - **v1.17.2 tagged and released, not pre-release.** Spotify OAuth return fix
   (attempted): intended to serve `index.html` for direct links to frontend
   routes, but caught the wrong exception class and still returned 404.
