@@ -2,7 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.types import Scope
@@ -86,6 +86,21 @@ class _CacheAwareStaticFiles(StaticFiles):
         else:
             response.headers["Cache-Control"] = "no-cache"
         return response
+
+    async def get_response(self, path: str, scope: Scope):
+        """SPA fallback: serve index.html for any non-asset path that does not
+        match a real static file. This lets direct links such as
+        /settings?spotify=connected (the Spotify OAuth return URL) load the
+        React app instead of a 404."""
+        try:
+            return await super().get_response(path, scope)
+        except HTTPException as exc:
+            if exc.status_code == 404 and not scope["path"].startswith("/assets/"):
+                return FileResponse(
+                    STATIC_DIR / "index.html",
+                    headers={"Cache-Control": "no-cache"},
+                )
+            raise
 
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"

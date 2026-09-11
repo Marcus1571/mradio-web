@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.17.2] - 2026-09-12
+
+Spotify OAuth return fix.
+
+- `backend/app/main.py`: added an SPA fallback to the static-files handler
+  so direct GETs to frontend routes (e.g. `/settings?spotify=connected`, the
+  Spotify OAuth return URL) serve `index.html` instead of a 404. This fixes
+  the popup showing `{"detail":"Not Found"}` after the user authorizes
+  Spotify.
+
 ## [1.17.1] - 2026-09-12
 
 Spotify OAuth popup fix.

@@ -23,10 +23,16 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
-- **v1.17.1 tagged and released, not pre-release.** Spotify per-user
-  playlist integration plus OAuth popup fix: authorization now opens in a new
-  browser tab so the player stays open, and the player polls status until the
-  popup returns. Each user connects their own Spotify account, gets a private
+- **v1.17.2 tagged and released, not pre-release.** Spotify OAuth return fix:
+  the backend now serves `index.html` for direct links to frontend routes such
+  as `/settings?spotify=connected`, so the OAuth popup no longer lands on a
+  404 after the user authorizes Spotify. This sits on top of the v1.17.1 popup
+  fix and the v1.17.0 per-user playlist integration.
+- **v1.17.1 tagged and released, not pre-release.** Spotify OAuth popup fix:
+  authorization now opens in a new browser tab so the player stays open, and
+  the player polls status until the popup returns.
+- **v1.17.0 tagged and released, not pre-release.** Spotify per-user playlist
+  integration. Each user connects their own Spotify account, gets a private
   "mradio-web" playlist, and can add/remove the currently-playing track with a
   star button. Track matching is an executive-decision search + score combining
   title similarity, artist/performer presence, album-type preference, and
