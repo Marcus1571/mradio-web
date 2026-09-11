@@ -1,13 +1,22 @@
 # Changelog
 
+## [1.17.5] - 2026-09-12
+
+Spotify OAuth callback page fix.
+
+- `backend/app/main.py`: the `/spotify-callback` page added in v1.17.4 used
+  `str.format()` on an HTML template that contained CSS braces, causing a 500.
+  Switched to a plain `replace()` placeholder so the page renders and closes
+  the popup correctly.
+
 ## [1.17.4] - 2026-09-12
 
-Spotify OAuth popup close fix.
+Spotify OAuth popup close fix (partial).
 
-- Added a dedicated `/spotify-callback` page that closes the OAuth popup after
-  Spotify redirects back, instead of leaving the user on the Settings → Spotify
-  admin page inside the popup. The player stays open and its polling loop
-  updates the star button.
+- Added a dedicated `/spotify-callback` page intended to close the OAuth popup
+  after Spotify redirects back, instead of leaving the user on the Settings →
+  Spotify admin page inside the popup. The HTML template used `str.format()`,
+  which crashed on CSS braces, so v1.17.5 finishes the fix.
 - `backend/app/routers/spotify.py`: callback now redirects every user to
   `/spotify-callback?status=...`; removed the admin-vs-non-admin redirect split.
 - `frontend/src/pages/Dashboard.tsx`: removed the stale effect that opened the

@@ -116,7 +116,7 @@ _SPOTIFY_CALLBACK_HTML = """<!DOCTYPE html>
 </style>
 </head>
 <body>
-  <p id="msg">{message}</p>
+  <p id="msg"><!--MESSAGE--></p>
   <button id="close" type="button" style="display:none">Close this window</button>
   <script>
     (function () {
@@ -153,7 +153,7 @@ if STATIC_DIR.is_dir():
         else:
             message = "Spotify connection failed" + (": " + detail if detail else "") + "."
         return HTMLResponse(
-            _SPOTIFY_CALLBACK_HTML.format(message=message),
+            _SPOTIFY_CALLBACK_HTML.replace("<!--MESSAGE-->", message),
             headers={"Cache-Control": "no-store"},
         )
 
