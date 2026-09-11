@@ -23,21 +23,23 @@ _DEFAULTS = {
     "api_key": "",
     # minimaxai/minimax-m3 (the old default) was retired by NVIDIA on
     # 2026-09-09 (confirmed live: a real call returns 410 Gone, "has
-    # reached its end of life") — this app's NIM default sat broken
-    # until caught here. mistralai/mistral-nemotron confirmed live as
-    # a real, working replacement (3-11s response times), but a live
-    # probe of all 80 models NVIDIA's own /v1/models lists for a real
-    # account found only 9 actually invokable — most return 404
-    # "Function not found for account", and several of the 9 that DO
-    # work are reasoning models (nemotron-3-super-120b-a12b,
-    # nemotron-3.5-lightning-30b-a3b) that leak chain-of-thought into
-    # the reply and burn the token budget before reaching real JSON,
-    # the same failure mode seen on Mistral's flagship and OpenRouter's
-    # free auto-router. mistral-nemotron was the only non-reasoning,
-    # actually-working option found. If this model is ever retired
-    # too, re-probe NVIDIA's actual account-enabled model list rather
+    # reached its end of life"). A live probe of all 80 models NVIDIA's
+    # own /v1/models lists for a real account found only a handful
+    # actually invokable — most return 404 "Function not found for
+    # account", several of the rest are reasoning models that leak
+    # chain-of-thought and burn the token budget before reaching real
+    # JSON (same failure mode as OpenRouter's free auto-router), and
+    # mistralai/mistral-nemotron — the previous replacement — had
+    # become unreliable by 2026-09-11 (timeouts and HTTP 500s). Of the
+    # models that actually responded, meta/llama-3.2-11b-vision-instruct
+    # was the only one that was consistently available, returned valid
+    # JSON within the 30s timeout, and completed the prompt end-to-end.
+    # It is a vision-capable instruct model, but it accepts text prompts
+    # normally. Accuracy on niche facts is mediocre and is expected to
+    # improve once Wikipedia grounding is injected. If this model is ever
+    # retired, re-probe NVIDIA's actual account-enabled model list rather
     # than trusting the public /v1/models catalog — most of it 404s.
-    "api_model": "mistralai/mistral-nemotron",
+    "api_model": "meta/llama-3.2-11b-vision-instruct",
     "api_timeout": 45,
     "opencode": "",
     "opencode_timeout": 180,

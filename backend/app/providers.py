@@ -293,7 +293,7 @@ async def _llm_openai_compatible(base_url: str, model: str, api_key: str,
                 "Authorization": f"Bearer {api_key}"})
             r.raise_for_status()
             data = r.json()
-        content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
+        content = (data.get("choices") or [{}])[0].get("message", {}).get("content") or ""
         return content.strip() or None
     except (httpx.HTTPError, ValueError, IndexError):
         return None
@@ -474,7 +474,7 @@ async def llm_grok(settings: dict, prompt: str) -> str | None:
                                   headers={"Authorization": f"Bearer {token}"})
             r.raise_for_status()
             data = r.json()
-        content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
+        content = (data.get("choices") or [{}])[0].get("message", {}).get("content") or ""
         return content.strip() or None
     except (httpx.HTTPError, ValueError, IndexError):
         return None

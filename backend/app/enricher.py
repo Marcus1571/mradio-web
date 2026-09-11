@@ -17,7 +17,7 @@ from . import db
 from . import providers
 from . import settings as settings_store
 from . import wiki
-from .textutil import apply_provider_rules, elide, extract_json_item
+from .textutil import _CATEGORICAL_PROVIDERS, apply_provider_rules, elide, extract_json_item
 from .userdata import load_cfg, persist_cfg
 
 logger = logging.getLogger("mradio.enricher")
@@ -375,6 +375,25 @@ class Enricher:
             f"Tagged name: {title or 'unknown'} · "
             f"Performer (if present): {performer or 'none'}"
         )
+        grounding = ""
+        if self.provider in _CATEGORICAL_PROVIDERS:
+            try:
+                surname = (artist.split("(")[0].split()[-1] if artist else "") or ""
+                wiki_ctx = await wiki.ground(artist, title, surname)
+                if wiki_ctx:
+                    grounding = (
+                        "GROUNDING CONTEXT — verified English Wikipedia excerpt. "
+                        "Use only facts from this excerpt or your own confident "
+                        "knowledge; do not invent dates, venues, dedicatees, or "
+                        "other details to fill gaps.\n\n"
+                        f"Article: {wiki_ctx['title']}\n"
+                        f"Excerpt: {wiki_ctx['extract']}\n\n"
+                        "If the article above matches the specific work being "
+                        "played, use its exact title for the 'wiki' field; "
+                        "otherwise return '' for 'wiki'.\n\n"
+                    )
+            except Exception:
+                logger.warning("wiki.ground failed for %s - %s", artist, title, exc_info=True)
         prompt = apply_provider_rules(
             _PROMPT_TEMPLATE.format(
                 question=question,
@@ -383,6 +402,8 @@ class Enricher:
             self.provider,
             model=settings.get("ollama_model", "") if self.provider == "ollama" else "",
         )
+        if grounding:
+            prompt = grounding + prompt
         result = await self._llm(settings, prompt)
         if result is None:
             return None

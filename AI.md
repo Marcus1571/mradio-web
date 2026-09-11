@@ -99,6 +99,20 @@ those exist.
   backs off together for a cooldown window rather than each user's
   request hammering dead providers on its own schedule. Shared because
   credentials are global (admin-managed), not per-user.
+- **Wikipedia snippet grounding** (`backend/app/wiki.py` +
+  `enricher.py`) — for providers in `_CATEGORICAL_PROVIDERS`, the
+  enricher resolves the work title to an English Wikipedia article,
+  fetches the intro extract (up to ~600 chars), and prepends it to the
+  prompt as "GROUNDING CONTEXT". The resolver uses a 1-hour in-memory
+  cache, a 1-second global API throttle, 429/5xx retry, title-first
+  search, and scoring that strongly prefers exact title matches (+1000)
+  and music-specific articles (+200) while penalizing disambiguation
+  pages (-300). Implemented 2026-09-11; see `findings.md` for the
+  grounded battery results.
+- **Known bug, fixed 2026-09-11:** `_llm_openai_compatible()` in
+  `backend/app/providers.py` used to crash with `AttributeError` when a
+  provider returned `"content": null` (observed with OpenRouter reasoning
+  outputs). It now coerces `None` to `""` before `.strip()`.
 - **Prompting strategy — three variants, not two** (`backend/app/textutil.py`).
   `apply_provider_rules(prompt, provider, model="")` picks one of:
   - **`plain`** — the stock prompt template, completely unmodified. Used
@@ -129,7 +143,9 @@ those exist.
     "openrouter", "ollama", "grok"}`. Built originally for Mistral;
     shipped v1.13.0; brought raw Mistral fabrication down to roughly
     70-90% clean across ~20 live test runs — a measured improvement,
-    not a fix.
+    not a fix. Since 2026-09-11, hardened prompts are also prefixed with
+    a Wikipedia snippet grounding excerpt when a relevant English article
+    is found (see "Wikipedia snippet grounding" above).
   - **`hardened + anti-loop`** — the hardened variant plus
     `_GPT_OSS_ANTI_LOOP_RULES`, applied *only* when `provider == "ollama"`
     **and** the configured model starts with `gpt-oss` — tells the model
@@ -191,16 +207,19 @@ subscription (unlike codex/grok) — but currently admin-only anyway per
 explicit user request 2026-09-09, reason unstated. See
 `ADMIN_ONLY_PROVIDERS` above.
 
-**Reliability:** no `ai_requests` data yet.
+**Reliability:** `ai_requests` snapshot 2026-09-11: 100% success, n=17.
 
-**Speed:** manual spot-check, pre-instrumentation — fastest provider
-tested, ~1-3s. Timeout set to 30s (the app's baseline default).
+**Speed:** `ai_requests` median 1,741ms, p90 2,297ms (2026-09-11).
+Manual spot-checks pre-instrumentation were ~1-3s. Timeout set to 30s
+(the app's baseline default).
 
-**Accuracy:** manual fact-check, ~20 live test runs — hardened version
-roughly 70-90% clean (a measured improvement over raw, not a fix). Raw
-(unhardened) output had confirmed fabrication on niche classical facts;
-see the Cross-cutting hardening entry above for the specific failure
-modes observed.
+**Accuracy:** fact-check battery 2026-09-11: correct on well-documented
+classical/jazz tracks; invented vague/1970s-implied details for Maria
+Muldaur's "Empty Bed Blues" and the obscure Kora Jazz Trio live cover.
+Grounded re-run 2026-09-11: 4/4, all grounded, no invented dates on the
+less-documented tracks; still generic on the obscure live cover but
+factually safe. The retrieved grounding source resolved the main
+fabrication path.
 
 **Known limitation, confirmed live:** Mistral's real-time `web_search`
 tool is NOT available on the plain `chat/completions` endpoint this app
@@ -226,20 +245,25 @@ because live testing shows it doesn't need it (see Accuracy below).
 **Access:** not admin-only, no manual kill switch restriction beyond the
 standard toggle.
 
-**Reliability / Speed:** no `ai_requests` data yet. Manual observation,
-pre-instrumentation: user's own framing is "takes FOREVER" — the binding
-constraint on this provider is latency, not accuracy, but no numeric
-figure has been logged. This is exactly the gap the new instrumentation
-is meant to close — check `ai_stats` output once real traffic has
-accumulated for an actual number here.
+**Reliability:** `ai_requests` snapshot 2026-09-11: 100% success, n=14.
 
-**Accuracy:** manual fact-check, 3 independent live test runs (see
-`findings.md` and the memory file `mradio_ai_veridicity_investigation.md`
-for full detail) — 2 completely clean across dense multi-paragraph
-answers, 1 with a single subtle album/date-conflation error (two real
-Maria Muldaur albums from different years fused into one citation; not
-wholesale invention). Meaningfully more accurate, unprompted, than
-Mistral's raw (unhardened) output, with zero prompt scaffolding.
+**Speed:** `ai_requests` median 21,141ms, p90 61,259ms (2026-09-11).
+Manual observation pre-instrumentation: user's own framing is "takes
+FOREVER." The binding constraint is latency, not accuracy. The 90s
+fact-check battery timeout was exceeded on `kindofblue` in one run.
+
+**Accuracy:** fact-check battery 2026-09-11 plus 3 earlier independent
+live test runs (see `findings.md` and the memory file
+`mradio_ai_veridicity_investigation.md` for full detail): consistently the
+most accurate provider, including correct identification of obscure
+recordings and the only provider to correctly cite Bessie Smith's 1928
+origin for "Empty Bed Blues" without inventing a date for Muldaur's
+version. The one prior error was a subtle album/date-conflation (two real
+Maria Muldaur albums fused), not wholesale invention. Grounded re-run
+2026-09-11: 4/4, all within the 90s timeout, still accurate without
+receiving Wikipedia grounding (it is a `plain` provider). OpenCode is the
+accuracy benchmark; the question is how to use it without paying its
+latency on every request.
 
 **Open hypothesis, not yet confirmed:** OpenCode's own agent loop may
 have real tool access (web fetch/search) baked into its execution model,
@@ -267,20 +291,23 @@ without emitting a response).
 
 **Access:** not admin-only.
 
-**Reliability / Speed:** no `ai_requests` data yet. Manual spot-checks,
-pre-instrumentation, two models tested: `qwen3:14b` — 47.5s. `gpt-oss:20b`
-— 32.6s (faster, but see Accuracy below).
+**Reliability:** `ai_requests` snapshot 2026-09-11 has no Ollama rows
+yet (self-hosted, lower traffic).
 
-**Accuracy:** manual fact-check. `qwen3:14b` — mostly accurate, and
-notably the *only* provider across this whole investigation observed to
-correctly decline to guess a dedicatee it didn't know rather than
-inventing one (best-behaved result on that specific axis, any provider).
-`gpt-oss:20b` — worse: wrong date (both day and year), invented a venue
-name.
+**Speed:** fact-check battery 2026-09-11: `gpt-oss:20b` median ~25s
+(`ollama_timeout` 75s); `qwen3:14b` median ~58s. Pre-instrumentation
+manual spot-checks: `qwen3:14b` — 47.5s; `gpt-oss:20b` — 32.6s.
 
-Revisit which model is the app's effective default before relying on
-this section being current — not confirmed in `settings.py` as of this
-writing.
+**Accuracy:** fact-check battery 2026-09-11: `gpt-oss:20b` gave a
+correct, clean decline on the obscure track and acceptable facts on the
+well-known tracks. `qwen3:14b` was slow and hallucinated on "Empty Bed
+Blues" (claimed it was a 1977 track from *Midnight at the Oasis*). Prior
+manual fact-check: `qwen3:14b` had been the only provider to decline a
+dedicatee it didn't know; `gpt-oss:20b` invented a venue and wrong date.
+Grounded re-run 2026-09-11: `gpt-oss:20b` 4/4, all grounded, obscure track
+now factually anchored rather than declined; `qwen3:14b` 3/4, still timed
+out on "Empty Bed Blues" but got the obscure track right when it did
+return. The preference toward `gpt-oss:20b` is now stronger.
 
 ## openai (generic OpenAI-compatible slot)
 
@@ -315,19 +342,23 @@ account — 25x the headroom.
 **Access:** manual kill switch still provided since the daily quota,
 while generous, is still finite.
 
-**Reliability:** no `ai_requests` data yet.
+**Reliability:** `ai_requests` snapshot 2026-09-11: 71% success, n=5 —
+the only provider in the live snapshot with a visible failure rate. Some
+failures are likely the 45s timeout being exceeded by reasoning tokens;
+others may be quota-related.
 
-**Speed:** manual spot-check, pre-instrumentation, one test run only.
+**Speed:** `ai_requests` median 11,629ms, p90 25,695ms (2026-09-11).
 Timeout set to 45s, not the 30s baseline — confirmed live that Gemini's
 "thinking" reasoning tokens can push a simple reply past 30s; a timeout
 here silently falls through to the next provider in the fallback chain
 rather than erroring loudly, so this was raised specifically to avoid
 that.
 
-**Accuracy:** one clean live test on a Beethoven trivia prompt — fully
-correct facts including a real, correctly-attributed Wagner quote about
-that specific symphony. Only one test run logged so far — not yet a
-reliable sample size, unlike OpenCode's 3.
+**Accuracy:** fact-check battery 2026-09-11: correct on well-documented
+tracks; falsely dated Maria Muldaur's "Empty Bed Blues" to "1978 in Los
+Angeles" (the recording is on the 2001 album *Richland Woman Blues*).
+Grounded re-run 2026-09-11: 4/4, all grounded, no repeat of the 1978 Los
+Angeles fabrication; answers stayed close to the Wikipedia excerpt.
 
 **Not yet integrated:** Gemini's built-in `google_search` grounding tool
 (`"tools": [{"google_search": {}}]` on the same endpoint already in use).
@@ -353,22 +384,26 @@ requests/day, confirmed live) across every account using the one saved
 key, not a per-user allowance. 1,000/day once $10 has ever been spent on
 the account (doesn't expire). See `ADMIN_ONLY_PROVIDERS` above.
 
-**Reliability:** no `ai_requests` data yet. Known failure mode, confirmed
-live: on one test run, the auto-router landed on a reasoning model that
-burned its entire token budget on visible chain-of-thought (obsessively
-re-counting its own draft's character length) and never produced a
-final JSON answer at all — logged as a failure, not a slow success. Not
-a one-off fluke — documented behavior class for some reasoning models
-under tight token budgets, not specific to this app.
+**Reliability:** `ai_requests` snapshot 2026-09-11: 100% mechanical
+success, n=5. The `"content": null` crash was fixed 2026-09-11, but the
+grounded battery still saw 2/4 empty responses (`muldaur_empty_bed` and
+`obscure_trap`), so mechanical reliability under the free auto-router
+remains inconsistent.
 
-**Speed:** manual spot-check, pre-instrumentation — a live
-provider-comparison battery (2026-09-09) found the free lineup's working
-models are reasoning models with real variance: as fast as ~3s with
-categorical hardening applied, but the auto-router was observed taking
-84s on one run with that same hardening. Timeout set to 90s, not the 30s
-baseline, specifically because a shorter timeout would have discarded a
-correct, complete answer; `max_tokens` was bumped to match (reasoning
-tokens count against the same budget as content).
+**Speed:** `ai_requests` median 5,998ms, p90 21,322ms (2026-09-11).
+Manual spot-checks pre-instrumentation showed high variance: as fast as
+~3s, as slow as 84s. Timeout set to 90s, not the 30s baseline; `max_tokens`
+was bumped to match because reasoning tokens count against the same budget.
+
+**Accuracy:** fact-check battery 2026-09-11: content quality is poor.
+`muldaur_empty_bed` returned literal `"User Safety: safe"` instead of
+JSON. `obscure_trap` misattributed Chan Chan as "a cover of Buena Vista
+Social Club's 1996 recording" (wrong year; BVSC recorded it in 1997 and
+the song was written by Compay Segundo in 1984). Grounded re-run
+2026-09-11: 2/4 empty responses; the two well-known tracks that did
+return (`beethoven9`, `kindofblue`) were factually correct and clearly
+used the grounding excerpt. The free auto-router's unreliability is now
+the bigger problem than fabrication on the tracks it completes.
 
 **Not yet integrated:** OpenRouter's `openrouter:web_search` server tool
 (a different, newer mechanism than the free auto-router that failed
@@ -380,35 +415,34 @@ for Gemini/Wikipedia.
 ## nim (NVIDIA NIM)
 
 **Consumption model:** free API key, configured as the hosted default of
-the generic **openai** slot above (not a separate `PROVIDERS` entry).
+ the generic **openai** slot above (not a separate `PROVIDERS` entry).
 
 **Prompting strategy:** `hardened` (inherits the `openai` slot's
-categorical hardening) — live testing found real fabrication risk at
-this model size too.
+ categorical hardening) — live testing found real fabrication risk at
+ this model size too. Since 2026-09-11 it also receives Wikipedia snippet
+ grounding like every other `hardened` provider.
 
-**Reliability:** no `ai_requests` data yet, but see the known issue
-below — reliability at the account level is currently poor regardless
-of prompt hardening.
+**Model:** `meta/llama-3.2-11b-vision-instruct` (changed from EOL
+ `minimaxai/minimax-m3` 2026-09-11). A live probe of NVIDIA's
+ account-enabled models found most catalog entries 404'd for the account;
+ of the few that responded, this was the only one that consistently
+ returned valid JSON within the timeout. It is a vision-capable instruct
+ model but accepts text prompts normally.
 
-**Known issue, confirmed live 2026-09-10:** the app's own default model
-(`minimaxai/minimax-m3`) reached end-of-life hours before that session's
-testing (HTTP 410). Most other models on the test account either 404'd
-("not found for account") or hung/timed out (30-90s) even on trivial
-prompts. Inconclusive whether that's account-tier gating or a genuine
-service issue — not resolved. **The app's default model needs fixing**
-independent of this investigation; not yet done as of this writing.
+**Reliability:** no production `ai_requests` data yet. Grounded battery
+ 2026-09-11: 4/4 mechanical success, median ~6.5s.
+
+**Accuracy:** grounded battery 2026-09-11: 4/4 factually correct,
+ including an explicit, grounded Kind of Blue answer that named the 1959
+ release and the correct key sidemen (Coltrane, Adderley, Evans). Before
+ Wikipedia grounding it had shown the same fabrication risk as other small
+ hosted models.
 
 ## Not yet coded / research-only
 
 Ideas researched in `findings.md` but not implemented — do not assume
 these exist in the app:
 
-- Wikipedia snippet-injection grounding. `backend/app/wiki.py` already
-  calls the MediaWiki Action API with `exintro=1&explaintext=1&exchars=600`
-  for relevance-matching, then discards the text, keeping only the
-  article title. Research agent's top-ranked recommendation (near-zero
-  cost, no new dependency) — one return-value change would turn this into
-  real injectable grounding context.
 - Gemini's `google_search` grounding tool (see gemini section above).
 - OpenRouter's `web_search` server tool (see openrouter section above).
 - Self-consistency/voting and critic-pass verification — researched and
