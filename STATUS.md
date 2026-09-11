@@ -23,13 +23,15 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
-- **v1.17.0 tagged and released, not pre-release.** Adds Spotify per-user
-  playlist integration. Each user connects their own Spotify account, gets a
-  private "mradio-web" playlist, and can add/remove the currently-playing track
-  with a star button in the player. Track matching is an executive-decision
-  search + score combining title similarity, artist/performer presence,
-  album-type preference, and popularity. Refresh tokens are encrypted at rest
-  with `MRADIO_SPOTIFY_TOKEN_KEY` via Fernet; market is auto-detected from the
+- **v1.17.1 tagged and released, not pre-release.** Spotify per-user
+  playlist integration plus OAuth popup fix: authorization now opens in a new
+  browser tab so the player stays open, and the player polls status until the
+  popup returns. Each user connects their own Spotify account, gets a private
+  "mradio-web" playlist, and can add/remove the currently-playing track with a
+  star button. Track matching is an executive-decision search + score combining
+  title similarity, artist/performer presence, album-type preference, and
+  popularity. Refresh tokens are encrypted at rest with
+  `MRADIO_SPOTIFY_TOKEN_KEY` via Fernet; market is auto-detected from the
   Spotify profile. Deployed to LT and reachable at
   `mradioweb.legba.myddns.rocks`; client credentials are entered in Settings →
   Spotify by the admin.

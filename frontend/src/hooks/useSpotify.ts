@@ -23,6 +23,7 @@ export function useSpotify(rawTitle: string) {
     trackId: null,
     toggling: false,
   })
+  const [pendingAuth, setPendingAuth] = useState(false)
   const lastRawTitleRef = useRef('')
 
   const refreshStatus = useCallback(async () => {
@@ -80,11 +81,25 @@ export function useSpotify(rawTitle: string) {
   const connect = useCallback(async () => {
     try {
       const res = await api.get<{ url: string }>('/api/spotify/auth-url')
-      window.location.href = res.url
+      window.open(res.url, '_blank', 'noopener,noreferrer')
+      setPendingAuth(true)
     } catch (err) {
       setState((s) => ({ ...s, error: err instanceof ApiError ? err.message : 'spotify error' }))
     }
   }, [])
+
+  useEffect(() => {
+    if (!pendingAuth) return
+    const id = window.setInterval(() => {
+      void refreshStatus().then((status) => {
+        if (status?.connected) {
+          setPendingAuth(false)
+          if (rawTitle) void checkMembership(rawTitle)
+        }
+      })
+    }, 3000)
+    return () => window.clearInterval(id)
+  }, [pendingAuth, rawTitle, refreshStatus, checkMembership])
 
   const toggle = useCallback(async () => {
     if (!rawTitle || state.toggling) return

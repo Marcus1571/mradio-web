@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.17.1] - 2026-09-12
+
+Spotify OAuth popup fix.
+
+- `frontend/src/hooks/useSpotify.ts`: Spotify authorization now opens in a
+  new browser tab/window instead of navigating the player away, and the
+  player polls `/api/spotify/status` every 3 seconds until the popup
+  completes so the star button reflects the connected state.
+
 ## [1.17.0] - 2026-09-12
 
 Spotify per-user playlist integration.
