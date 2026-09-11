@@ -23,12 +23,12 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
-- **v1.16.8 tagged and released, not pre-release.** Adds Wikipedia snippet
-  grounding to the AI liner-notes pipeline and hardens the NIM/OpenAI-
-  compatible provider slot. Verified end-to-end: `docker compose build &&
-  docker compose up -d` run on the server/Unraid via Tailscale SSH, container
-  healthy, frontend reachable behind Nginx Proxy Manager at
-  `radio.example.com`, AI enrichment returning grounded liner notes.
+- **v1.16.9 tagged and released, not pre-release.** Optimizes Wikipedia
+  snippet grounding lookups in the AI liner-notes pipeline (batched extracts,
+  coalesced concurrent lookups, reduced throttle). Verified end-to-end:
+  `docker compose build && docker compose up -d` run on the server/Unraid via
+  Tailscale SSH, container healthy, frontend reachable behind Nginx Proxy
+  Manager at `radio.example.com`, AI enrichment returning grounded liner notes.
 - Develop from `main`; release branches are short-lived.
 
 ## Local development

@@ -24,9 +24,16 @@ _CACHE_MAX_SIZE = 200
 # minimum interval keeps us well under rate limits even when the fallback
 # chain or the battery fires several lookups in quick succession.
 _API_SEMAPHORE = asyncio.Semaphore(1)
-_MIN_INTERVAL = 1.0  # seconds between API calls
+_MIN_INTERVAL = 0.5  # seconds between API calls
 _LAST_CALL_AT = 0.0
 _LAST_CALL_LOCK = asyncio.Lock()
+
+# Coalesce concurrent ground() calls for the same key so a burst of
+# enrichment requests for one track (fallback chain, multiple users,
+# multiple workers are still separate) does not each fire its own
+# Wikipedia lookup.
+_IN_FLIGHT: dict[str, asyncio.Task] = {}
+_IN_FLIGHT_LOCK = asyncio.Lock()
 
 
 async def _api_get(client: httpx.AsyncClient, params: dict) -> httpx.Response:
@@ -81,6 +88,25 @@ async def resolve(query: str, surname: str = "") -> dict | str:
     return ""
 
 
+async def _extract_multi(client: httpx.AsyncClient, titles: list[str]) -> dict[str, str]:
+    """Fetch extracts for several titles in one API call."""
+    if not titles:
+        return {}
+    try:
+        r = await _api_get(client, {
+            "action": "query", "prop": "extracts", "exintro": 1,
+            "explaintext": 1, "exchars": 600, "format": "json",
+            "redirects": 1, "titles": "|".join(titles)})
+        pages = r.json().get("query", {}).get("pages", {})
+        out: dict[str, str] = {}
+        for pg in pages.values():
+            if "missing" not in pg:
+                out[pg.get("title", "")] = (pg.get("extract") or "").strip()
+        return out
+    except (httpx.HTTPError, ValueError):
+        return {}
+
+
 async def _search(client: httpx.AsyncClient, query: str) -> list[tuple[str, str, str]]:
     """Search English Wikipedia for candidate articles.
 
@@ -89,21 +115,19 @@ async def _search(client: httpx.AsyncClient, query: str) -> list[tuple[str, str,
     "Symphony No. 9 in D minor, Op. 125"). Falls back to the combined
     generator search and then the legacy list=search."""
 
-    # Primary: opensearch, then fetch extracts individually.
+    # Primary: opensearch, then fetch extracts in one batched call.
     try:
         r = await _api_get(client, {
             "action": "opensearch", "format": "json", "limit": 5, "search": query})
         res = r.json()
         if len(res) > 3 and res[1]:
             # Only process the top 3 results; beyond that the signal is
-            # usually noise and each requires its own extract round-trip.
+            # usually noise.
             limit = min(3, len(res[1]), len(res[3]))
             titles_urls = [(res[1][i], res[3][i]) for i in range(limit)]
-            cand = []
-            for title, url in titles_urls:
-                extract = await _extract(client, title)
-                cand.append((title, url, extract))
-            return cand
+            titles = [t for t, _ in titles_urls]
+            extracts = await _extract_multi(client, titles)
+            return [(t, u, extracts.get(t, "")) for t, u in titles_urls]
     except (httpx.HTTPError, ValueError, IndexError):
         pass
 
@@ -243,7 +267,18 @@ async def ground(artist: str, title: str, surname: str = "") -> dict | None:
                 return value
             del _CACHE[cache_key]
 
-    result = await _ground_with_retry(artist, title, surname)
+    async with _IN_FLIGHT_LOCK:
+        existing = _IN_FLIGHT.get(cache_key)
+        if existing is not None:
+            return await existing
+        task = asyncio.create_task(_ground_with_retry(artist, title, surname))
+        _IN_FLIGHT[cache_key] = task
+
+    try:
+        result = await task
+    finally:
+        async with _IN_FLIGHT_LOCK:
+            _IN_FLIGHT.pop(cache_key, None)
 
     async with _CACHE_LOCK:
         now = time.monotonic()

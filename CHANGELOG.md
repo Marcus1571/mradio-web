@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.16.9] - 2026-09-11
+
+Wikipedia grounding speed fix.
+
+- Optimized `backend/app/wiki.py` grounding lookups. Extracts for the
+  top opensearch results are now fetched in a single batched API call
+  instead of three sequential calls, concurrent lookups for the same
+  track are coalesced, and the inter-call throttle was reduced from
+  1.0s to 0.5s. Cold-start title resolution now takes ~1s instead of
+  ~4s, which restores Mistral/Grok/Gemini/NIM's snappy feel while
+  keeping the grounded anti-hallucination benefits.
+
 ## [1.16.8] - 2026-09-11
 
 AI liner-notes grounding + provider hardening.
