@@ -23,10 +23,13 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
-- **v1.17.5 tagged and released, not pre-release.** Finishes the v1.17.4
-  Spotify OAuth popup close fix: the `/spotify-callback` page no longer crashes
-  on CSS braces, so the popup actually closes after authorization and the player
-  updates the star button from its polling loop.
+- **v1.17.5 tagged, released, and deployed, not pre-release.** Finishes the
+  v1.17.4 Spotify OAuth popup close fix: the `/spotify-callback` page no longer
+  crashes on CSS braces, so the popup actually closes after authorization and
+  the player updates the star button from its polling loop. Smoke-tested on LT:
+  `/spotify-callback?status=connected` and `status=error` both return `200`
+  text/html; root returns `200`; unauthenticated `/api/spotify/status` returns
+  `401` as expected.
 - **v1.17.4 tagged and released, not pre-release.** Spotify OAuth popup close
   fix (attempted): added `/spotify-callback` and redirected the backend callback
   there, but the callback page template used `str.format()` on CSS braces and
