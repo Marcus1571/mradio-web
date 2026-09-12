@@ -23,14 +23,20 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
-- **v1.18.0 tagged and released, not pre-release.** Adds Deezer per-user
-  playlist integration as a selectable alternative to Spotify: parallel OAuth
-  flow, encrypted token storage, playlist mirror, executive-decision track
-  matching, and a player "Music service" dropdown. A GitHub Actions deploy
-  workflow was added so commit/push/deploy is automatic; it needs its SSH
-  secrets set before it can run, so the exact manual deploy commands were left
-  with the operator for the first deploy. Live OAuth + toggle test is the
-  remaining step once a Deezer app is registered and its credentials are
+- **v1.18.0 tagged, released, and deployed to LT 2026-09-12.** Adds Deezer
+  per-user playlist integration as a selectable alternative to Spotify:
+  parallel OAuth flow, encrypted token storage, playlist mirror,
+  executive-decision track matching, and a player "Music service" dropdown.
+  The earlier "deploy blocked" failure was a wrong-path assumption, not an
+  SSH or infra problem: the deploy checkout lives one directory deeper than
+  expected, at `<appdata>/mradio-web/app`, not `<appdata>/mradio-web` itself
+  — `docker-compose.yml`/`.git` are inside `app/`. `deploy.yml` still has the
+  old wrong path and needs fixing before the GitHub Actions route can work;
+  until then, manual deploy via SSH (`cd .../mradio-web/app && git pull &&
+  docker compose build && docker compose up -d`) is confirmed working.
+  Container verified up and healthy post-deploy (clean startup log, live
+  WebSocket client connected). Live OAuth + toggle test is the remaining step
+  once a Deezer app is registered and its credentials are
   entered in Settings → Deezer.
 - **v1.17.6 tagged and released, not pre-release.** Adds logging around the
   Spotify token exchange and `/v1/me` call, forces `show_dialog=true` so Spotify

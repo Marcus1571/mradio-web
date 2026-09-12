@@ -18,7 +18,7 @@ jobs:
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
             set -e
-            for d in /mnt/user/appdata/mradio-web /mnt/cache/appdata/mradio-web; do
+            for d in /mnt/user/appdata/mradio-web/app /mnt/cache/appdata/mradio-web/app; do
               if [ -d "$d/.git" ]; then
                 cd "$d"
                 git pull
