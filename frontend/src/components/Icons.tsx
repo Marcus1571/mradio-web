@@ -238,3 +238,28 @@ export function NimIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+export function SpotifyIcon({ className }: IconProps) {
+  // Three concentric arcs in a circle, suggestive of Spotify's sound-wave mark.
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2">
+      <circle cx="8" cy="8" r="6.5" />
+      <path d="M5 6c1.7-1 4.3-1 6 0" strokeLinecap="round" />
+      <path d="M4.8 8.2c2.1-1.2 5.3-1.2 7.4 0" strokeLinecap="round" />
+      <path d="M4.6 10.5c2.6-1.4 6.2-1.4 8.8 0" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+export function DeezerIcon({ className }: IconProps) {
+  // Stacked equalizer bars, suggestive of Deezer's logo.
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="currentColor">
+      <rect x="1" y="9" width="2" height="5" rx="0.4" />
+      <rect x="4" y="6" width="2" height="8" rx="0.4" />
+      <rect x="7" y="3" width="2" height="11" rx="0.4" />
+      <rect x="10" y="5" width="2" height="9" rx="0.4" />
+      <rect x="13" y="8" width="2" height="6" rx="0.4" />
+    </svg>
+  )
+}

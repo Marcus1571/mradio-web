@@ -456,17 +456,26 @@
   min-width: 0;
 }
 
+.music-service-star,
 .spotify-star {
   color: var(--ink-3);
   flex-shrink: 0;
 }
 
+.music-service-star.active,
 .spotify-star.active {
   color: var(--accent);
 }
 
+.music-service-star.busy,
 .spotify-star.busy {
   opacity: 0.6;
+}
+
+.dropdown-option-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 .np-performer {

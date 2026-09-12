@@ -722,16 +722,22 @@ not an error:
 Play history and stats have no such limitation — they work regardless of
 where a listener connects from.
 
-## 12. Spotify playlist integration (optional)
+## 12. Spotify and Deezer playlist integration (optional)
 
-Each listener can connect their own Spotify account and save tracks to a
-private "mradio-web" playlist straight from the player. Configuration is
-split: the Spotify **app credentials** live in mradio-web's Settings UI, but
-the **redirect URI** and **token-encryption key** are environment variables
-on the server because they're infrastructure-level values that shouldn't be
-editable from the UI.
+Each listener can connect their own Spotify or Deezer account and save tracks
+to a private "mradio-web" playlist straight from the player. The player has a
+"Music service" dropdown that switches the star button between the two; if
+only one service is configured, that service is used automatically.
 
-### 12.1 Create a Spotify app
+Configuration is split for both services: the **app credentials** live in
+mradio-web's Settings UI, but the **redirect URI** and **token-encryption key**
+are environment variables on the server because they're infrastructure-level
+values that shouldn't be editable from the UI. The same encryption key is used
+for both services.
+
+### 12.1 Spotify
+
+#### 12.1.1 Create a Spotify app
 
 1. Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
    and create an app.
@@ -742,25 +748,77 @@ editable from the UI.
    Use the same domain listeners reach the app on (e.g. `https://radio.example.com`).
 3. Note the **Client ID** and **Client Secret**.
 
-### 12.2 Configure the server
+#### 12.1.2 Configure the server
 
-Add these environment variables in `docker-compose.yml` (or an override):
+Add this environment variable in `docker-compose.yml` (or an override):
 
 ```yaml
 environment:
   - MRADIO_SPOTIFY_REDIRECT_URI=https://<your-domain>/api/spotify/callback
-  - MRADIO_SPOTIFY_TOKEN_KEY=<a 32-byte Fernet key>
 ```
 
-- `MRADIO_SPOTIFY_REDIRECT_URI` must match exactly what you entered in the
-  Spotify app settings, including `https://`.
-- `MRADIO_SPOTIFY_TOKEN_KEY` encrypts refresh tokens at rest. Generate one
-  with:
-  ```bash
-  python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-  ```
-  If unset, refresh tokens are still stored but only obfuscated as
-  `plain:<token>` — fine for local development, not for production.
+`MRADIO_SPOTIFY_REDIRECT_URI` must match exactly what you entered in the
+Spotify app settings, including `https://`.
+
+#### 12.1.3 Enter Spotify credentials
+
+From the user menu → **Settings** → **Spotify** (admin only):
+
+- Paste the **Client ID** and **Client Secret** from the Spotify app.
+- Save.
+
+### 12.2 Deezer
+
+#### 12.2.1 Create a Deezer app
+
+1. Go to the [Deezer Developer Dashboard](https://developers.deezer.com/myapps)
+   and create an app.
+2. Add the redirect URI:
+   ```
+   https://<your-domain>/api/deezer/callback
+   ```
+   Use the same domain listeners reach the app on (e.g. `https://radio.example.com`).
+3. Note the **Application ID** and **Secret key**.
+
+#### 12.2.2 Configure the server
+
+Add this environment variable in `docker-compose.yml` (or an override):
+
+```yaml
+environment:
+  - MRADIO_DEEZER_REDIRECT_URI=https://<your-domain>/api/deezer/callback
+```
+
+`MRADIO_DEEZER_REDIRECT_URI` must match exactly what you entered in the
+Deezer app settings, including `https://`.
+
+#### 12.2.3 Enter Deezer credentials
+
+From the user menu → **Settings** → **Deezer** (admin only):
+
+- Paste the **Application ID** and **Secret key** from the Deezer app.
+- Save.
+
+### 12.3 Token encryption key
+
+OAuth refresh tokens are encrypted at rest with a Fernet key. Set:
+
+```yaml
+environment:
+  - MRADIO_TOKEN_KEY=<a 32-byte Fernet key>
+```
+
+Generate one with:
+
+```bash
+python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+`MRADIO_SPOTIFY_TOKEN_KEY` still works as a fallback for existing installs,
+but `MRADIO_TOKEN_KEY` is preferred and is the one value that covers both
+Spotify and Deezer. If no key is set, tokens are still stored but only
+obfuscated as `plain:<token>` — fine for local development, not for
+production.
 
 Restart the container after changing env vars:
 
@@ -768,24 +826,23 @@ Restart the container after changing env vars:
 docker compose up -d
 ```
 
-### 12.3 Enter app credentials in mradio-web
+### 12.4 Using the star button
 
-From the user menu → **Settings** → **Spotify** (admin only):
+Once at least one service is configured, every user sees a star icon next to
+the currently-playing track. A hollow star means the track isn't in their
+playlist yet; a filled star means it is. Clicking it connects the selected
+service if needed, then adds or removes the track.
 
-- Paste the **Client ID** and **Client Secret** from the Spotify app.
-- Save.
+If both Spotify and Deezer are configured, a "Music service" dropdown appears
+next to the AI provider dropdown so each listener can choose which service
+the star button uses. The choice is saved per account.
 
-Once this is done, every user sees a star icon next to the currently-playing
-track. A hollow star means the track isn't in their playlist yet; a filled
-star means it is. Clicking it connects Spotify if needed, then adds or
-removes the track.
+### 12.5 How tracks are matched
 
-### 12.4 How tracks are matched
-
-The app searches Spotify using the ICY metadata (artist and title parsed from
-the stream), deduplicates by ISRC, and picks the best candidate with a
-conservative score combining title similarity, artist/performer presence,
-album type (album preferred over single over compilation), and popularity.
-If no good match is found, the star action reports that the track wasn't
-found. The playlist contents are mirrored locally so the filled-star state
-is instant.
+The app searches the selected service using the ICY metadata (artist and title
+parsed from the stream), deduplicates by ISRC, and picks the best candidate
+with a conservative score combining title similarity, artist/performer
+presence, and popularity. (Spotify also weighs album type: album preferred
+over single over compilation.) If no good match is found, the star action
+reports that the track wasn't found. The playlist contents are mirrored
+locally so the filled-star state is instant.

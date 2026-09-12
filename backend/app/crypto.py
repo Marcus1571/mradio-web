@@ -2,7 +2,8 @@
 
 Refresh tokens are long-lived credentials that grant persistent access to a
 user's third-party account. We encrypt them at rest with Fernet (symmetric
-AES-128-CBC + HMAC) using a key from the MRADIO_SPOTIFY_TOKEN_KEY env var.
+AES-128-CBC + HMAC) using a key from the MRADIO_TOKEN_KEY env var, falling
+back to MRADIO_SPOTIFY_TOKEN_KEY for backward compatibility.
 Access tokens expire quickly and are stored plaintext.
 
 If no key is configured, encryption falls back to a no-op identity so local
@@ -12,7 +13,7 @@ import os
 
 from cryptography.fernet import Fernet, InvalidToken
 
-_TOKEN_KEY = os.environ.get("MRADIO_SPOTIFY_TOKEN_KEY", "")
+_TOKEN_KEY = os.environ.get("MRADIO_TOKEN_KEY", "") or os.environ.get("MRADIO_SPOTIFY_TOKEN_KEY", "")
 
 _fernet: Fernet | None = None
 

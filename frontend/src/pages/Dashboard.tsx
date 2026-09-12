@@ -15,6 +15,7 @@ import { AISettingsPage } from './AISettingsPage'
 import { AnalyticsPage } from './AnalyticsPage'
 import { EmailSettingsPage } from './EmailSettingsPage'
 import { SettingsPage } from './SettingsPage'
+import { DeezerSettingsPage } from './DeezerSettingsPage'
 import { SpotifySettingsPage } from './SpotifySettingsPage'
 import { UsersPage } from './UsersPage'
 import '../styles/dashboard.css'
@@ -35,6 +36,7 @@ export function Dashboard() {
     'ai-settings',
     'email-settings',
     'spotify-settings',
+    'deezer-settings',
     'analytics',
   ]
 
@@ -138,6 +140,7 @@ export function Dashboard() {
       {page === 'ai-settings' && <AISettingsPage onBack={() => setPage('settings')} t={t} />}
       {page === 'email-settings' && <EmailSettingsPage onBack={() => setPage('settings')} t={t} />}
       {page === 'spotify-settings' && <SpotifySettingsPage onBack={() => setPage('settings')} t={t} />}
+      {page === 'deezer-settings' && <DeezerSettingsPage onBack={() => setPage('settings')} t={t} />}
       {page === 'analytics' && <AnalyticsPage t={t} />}
     </div>
   )

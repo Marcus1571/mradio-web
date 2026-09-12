@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from ..deps import get_active_user
@@ -10,6 +10,9 @@ router = APIRouter(prefix="/api/config", tags=["config"])
 _VALID_LANGUAGES = ("en", "es", "it", "pt", "fr", "ru", "de", "el", "nl", "da", "sv", "nb", "ja", "tr", "he")
 
 
+_VALID_MUSIC_SERVICES = {"spotify", "deezer"}
+
+
 class ConfigUpdate(BaseModel):
     theme: str | None = None
     volume: int | None = None
@@ -19,6 +22,7 @@ class ConfigUpdate(BaseModel):
     last_genre: str | None = None
     last_status: str | None = None
     language: str | None = None
+    music_service: str | None = None
 
 
 @router.get("")
@@ -29,6 +33,8 @@ async def get_config(user: dict = Depends(get_active_user)):
 @router.patch("")
 async def update_config(body: ConfigUpdate, user: dict = Depends(get_active_user)):
     fields = body.model_dump(exclude_unset=True)
+    if "music_service" in fields and fields["music_service"] not in _VALID_MUSIC_SERVICES:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "invalid music_service")
     await persist_cfg(user["id"], **fields)
     # The Enricher caches language in memory (set once at start(), like
     # provider) — push a live update so the next AI question uses it

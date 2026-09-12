@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.18.0] - 2026-09-12
+
+Deezer per-user playlist integration and selectable music service.
+
+- Added a parallel Deezer backend path mirroring Spotify: OAuth flow, encrypted
+  token storage, private per-user "mradio-web" playlist, executive-decision
+  track matching, and local playlist mirror (`backend/app/deezer.py`,
+  `backend/app/routers/deezer.py`, new `deezer_*` DB tables).
+- Added `music_service` to per-user config: listeners can choose whether the
+  star button saves tracks to Spotify or Deezer.
+- Added a "Music service" dropdown to the Now Playing panel (visible only when
+  both services are configured), with inline Spotify and Deezer icons.
+- Added a Deezer admin settings page and registered it in Settings,
+  Dashboard, and TopBar.
+- Updated i18n strings across all 15 locales for Deezer and the new music
+  service labels.
+- Unified the OAuth token encryption key: `MRADIO_TOKEN_KEY` is now preferred
+  and covers both services; `MRADIO_SPOTIFY_TOKEN_KEY` still works as a
+  fallback for existing installs.
+- Updated `KB.md`, `README.md`, `docker-compose.yml`, and `STATUS.md` with
+  Deezer setup instructions.
+
 ## [1.17.6] - 2026-09-12
 
 Spotify OAuth logging and error visibility.

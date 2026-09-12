@@ -32,6 +32,7 @@ from .routers import favorites as favorites_router
 from .routers import grok as grok_router
 from .routers import settings as settings_router
 from .routers import smtp as smtp_router
+from .routers import deezer as deezer_router
 from .routers import spotify as spotify_router
 from .routers import stations as stations_router
 from .routers import stream as stream_router
@@ -67,6 +68,27 @@ app.include_router(config_router.router)
 app.include_router(ws_router.router)
 app.include_router(analytics_router.router)
 app.include_router(spotify_router.router)
+app.include_router(deezer_router.router)
+
+
+_SERVICE_CALLBACK_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{service} — mradio web</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 2rem; text-align: center; color: #333; }
+  button { margin-top: 1rem; padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; }
+</style>
+</head>
+<body>
+  <p id="msg">{message}</p>
+  <button id="close" type="button" style="display:none">Close this window</button>
+  <script>{script}</script>
+</body>
+</html>"""
+
 
 class _CacheAwareStaticFiles(StaticFiles):
     """Only files actually under /assets/* are Vite-content-hashed (a new
@@ -104,23 +126,6 @@ class _CacheAwareStaticFiles(StaticFiles):
             raise
 
 
-_SPOTIFY_CALLBACK_HTML = """<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Spotify — mradio web</title>
-<style>
-  body { font-family: system-ui, -apple-system, sans-serif; margin: 2rem; text-align: center; color: #333; }
-  button { margin-top: 1rem; padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; }
-</style>
-</head>
-<body>
-  <p id="msg"><!--MESSAGE--></p>
-  <button id="close" type="button" style="display:none">Close this window</button>
-  <script><!--SCRIPT--></script>
-</body>
-</html>"""
 
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
@@ -133,12 +138,9 @@ if STATIC_DIR.is_dir():
     async def reset_password_page():
         return FileResponse(STATIC_DIR / "index.html", headers={"Cache-Control": "no-cache"})
 
-    # The Spotify OAuth popup needs to close after authorization instead of
-    # leaving the user on a settings page inside the popup.
-    @app.get("/spotify-callback", include_in_schema=False)
-    async def spotify_callback_page(status: str = "connected", detail: str = ""):
+    def _callback_response(service: str, status: str, detail: str) -> HTMLResponse:
         if status == "connected":
-            message = "Spotify connected."
+            message = f"{service} connected."
             script = """
     (function () {
       var closeBtn = document.getElementById('close');
@@ -151,7 +153,7 @@ if STATIC_DIR.is_dir():
     })();
     """
         else:
-            message = "Spotify connection failed" + (": " + detail if detail else "") + "."
+            message = f"{service} connection failed" + (": " + detail if detail else "") + "."
             script = """
     (function () {
       document.getElementById('close').style.display = 'inline-block';
@@ -159,8 +161,18 @@ if STATIC_DIR.is_dir():
     })();
     """
         return HTMLResponse(
-            _SPOTIFY_CALLBACK_HTML.replace("<!--MESSAGE-->", message).replace("<!--SCRIPT-->", script),
+            _SERVICE_CALLBACK_HTML.format(service=service, message=message, script=script),
             headers={"Cache-Control": "no-store"},
         )
+
+    # OAuth popups need to close after authorization instead of leaving the
+    # user on a settings page inside the popup.
+    @app.get("/spotify-callback", include_in_schema=False)
+    async def spotify_callback_page(status: str = "connected", detail: str = ""):
+        return _callback_response("Spotify", status, detail)
+
+    @app.get("/deezer-callback", include_in_schema=False)
+    async def deezer_callback_page(status: str = "connected", detail: str = ""):
+        return _callback_response("Deezer", status, detail)
 
     app.mount("/", _CacheAwareStaticFiles(directory=STATIC_DIR, html=True), name="static")

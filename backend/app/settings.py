@@ -138,10 +138,12 @@ _DEFAULTS = {
     # exactly what's registered in the Spotify app dashboard).
     "spotify_client_id": "",
     "spotify_client_secret": "",
+    "deezer_app_id": "",
+    "deezer_secret": "",
 }
 
 _SECRET_FIELDS = {"api_key", "grok_api_key", "gemini_api_key", "openrouter_api_key",
-                  "mistral_api_key", "spotify_client_secret"}
+                  "mistral_api_key", "spotify_client_secret", "deezer_secret"}
 
 
 def _seed_from_env() -> dict:
@@ -158,6 +160,8 @@ def _seed_from_env() -> dict:
         "opencode": os.environ.get("MRADIO_OPENCODE", _DEFAULTS["opencode"]),
         "opencode_timeout": int(os.environ.get("MRADIO_OPENCODE_TIMEOUT",
                                                _DEFAULTS["opencode_timeout"])),
+        "deezer_app_id": os.environ.get("MRADIO_DEEZER_APP_ID", _DEFAULTS["deezer_app_id"]),
+        "deezer_secret": os.environ.get("MRADIO_DEEZER_SECRET", _DEFAULTS["deezer_secret"]),
     }
 
 

@@ -46,7 +46,10 @@ export interface Config {
   last_status?: 'playing' | 'stopped'
   provider?: string
   language?: 'en' | 'es' | 'it' | 'pt' | 'fr' | 'ru' | 'de' | 'el' | 'nl' | 'da' | 'sv' | 'nb' | 'ja' | 'tr' | 'he'
+  music_service?: MusicService
 }
+
+export type MusicService = 'spotify' | 'deezer'
 
 export interface ProviderInfo {
   name: 'opencode' | 'openai' | 'ollama' | 'codex' | 'grok' | 'gemini' | 'openrouter' | 'mistral'
@@ -91,6 +94,8 @@ export interface AISettings {
   mistral_manually_enabled: boolean
   spotify_client_id: string
   spotify_client_secret: string
+  deezer_app_id: string
+  deezer_secret: string
 }
 
 export interface SpotifyStatus {
@@ -106,6 +111,24 @@ export interface SpotifyMembership {
 }
 
 export interface SpotifyToggleResult {
+  ok: boolean
+  in_playlist: boolean
+  track_id: string | null
+  message?: string
+}
+
+export interface DeezerStatus {
+  configured: boolean
+  connected: boolean
+  playlist_id?: string
+}
+
+export interface DeezerMembership {
+  in_playlist: boolean
+  track_id: string | null
+}
+
+export interface DeezerToggleResult {
   ok: boolean
   in_playlist: boolean
   track_id: string | null

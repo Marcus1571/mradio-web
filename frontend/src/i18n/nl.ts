@@ -33,6 +33,10 @@ const nl: Dict = {
     emailDescription: 'Forgot-password delivery.',
     spotifyTitle: 'Spotify',
     spotifyDescription: 'Per-user playlist integration.',
+
+    deezerTitle: 'Deezer',
+
+    deezerDescription: 'Per-user playlist integration.',
   },
   spotifySettings: {
     title: 'Spotify',
@@ -49,7 +53,23 @@ const nl: Dict = {
     saved: 'Saved',
     saving: 'Saving…',
     errorFallback: 'Could not save settings.',
+  },  deezerSettings: {
+    title: 'Deezer',
+    intro:
+      'App credentials for the Deezer per-user playlist integration. Each listener connects their own ' +
+      'Deezer account from the player and gets a private "mradio-web" playlist.',
+    credsGroup: 'App credentials',
+    appId: 'App ID',
+    secret: 'Secret key',
+    redirectUriNote:
+      'The redirect URI and token encryption key are set via environment variables on the server — ' +
+      'see the deployment notes.',
+    save: 'Opslaan',
+    saved: 'Opgeslagen',
+    saving: 'Opslaan…',
+    errorFallback: 'Could not save settings.',
   },
+
   changePassword: {
     title: 'Wachtwoord wijzigen',
     currentPassword: 'Huidig wachtwoord',
@@ -256,6 +276,14 @@ const nl: Dict = {
     addToSpotify: 'Add to Spotify playlist',
     removeFromSpotify: 'Remove from Spotify playlist',
     connectSpotify: 'Connect Spotify to save tracks',
+
+    musicService: 'Music service',
+
+    addToDeezer: 'Add to Deezer playlist',
+
+    removeFromDeezer: 'Remove from Deezer playlist',
+
+    connectDeezer: 'Connect Deezer to save tracks',
   },
   analytics: {
     title: 'Analyse',

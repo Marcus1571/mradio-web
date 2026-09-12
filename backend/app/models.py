@@ -91,6 +91,8 @@ class AISettingsUpdate(BaseModel):
     mistral_manually_enabled: bool | None = None
     spotify_client_id: str | None = None
     spotify_client_secret: str | None = None
+    deezer_app_id: str | None = None
+    deezer_secret: str | None = None
 
 
 class ProviderSwitchRequest(BaseModel):

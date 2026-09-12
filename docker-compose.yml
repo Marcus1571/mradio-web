@@ -18,8 +18,14 @@ services:
       # own site provides. Leave unset if you don't run one — that
       # lookup tier is simply skipped. See KB.md § station logos.
       - MRADIO_SEARXNG_URL=${MRADIO_SEARXNG_URL:-}
-      # Spotify OAuth redirect URI and refresh-token encryption key.
-      # Client credentials live in settings.json and are editable in the UI.
+      # Spotify OAuth redirect URI. Client credentials live in settings.json
+      # and are editable in the UI.
       - MRADIO_SPOTIFY_REDIRECT_URI=${MRADIO_SPOTIFY_REDIRECT_URI:-}
+      # Deezer OAuth redirect URI. Client credentials live in settings.json
+      # and are editable in the UI.
+      - MRADIO_DEEZER_REDIRECT_URI=${MRADIO_DEEZER_REDIRECT_URI:-}
+      # Token encryption key for OAuth refresh tokens (Spotify and Deezer).
+      # Falls back to MRADIO_SPOTIFY_TOKEN_KEY for existing installs.
+      - MRADIO_TOKEN_KEY=${MRADIO_TOKEN_KEY:-}
       - MRADIO_SPOTIFY_TOKEN_KEY=${MRADIO_SPOTIFY_TOKEN_KEY:-}
     restart: unless-stopped

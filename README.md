@@ -42,10 +42,11 @@ This page is just the overview.
   reset is available once the admin sets up outgoing email. See
   [KB §5 — Managing accounts](KB.md#5-managing-accounts) and
   [KB §7 — Configuring email](KB.md#7-configuring-email-smtp).
-- **Admin analytics dashboard** — who's listening right now and from
-  where (a live world map), plus full play history and stats on the most
-  popular stations, genres, and listeners. See
-  [KB §11 — Analytics](KB.md#11-analytics).
+- **Spotify and Deezer playlist saving** — each listener can connect their
+  own account and save the currently-playing track to a private
+  "mradio-web" playlist with one click. The player has a "Music service"
+  dropdown to choose which service the star button uses. See
+  [KB §12 — Spotify and Deezer playlist integration](KB.md#12-spotify-and-deezer-playlist-integration).
 
 ## Stack
 
@@ -130,6 +131,7 @@ See [`KB.md`](KB.md) for the full deployment reference:
 - [KB §9 — Data and backups](KB.md#9-data-and-backups)
 - [KB §10 — Updating](KB.md#10-updating)
 - [KB §11 — Analytics](KB.md#11-analytics)
+- [KB §12 — Spotify and Deezer playlist integration](KB.md#12-spotify-and-deezer-playlist-integration)
 
 ---
 

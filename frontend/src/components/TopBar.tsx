@@ -12,6 +12,7 @@ export type Page =
   | 'ai-settings'
   | 'email-settings'
   | 'spotify-settings'
+  | 'deezer-settings'
   | 'analytics'
   | 'change-password'
 

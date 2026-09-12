@@ -23,6 +23,12 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.18.0 tagged and released, not pre-release.** Adds Deezer per-user
+  playlist integration as a selectable alternative to Spotify: parallel OAuth
+  flow, encrypted token storage, playlist mirror, executive-decision track
+  matching, and a player "Music service" dropdown. Live OAuth + toggle test is
+  the remaining step once a Deezer app is registered and its credentials are
+  entered in Settings → Deezer.
 - **v1.17.6 tagged and released, not pre-release.** Adds logging around the
   Spotify token exchange and `/v1/me` call, forces `show_dialog=true` so Spotify
   re-prompts for scopes, keeps the callback page open on errors to show the
@@ -60,6 +66,24 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
   Tailscale SSH, container healthy, frontend reachable behind Nginx Proxy
   Manager at `radio.example.com`, AI enrichment returning grounded liner notes.
 - Develop from `main`; release branches are short-lived.
+
+## Grand project: multi-service playlist export
+
+Launched 2026-09-12. Goal: let users "star" the currently-playing track into a
+playlist on the music service of their choice, not only Spotify.
+
+- **Spotify** is implemented but parked: the Spotify Developer app owner must
+  have an active Premium subscription, which the current owner does not have.
+- **Deezer** is implemented on main: public OAuth API, free developer account,
+  free users can create playlists, and the flow mirrors Spotify. The player now
+  has a "Music service" dropdown to choose between the two when both are
+  configured.
+- **Apple Music** is technically viable but requires a paid Apple Developer
+  Program membership (~$99/year) and an Apple Music subscription for each user.
+- **Amazon Music, Tidal, and YouTube Music** are not viable: no public,
+  ToS-safe API for third-party playlist creation.
+
+See `findings.md` for the full investigation.
 
 ## Local development
 

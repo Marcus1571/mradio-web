@@ -106,6 +106,34 @@ CREATE TABLE IF NOT EXISTS spotify_oauth_states (
 );
 CREATE INDEX IF NOT EXISTS idx_spotify_oauth_states_user ON spotify_oauth_states(user_id);
 CREATE INDEX IF NOT EXISTS idx_spotify_oauth_states_expires ON spotify_oauth_states(expires_at);
+CREATE TABLE IF NOT EXISTS deezer_tokens (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    access_token TEXT NOT NULL,
+    refresh_token TEXT NOT NULL DEFAULT '',
+    expires_at TEXT NOT NULL,
+    playlist_id TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_deezer_tokens_user ON deezer_tokens(user_id);
+CREATE TABLE IF NOT EXISTS deezer_playlist_tracks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    deezer_track_id TEXT NOT NULL,
+    isrc TEXT NOT NULL DEFAULT '',
+    added_at TEXT NOT NULL,
+    UNIQUE(user_id, deezer_track_id)
+);
+CREATE INDEX IF NOT EXISTS idx_deezer_playlist_tracks_user ON deezer_playlist_tracks(user_id);
+CREATE INDEX IF NOT EXISTS idx_deezer_playlist_tracks_isrc ON deezer_playlist_tracks(user_id, isrc);
+CREATE TABLE IF NOT EXISTS deezer_oauth_states (
+    state TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_deezer_oauth_states_user ON deezer_oauth_states(user_id);
+CREATE INDEX IF NOT EXISTS idx_deezer_oauth_states_expires ON deezer_oauth_states(expires_at);
 """
 
 _db: aiosqlite.Connection | None = None
