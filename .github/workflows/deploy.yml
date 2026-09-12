@@ -1,0 +1,32 @@
+name: Deploy to production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          port: ${{ secrets.DEPLOY_PORT || '22' }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            set -e
+            for d in /mnt/user/appdata/mradio-web /mnt/cache/appdata/mradio-web; do
+              if [ -d "$d/.git" ]; then
+                cd "$d"
+                git pull
+                docker compose build
+                docker compose up -d
+                docker compose logs --tail 30
+                exit 0
+              fi
+            done
+            echo "mradio-web checkout not found" >&2
+            exit 1
