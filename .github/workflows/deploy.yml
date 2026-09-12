@@ -28,5 +28,10 @@ jobs:
                 exit 0
               fi
             done
-            echo "mradio-web checkout not found" >&2
+            echo "mradio-web checkout not found in any of: /mnt/user/appdata/mradio-web/app /mnt/cache/appdata/mradio-web/app" >&2
+            echo "--- debugging: showing what actually exists ---" >&2
+            for base in /mnt/user/appdata/mradio-web /mnt/cache/appdata/mradio-web; do
+              echo "ls -la $base:" >&2
+              ls -la "$base" 2>&1 >&2 || echo "  (does not exist)" >&2
+            done
             exit 1
