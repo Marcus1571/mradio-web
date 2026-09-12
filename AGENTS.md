@@ -134,8 +134,11 @@ committed file, not just `KB.md`/`README.md`.
 Full sequence, run straight through per `~/governance/USER.md`'s no-confirmation-
 prompts rule: bump version → add `CHANGELOG.md` entry → build/lint/test green →
 commit → `git tag vX.Y.Z` + push tag → publish the GitHub Release (assets + notes,
-verify it shows as "Latest") → push `main`. A bare git tag without a published
-GitHub Release does not count as shipped.
+verify it shows as "Latest") → push `main`. Pushing `main` triggers the GitHub
+Actions deploy workflow (`.github/workflows/deploy.yml`), so commit/push/deploy
+is the default path. If the workflow is missing its secrets or is otherwise
+broken, provide exact manual deploy commands — do not attempt remote SSH from the
+assistant session, because the safety classifier blocks those calls.
 
 Doc-sync check before considering any bug fix, feature, or release "done" — verify
 all of these against what actually changed, not just the one that feels obviously
@@ -156,11 +159,14 @@ Never add curated items (e.g. default station lists) on the agent's own initiati
 the operator personally approves every one. User-owned data files are never touched
 by releases.
 
-## Deploy is part of the job, not the operator's to do by hand
+## Deploy is automated, not manual
 
-Corrected 2026-09-10 — an earlier version of this file said to stop at commit/push
-and leave deployment to the operator. That was wrong; the operator's explicit,
-standing instruction is the opposite: after cutting a release, deploy it to the
-running instance too (`git pull && docker compose build && docker compose up -d`
-over SSH, or whatever the real deploy path is) and verify it's live — same as every
-release this whole project. Don't stop short of that without being asked to.
+Deployment runs through the GitHub Actions workflow in
+`.github/workflows/deploy.yml`. Pushing `main` triggers it; the workflow SSHes into
+the production host, pulls the repo, rebuilds the container, and restarts it.
+
+The assistant's job is to keep that workflow correct and up to date. The assistant
+must **not** run remote SSH commands directly: the session's safety classifier
+blocks them, which breaks CPD for no benefit. If the workflow is missing secrets or
+fails, provide the exact manual commands so the operator can run them once; after
+that, CPD should be automatic.
