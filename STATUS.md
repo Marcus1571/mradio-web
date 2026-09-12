@@ -26,9 +26,11 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 - **v1.18.0 tagged and released, not pre-release.** Adds Deezer per-user
   playlist integration as a selectable alternative to Spotify: parallel OAuth
   flow, encrypted token storage, playlist mirror, executive-decision track
-  matching, and a player "Music service" dropdown. Live OAuth + toggle test is
-  the remaining step once a Deezer app is registered and its credentials are
-  entered in Settings → Deezer.
+  matching, and a player "Music service" dropdown. Not yet deployed to the
+  production host because the session's safety classifier is blocking remote
+  SSH file operations; the exact manual deploy commands were left with the
+  operator. Live OAuth + toggle test is the remaining step once a Deezer app
+  is registered and its credentials are entered in Settings → Deezer.
 - **v1.17.6 tagged and released, not pre-release.** Adds logging around the
   Spotify token exchange and `/v1/me` call, forces `show_dialog=true` so Spotify
   re-prompts for scopes, keeps the callback page open on errors to show the
