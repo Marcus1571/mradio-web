@@ -5,7 +5,15 @@ Scope: find services that let a user export/"star" a track from mradio-web into 
 
 ## Executive summary
 
-- **Spotify** works technically but is blocked because the Spotify Developer app owner needs an active Premium subscription.
+- **Spotify** works technically, but is capped hard as of Spotify's February 2026
+  policy change: Development Mode apps require the app owner to have an active
+  Premium subscription *and* are limited to a 5-user allowlist (Settings → User
+  Management in the Spotify Developer Dashboard) — every listener who wants
+  Spotify, not just the app owner, must be manually added there, with no
+  self-service path past 5. The no-allowlist "Extended Quota Mode" tier exists
+  but has been closed to individuals since May 2025 — it now requires a
+  registered business with 250k+ monthly active users and a multi-week review.
+  There is no path to more than 5 Spotify users for a project like this one.
 - **Apple Music** is technically possible but has a hard gate: a paid Apple Developer Program membership (~$99/year) is required to generate the developer token used by MusicKit / the Apple Music Web API. End users also need an Apple Music subscription.
 - **Deezer** is the best drop-in replacement: public OAuth API, free developers, free users can create/modify playlists, and the flow mirrors Spotify.
 - **Amazon Music** and **Tidal** have no public write API for third-party playlist creation.
@@ -84,9 +92,9 @@ Sources:
 
 | Service | Public write API | Auth model | Developer cost | End-user cost | Notes |
 |---|---|---|---|---|---|
-| **Spotify** | Yes | OAuth 2.0 | Free | Free (but app owner must have Premium) | Currently blocked by Premium-owner rule |
+| **Spotify** | Yes | OAuth 2.0 | Free | Free (app owner needs Premium) | Hard 5-user allowlist cap as of Feb 2026; no path past it without a 250k-MAU business |
 | **Apple Music** | Yes | MusicKit JS + JWT dev token | $99/year Apple Developer | Apple Music subscription | Robust but gated by fee + subscription |
-| **Deezer** | Yes | OAuth 2.0 | Free | Free accounts can create playlists | Best drop-in replacement |
+| **Deezer** | Yes | OAuth 2.0 | Free | Free accounts can create playlists (playback previews are capped, but mradio-web never streams via Deezer — playlist-write only) | Best drop-in replacement |
 | **SoundCloud** | Yes | OAuth 2.0 | Free | Free accounts can create playlists | Catalog is user-uploaded, less radio-friendly |
 | **YouTube Music** | No official | N/A | N/A | N/A | Unofficial `ytmusicapi` exists but violates ToS |
 | **Amazon Music** | No public | N/A | N/A | N/A | Only partner/Alexa APIs, not playlist write |
@@ -128,7 +136,11 @@ Sources:
 
 ## Recommendations
 
-1. **Park Spotify** until a Premium account owns the Spotify Developer app.
+1. **Spotify has a hard 5-user ceiling, not a temporary block.** A Premium
+   account owning the Developer app is necessary but not sufficient — every
+   listener who wants Spotify must also be individually allowlisted (5-user
+   cap, no self-service path past it for a project this size). Re-enabled
+   2026-09-13 under a Premium-owned app; still capped at 5 total users.
 2. **Add Deezer next.** It has the closest shape to the existing Spotify integration (OAuth, free dev account, free user accounts, playlist create/add endpoints) and is the fastest path to a working "star to playlist" feature.
 3. **Defer Apple Music** unless you are already paying for the Apple Developer Program and your users are mostly Apple Music subscribers. The $99/year fee and the MusicKit token complexity make it a second-tier priority.
 4. **Skip Amazon Music, Tidal, and YouTube Music** for now — none offer a public, ToS-safe way to write playlists.
