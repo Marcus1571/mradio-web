@@ -23,6 +23,7 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.19.3 tagged, released, and deployed to LT 2026-09-13.** Follow-up to v1.19.2: the original `min-width: 0` on `.panel-head` was insufficient — the logo is absolutely positioned and occupies no flex space, so the name still rendered under it. Adds `padding-inline-end: 4.5rem` to `.station-strip` inside the `max-width: 480px` media query to reserve the logo's width.
 - **v1.19.2 tagged, released, and deployed to LT 2026-09-13.** Fixes a mobile UI bug where long station names overflowed into the station logo in the now-playing panel header. `.station-name-strong` now uses `-webkit-line-clamp: 2`; `.panel-head` gains `min-width: 0` so flex children respect the logo's space.
 - **v1.19.1 tagged, released, and deployed to LT 2026-09-13.** Fixes the
   `deploy.yml` path bug (now `<appdata>/mradio-web/app`, matches reality,
