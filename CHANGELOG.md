@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.19.2] - 2026-09-13
+
+Bug fix: station names longer than one line now wrap to two lines in the
+now-playing panel header without crowding or overlapping the station logo.
+The logo's reserved space is always respected. Short names stay on one
+line as before. Desktop layout is unaffected.
+
+- `dashboard.css`: `.station-name-strong` now uses `-webkit-line-clamp: 2`
+  instead of `white-space: nowrap`, allowing multi-line wrap with ellipsis.
+- `dashboard.css`: `.panel-head` gains `min-width: 0` so flex children can
+  shrink below their content size, ensuring the station name always leaves
+  the logo's right-side space intact.
+
 ## [1.19.1] - 2026-09-13
 
 Security fix: close an SSRF bypass in the stream proxy via HTTP redirects.
