@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.19.3] - 2026-09-13
+
+Bug fix: station name now wraps cleanly away from the station logo on mobile.
+The `min-width: 0` on `.panel-head` was insufficient because the logo is
+absolutely positioned — it occupies no flex space. Adds `padding-inline-end`
+on `.station-strip` inside the `max-width: 480px` media query to reserve
+the logo's width, so the name wraps correctly instead of rendering under it.
+
+- `dashboard.css`: add `padding-inline-end: 4.5rem` to `.station-strip` in the
+  mobile media query; the value accounts for the 44px-tall logo's width range.
+
 ## [1.19.2] - 2026-09-13
 
 Bug fix: station names longer than one line now wrap to two lines in the
