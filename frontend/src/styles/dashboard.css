@@ -257,6 +257,8 @@
   justify-content: space-between;
   gap: var(--space-sm);
   padding: var(--space-xs) var(--space-md);
+  min-width: 0; /* allows flex children to shrink below content size, so the
+                   station name respects the logo's reserved right-side space */
 }
 
 .panel-head::after {
@@ -352,7 +354,11 @@
 .station-name-strong {
   font-size: var(--text-md);
   font-weight: 600;
-  white-space: nowrap;
+  /* Allow wrapping to 2 lines on mobile; line-clamp with ellipsis gives
+     a clean fallback for single-line names in both modes. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
 }
