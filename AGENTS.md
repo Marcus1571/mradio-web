@@ -57,17 +57,36 @@ Checklist for adding a new (17th+) language:
 The AI trivia cache (`cache.py`, `provider::language::raw_title` key) generalizes
 per-language with zero code changes — confirmed repeatedly, no action needed there.
 
+## README vs. KB.md: what each is for
+
+`README.md` is the pitch — what greets someone landing on the repo. Its job is
+to entice: make the project look worth trying. It is curated by editorial
+judgment, not an obligation to enumerate every feature, config option, or
+curated-data list exhaustively. If a feature has many sub-items (e.g. station
+genres, supported AI providers), README can name a representative few or just
+the category — it doesn't need the full list.
+
+`KB.md` is the complete reference. Everything belongs there, rigidly and
+exhaustively — every genre, every config option, every setup step. When in
+doubt about whether something is "documentation-worthy," it goes in KB, not
+necessarily in README.
+
 ## README ↔ KB.md cross-linking
 
-`README.md` must stay cross-linked to `KB.md`, not just contain one bare link.
-Pattern to maintain: a top-of-file nav line, an early "full detail lives in KB.md"
-pointer, deep links to specific `KB.md#section-slug` anchors next to the feature
-bullet they explain, a full section-by-section link list under "Getting started,"
-and a closing call-to-action link back to the KB. Whenever a feature gets its own
-`KB.md` section, add or update the matching `README.md` link in the same change —
-don't let the two drift apart. GitHub's heading-anchor slugging (lowercase, strip
-periods/parens, spaces→hyphens) is the rule to follow when writing new deep links;
-spot-check unusual punctuation after pushing.
+`README.md` must stay cross-linked to `KB.md`, not just contain one bare link,
+and not just links at the top and bottom — deep links belong wherever a README
+bullet touches something KB documents in depth, woven into that sentence
+**organically** (fits the sentence's own logic, doesn't read as a bolted-on
+"see KB.md" tacked at the end of an unrelated clause). Pattern to maintain: a
+top-of-file nav line, an early "full detail lives in KB.md" pointer, deep
+links to specific `KB.md#section-slug` anchors next to (or woven into) the
+feature bullet they explain, a full section-by-section link list under
+"Getting started," and a closing call-to-action link back to the KB. Whenever
+a feature gets its own `KB.md` section, add or update the matching
+`README.md` link in the same change — don't let the two drift apart. GitHub's
+heading-anchor slugging (lowercase, strip periods/parens, spaces→hyphens) is
+the rule to follow when writing new deep links; spot-check unusual
+punctuation after pushing.
 
 ## Every committed doc must stay generic — including STATUS.md
 

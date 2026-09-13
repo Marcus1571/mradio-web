@@ -18,9 +18,10 @@ This page is just the overview.
 
 ## What it does
 
-- **Play any station** from a curated list (classical, jazz, blues,
-  country, rock, pop, focus, chill, funk, hip-hop, electronic, world,
-  metal) or your own stream URL, with up to 12 favorite slots per person.
+- **Play any station** from a curated catalogue spanning classical, jazz,
+  electronic, metal, world, and more, or your own stream URL, with up to
+  12 favorite slots per person. Full genre list in
+  [KB §13 — Curated station genres](KB.md#13-curated-station-genres).
 - **Live now-playing** — artist/track parsed straight off the station's
   ICY metadata, pushed to the browser over a WebSocket as it changes.
 - **AI liner notes** — a short, factual write-up about the piece and its
@@ -132,6 +133,7 @@ See [`KB.md`](KB.md) for the full deployment reference:
 - [KB §10 — Updating](KB.md#10-updating)
 - [KB §11 — Analytics](KB.md#11-analytics)
 - [KB §12 — Spotify and Deezer playlist integration](KB.md#12-spotify-and-deezer-playlist-integration)
+- [KB §13 — Curated station genres](KB.md#13-curated-station-genres)
 
 ---
 

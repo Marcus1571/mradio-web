@@ -846,3 +846,20 @@ presence, and popularity. (Spotify also weighs album type: album preferred
 over single over compilation.) If no good match is found, the star action
 reports that the track wasn't found. The playlist contents are mirrored
 locally so the filled-star state is instant.
+
+## 13. Curated station genres
+
+The default station catalogue (`backend/app/stations.py`) is organized into
+14 genres, browsable from the player's Genres tab: Classical, Jazz, Blues,
+Country, Rock, Pop, Focus, Chill, Funk, Hip-Hop, Electronic, World, Metal,
+and Other. Each genre has 10 curated stations (Classical has 12, since three
+of its entries are also part of the default favorites seeded for new
+accounts — see §5), sourced and spot-checked for working, direct stream URLs
+rather than pulled wholesale from a directory site.
+
+Adding a station or a new genre is a data-only change — a new entry in
+`DEFAULT_STATIONS` and, for a new genre, an addition to the `GENRES` tuple,
+`GENRE_LABELS`, and `_GENRE_KEYWORDS` (the last one drives automatic
+genre-guessing for a user's own stream URLs, via `genre_of()`). Per
+`AGENTS.md`'s curated-data rule, station and genre changes are never added on
+the assistant's own initiative — the operator approves every one.
