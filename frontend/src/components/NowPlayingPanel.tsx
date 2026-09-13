@@ -143,9 +143,14 @@ export function NowPlayingPanel({
     return () => document.removeEventListener('mousedown', onClick)
   }, [serviceOpen])
 
+  // Both playlist services are dead ends for this project right now: Spotify
+  // caps Development Mode apps at 5 allowlisted users (Feb 2026 policy, no
+  // path past it without a 250k-MAU business), and Deezer has closed new
+  // developer app registration with no reopening date. Force-disabled here
+  // regardless of server config until either changes. See STATUS.md/findings.md.
   const configuredServices = {
-    spotify: spotify.configured,
-    deezer: deezer.configured,
+    spotify: false,
+    deezer: false,
   }
 
   useEffect(() => {

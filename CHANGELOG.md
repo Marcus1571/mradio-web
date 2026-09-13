@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.18.4] - 2026-09-13
+
+Force-disable Spotify and Deezer playlist saving — both are dead ends right now.
+
+- Spotify is capped at 5 allowlisted users per Spotify's February 2026
+  Development Mode policy, with no self-service path past that for a project
+  this size. Deezer's developer portal has closed new app registration with
+  no reopening date. Both `configuredServices.spotify` and `.deezer` are now
+  hardcoded `false` in `NowPlayingPanel.tsx`, hiding the star button and
+  "Music service" dropdown regardless of server-side credentials. Backend
+  code, Settings pages, and DB schema for both services are untouched —
+  reversible the moment either blocker lifts.
+
 ## [1.18.3] - 2026-09-13
 
 Fix a crash on failed OAuth callback (Spotify and Deezer).

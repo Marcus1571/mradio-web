@@ -90,34 +90,40 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Grand project: multi-service playlist export
 
-Launched 2026-09-12. Goal: let users "star" the currently-playing track into a
-playlist on the music service of their choice, not only Spotify.
+Launched 2026-09-12, **shelved 2026-09-13 — both paths are dead ends right
+now, operator's call.** Original goal: let users "star" the currently-playing
+track into a playlist on the music service of their choice.
 
-- **Spotify** is implemented and re-enabled 2026-09-13: a Premium-subscription
-  account created a new Spotify Developer app, entered its Client ID/Secret in
-  Settings → Spotify, and `configuredServices.spotify` in
-  `NowPlayingPanel.tsx` was reverted from its v1.18.1 force-disabled state
-  back to the real `spotify.configured` check. **Hard limit, not a temporary
-  one:** as of Spotify's February 2026 policy, Development Mode apps cap out
-  at 5 allowlisted users (Dashboard → app → Settings → User Management) —
-  every listener who wants Spotify must be manually added there individually,
-  with no self-service path past 5 for a project this size (Extended Quota
-  Mode, the no-cap tier, has required a registered business with 250k+ MAU
-  since May 2025). First live test (2026-09-13) hit a `403 — user not
-  registered` because the test account wasn't yet on that allowlist — expected
-  behavior per this cap, not a bug. Separately fixed in the same session: the
-  OAuth callback page crashed with a 500 on any connection failure (including
-  this 403) due to a `str.format()`/literal-brace-CSS bug in
-  `_callback_response()` — fixed in v1.18.3, now shows a readable error.
-- **Deezer** is implemented on main: public OAuth API, free developer account,
-  free users can create/modify playlists (verified: Deezer's playback-preview
-  subscription requirement does not apply here, since mradio-web only calls
-  Deezer's playlist-write API and never streams audio through Deezer). The
-  player now has a "Music service" dropdown to choose between the two when
-  both are configured. New app registration on Deezer's Developer Portal has
-  been closed since roughly mid-2026 with no announced reopening date — see
-  `findings.md` for the standing monitor query. Existing registered apps keep
-  working; only *new* app creation is blocked.
+- **Spotify** is implemented but blocked by a real, structural limit, not a
+  bug: as of Spotify's February 2026 policy, Development Mode apps cap out at
+  5 allowlisted users (Dashboard → app → Settings → User Management) — every
+  listener who wants Spotify must be manually added there individually, with
+  no self-service path past 5 for a project this size (the no-cap "Extended
+  Quota Mode" tier has required a registered business with 250k+ MAU since May
+  2025). A Premium-owned Developer app was created and re-enabled 2026-09-13,
+  but the first live test hit `403 — user not registered` because the test
+  account wasn't on the 5-user allowlist yet — expected behavior under this
+  cap. A separate real bug was found and fixed in the same session: the OAuth
+  callback page crashed with a 500 on any connection failure (including this
+  403) due to a `str.format()`/literal-brace-CSS bug in `_callback_response()`
+  — fixed in v1.18.3, now shows a readable error instead of crashing.
+- **Deezer** is implemented on main and its playlist-write API works on free
+  accounts (verified: Deezer's playback-preview subscription requirement
+  doesn't apply here, since mradio-web only calls the playlist-write API and
+  never streams audio through Deezer) — but new developer app registration on
+  Deezer's Developer Portal has been closed since roughly mid-2026 with no
+  announced reopening date, so there's no way to get a new app's credentials
+  right now. See `findings.md` for the standing monitor query watching for
+  reopening.
+- **Given both are currently unusable for new registrations/users, the
+  feature is force-disabled in the UI as of v1.18.4:**
+  `configuredServices.spotify` and `.deezer` are both hardcoded `false` in
+  `NowPlayingPanel.tsx`, hiding the star button and the "Music service"
+  dropdown regardless of server-side credentials. The backend code, Settings
+  pages, and DB schema for both services are untouched and still fully
+  functional — this is a UI-only kill switch, reversible the moment either
+  service's blocker lifts (Spotify: allowlist a user manually, still works
+  today up to 5; Deezer: once registration reopens).
 - **Apple Music** is technically viable but requires a paid Apple Developer
   Program membership (~$99/year) and an Apple Music subscription for each user.
 - **Amazon Music, Tidal, and YouTube Music** are not viable: no public,
