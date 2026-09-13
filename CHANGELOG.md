@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.18.2] - 2026-09-13
+
+Re-enable Spotify.
+
+- A new Spotify Developer app was registered under a Premium-subscription
+  account, and its Client ID/Secret entered in Settings → Spotify. Reverted
+  the v1.18.1 force-disable in `NowPlayingPanel.tsx` — the star button now
+  reflects real server-side `spotify.configured` state again, so Spotify and
+  Deezer are both offered via the "Music service" dropdown.
+
 ## [1.18.1] - 2026-09-13
 
 Deploy fix, Spotify parked in the UI, three new genres.

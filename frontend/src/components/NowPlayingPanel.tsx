@@ -143,10 +143,8 @@ export function NowPlayingPanel({
     return () => document.removeEventListener('mousedown', onClick)
   }, [serviceOpen])
 
-  // Spotify is parked (Developer app owner needs Premium) - force-disabled here
-  // regardless of server config, until re-enabled. See STATUS.md/findings.md.
   const configuredServices = {
-    spotify: false,
+    spotify: spotify.configured,
     deezer: deezer.configured,
   }
 

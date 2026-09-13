@@ -93,8 +93,12 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 Launched 2026-09-12. Goal: let users "star" the currently-playing track into a
 playlist on the music service of their choice, not only Spotify.
 
-- **Spotify** is implemented but parked: the Spotify Developer app owner must
-  have an active Premium subscription, which the current owner does not have.
+- **Spotify** is implemented and re-enabled 2026-09-13: a Premium-subscription
+  account created a new Spotify Developer app, entered its Client ID/Secret in
+  Settings → Spotify, and `configuredServices.spotify` in
+  `NowPlayingPanel.tsx` was reverted from its v1.18.1 force-disabled state
+  back to the real `spotify.configured` check. Live OAuth + star-toggle test
+  is the remaining step.
 - **Deezer** is implemented on main: public OAuth API, free developer account,
   free users can create playlists, and the flow mirrors Spotify. The player now
   has a "Music service" dropdown to choose between the two when both are
