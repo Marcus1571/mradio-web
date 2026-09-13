@@ -5,12 +5,14 @@
 MAX_FAV = 12  # total favorites slots
 
 GENRES = ("classical", "jazz", "blues", "country", "rock", "pop", "focus",
-          "chill", "funk", "hiphop", "electronic", "world", "metal", "other")
+          "chill", "funk", "hiphop", "electronic", "latin", "afrobeat",
+          "metal", "other")
 GENRE_LABELS = {"classical": "Classical", "jazz": "Jazz",
                 "blues": "Blues", "country": "Country", "rock": "Rock",
                 "pop": "Pop", "focus": "Focus", "chill": "Chill",
                 "funk": "Funk", "hiphop": "Hip-Hop", "electronic": "Electronic",
-                "world": "World", "metal": "Metal", "other": "Other"}
+                "latin": "Latin/Hispanic", "afrobeat": "Afrobeat",
+                "metal": "Metal", "other": "Other"}
 
 _GENRE_KEYWORDS = {
     "blues": ("blues",),
@@ -30,8 +32,9 @@ _GENRE_KEYWORDS = {
     "hiphop": ("hip hop", "hip-hop", "hiphop", "rap", "urban", "jamz"),
     "electronic": ("electronic", "edm", "house", "techno", "trance", "dance",
                    "dubstep", "drum and bass", "drum & bass", "dnb", "idm"),
-    "world": ("world", "reggae", "dancehall", "salsa", "latin", "afrobeat",
-              "afrofusion", "bollywood", "reggaeton"),
+    "latin": ("latin", "salsa", "flamenco", "fado", "samba", "andalu",
+              "reggaeton", "hispanic"),
+    "afrobeat": ("afrobeat", "afrobeats", "afrofusion", "naija"),
     "metal": ("metal", "thrash", "death metal", "black metal", "power metal",
               "doom", "metalcore", "grindcore"),
 }
@@ -283,31 +286,51 @@ DEFAULT_STATIONS = [
      "url": "https://stream-eurodance90.fr/radio/8000/128.mp3", "genre": "electronic"},
     {"name": "FM4 (ORF)", "url": "https://orf-live.ors-shoutcast.at/fm4-q2a",
      "genre": "electronic"},
-    {"name": "RFI Monde", "url": "http://live02.rfi.fr/rfimonde-64.mp3",
-     "genre": "world"},
-    {"name": "WDR COSMO",
-     "url": "http://wdr-cosmo-live.icecast.wdr.de/wdr/cosmo/live/mp3/128/stream.mp3",
-     "genre": "world"},
-    {"name": "Radio Paradise World/Etc",
-     "url": "https://stream.radioparadise.com/world-etc-320", "genre": "world"},
-    {"name": "REGGAE CHILL CAFE",
-     "url": "https://maggie.torontocast.com:2020/stream/reggaechillcafe",
-     "genre": "world"},
+    {"name": "Canal Sur Radio Andalucía",
+     "url": "https://rtva-live-radio.flumotion.com/rtva/csr.mp3", "genre": "latin"},
+    {"name": "Energía Flamenca (Andalucía)",
+     "url": "https://axarquia.emisiononline.es/radio/8020/radio.mp3", "genre": "latin"},
+    {"name": "Rádio Amália (Fado, Portugal)",
+     "url": "http://centova.radio.com.pt:9496/;", "genre": "latin"},
+    {"name": "Antena 1 Fado (Portugal)",
+     "url": "http://radiocast.rtp.pt/antena1fado80a.mp3", "genre": "latin"},
     {"name": "Z 92 Miami (Salsa/Latin)",
-     "url": "https://liveaudio.lamusica.com/MIA_WCMQ_icy", "genre": "world"},
+     "url": "https://liveaudio.lamusica.com/MIA_WCMQ_icy", "genre": "latin"},
     {"name": "Colombia Salsa Dura",
      "url": "https://play10.tikast.com/proxy/colsalsadura?mp=/stream",
-     "genre": "world"},
-    {"name": "Softlife Afrofusion Radio",
-     "url": "https://a10.asurahosting.com:7540/radio.mp3", "genre": "world"},
-    {"name": "Afrobeats Gospel Radio",
-     "url": "https://stream.zeno.fm/zyd9stmdlnlvv", "genre": "world"},
-    {"name": "Mirchi Top 20 (Bollywood)",
-     "url": "https://drive.uber.radio/uber/bollywoodnow/icecast.audio",
-     "genre": "world"},
-    {"name": "Radio Udaan (Bollywood)",
-     "url": "https://stream.radioudaan.com/listen/radio_udaan/radio.mp3",
-     "genre": "world"},
+     "genre": "latin"},
+    {"name": "SABROSITA Ciudad de México",
+     "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/XEPHAMAAC.aac",
+     "genre": "latin"},
+    {"name": "Olímpica Stereo (Medellín)",
+     "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/OLP_MEDELLINAAC.aac",
+     "genre": "latin"},
+    {"name": "La 100 (Buenos Aires)",
+     "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/FM999_56.mp3",
+     "genre": "latin"},
+    {"name": "Rádio Batuta MPB (Brazil)",
+     "url": "http://radioims.out.airtime.pro:8000/radioims_a", "genre": "latin"},
+    {"name": "Softlife Afrofusion Radio (Nigeria)",
+     "url": "https://a10.asurahosting.com:7540/radio.mp3", "genre": "afrobeat"},
+    {"name": "Afrofusion Gospel Radio (Nigeria)",
+     "url": "https://a10.asurahosting.com:7120/radio.mp3", "genre": "afrobeat"},
+    {"name": "Afrobeats Gospel Radio (Nigeria)",
+     "url": "https://stream.zeno.fm/zyd9stmdlnlvv", "genre": "afrobeat"},
+    {"name": "LagosJump Radio (Nigeria)",
+     "url": "https://radio.lagosjumpradio.com/listen/lagosjump_radio/radio.mp3",
+     "genre": "afrobeat"},
+    {"name": "Fresh 105.9 FM Ibadan (Nigeria)",
+     "url": "https://stream.zenolive.com/e9x2n97b9uduv", "genre": "afrobeat"},
+    {"name": "MajorFM (Nigeria)",
+     "url": "http://stream.zeno.fm/pkza99xshkhvv", "genre": "afrobeat"},
+    {"name": "Bond 92.9 FM (Nigeria)",
+     "url": "https://go.webgateready.com/bondfm", "genre": "afrobeat"},
+    {"name": "METRO FM Lagos (Nigeria)",
+     "url": "https://go.webgateready.com/metrofm/radio.mp3", "genre": "afrobeat"},
+    {"name": "Life Radio Côte d'Ivoire",
+     "url": "https://cast4.asurahosting.com/proxy/life/stream", "genre": "afrobeat"},
+    {"name": "UbuntuFM (South Africa)",
+     "url": "https://streaming.coollective.nl:8443/UbuntuFM", "genre": "afrobeat"},
     {"name": "Rock Antenne - Heavy Metal",
      "url": "http://mp3channels.webradio.rockantenne.de/heavy-metal",
      "genre": "metal"},
@@ -340,7 +363,8 @@ def genre_of(name):
     """Best-effort genre for a station by its name; 'other' when unknown."""
     n = (name or "").lower()
     for genre in ("blues", "jazz", "country", "metal", "rock", "pop", "focus",
-                  "chill", "funk", "hiphop", "classical", "electronic", "world"):
+                  "chill", "funk", "hiphop", "classical", "electronic",
+                  "latin", "afrobeat"):
         for kw in _GENRE_KEYWORDS[genre]:
             if kw in n:
                 return genre
@@ -373,7 +397,7 @@ def genre_stations_for(fav_stations, genre):
             and (e.get("genre") or "other") == genre]
     if genre not in ("classical", "jazz", "blues", "country", "rock", "pop",
                      "focus", "chill", "funk", "hiphop", "electronic",
-                     "world", "metal"):
+                     "latin", "afrobeat", "metal"):
         return favs
     seen = set()
     out = []

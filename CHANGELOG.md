@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.19.0] - 2026-09-13
+
+Replace World genre with Latin/Hispanic, add a new Afrobeat genre.
+
+- Renamed the `world` genre key to `latin` throughout (`GENRES`,
+  `GENRE_LABELS`, `_GENRE_KEYWORDS`, `Genre` TS union, `genre_of()` and
+  `genre_stations_for()`'s classification tuples) and relabeled it
+  "Latin/Hispanic". Replaced its 10 stations: dropped Bollywood, Afrobeat,
+  and the generic French/world-music filler entries, added Andalusian
+  flamenco (Canal Sur Radio Andalucía, Energía Flamenca), Portuguese fado
+  (Rádio Amália, Antena 1 Fado), and South American salsa/samba (Colombia,
+  Mexico, Argentina, Brazil).
+- Added a new `afrobeat` genre, 10 stations, mostly Nigerian (Softlife
+  Afrofusion, LagosJump, Fresh 105.9 FM Ibadan, and others) plus Côte
+  d'Ivoire and South Africa, sourced from radio-browser.info by listener
+  count.
+- 15 genres total now (was 14); genre counts verified: Latin 10, Afrobeat
+  10, all other genres unchanged.
+
 ## [1.18.4] - 2026-09-13
 
 Force-disable Spotify and Deezer playlist saving — both are dead ends right now.

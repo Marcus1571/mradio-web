@@ -850,12 +850,18 @@ locally so the filled-star state is instant.
 ## 13. Curated station genres
 
 The default station catalogue (`backend/app/stations.py`) is organized into
-14 genres, browsable from the player's Genres tab: Classical, Jazz, Blues,
-Country, Rock, Pop, Focus, Chill, Funk, Hip-Hop, Electronic, World, Metal,
-and Other. Each genre has 10 curated stations (Classical has 12, since three
-of its entries are also part of the default favorites seeded for new
-accounts — see §5), sourced and spot-checked for working, direct stream URLs
-rather than pulled wholesale from a directory site.
+15 genres, browsable from the player's Genres tab: Classical, Jazz, Blues,
+Country, Rock, Pop, Focus, Chill, Funk, Hip-Hop, Electronic, Latin/Hispanic,
+Afrobeat, Metal, and Other. Each genre has 10 curated stations (Classical has
+12, since three of its entries are also part of the default favorites seeded
+for new accounts — see §5), sourced and spot-checked for working, direct
+stream URLs rather than pulled wholesale from a directory site.
+
+Latin/Hispanic (internal key `latin`) deliberately excludes Bollywood,
+Afrobeat, and generic "world music" filler — it's scoped to South America and
+Iberia, favoring Andalusian flamenco and Portuguese fado over mainstream
+Spanish pop. Afrobeat is its own separate genre, not folded into
+Latin/Hispanic.
 
 Adding a station or a new genre is a data-only change — a new entry in
 `DEFAULT_STATIONS` and, for a new genre, an addition to the `GENRES` tuple,

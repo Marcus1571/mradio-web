@@ -19,8 +19,8 @@ This page is just the overview.
 ## What it does
 
 - **Play any station** from a curated catalogue spanning classical, jazz,
-  electronic, metal, world, and more, or your own stream URL, with up to
-  12 favorite slots per person. Full genre list in
+  electronic, metal, Latin/Hispanic, Afrobeat, and more, or your own stream
+  URL, with up to 12 favorite slots per person. Full genre list in
   [KB §13 — Curated station genres](KB.md#13-curated-station-genres).
 - **Live now-playing** — artist/track parsed straight off the station's
   ICY metadata, pushed to the browser over a WebSocket as it changes.

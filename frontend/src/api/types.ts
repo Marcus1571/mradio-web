@@ -10,7 +10,8 @@ export type Genre =
   | 'funk'
   | 'hiphop'
   | 'electronic'
-  | 'world'
+  | 'latin'
+  | 'afrobeat'
   | 'metal'
   | 'other'
 
