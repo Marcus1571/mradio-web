@@ -1,6 +1,25 @@
 # Changelog
 
-## [1.19.0] - 2026-09-13
+## [1.19.1] - 2026-09-13
+
+Security fix: close an SSRF bypass in the stream proxy via HTTP redirects.
+
+- `backend/app/routers/stream.py`'s SSRF guard (`_reject_private_targets`)
+  correctly resolved and checked the target IP before the first request, but
+  `httpx.AsyncClient(follow_redirects=True)` then silently followed any 3xx
+  redirect with no further check — a public station URL that passed the
+  guard could redirect to a private/loopback/link-local address (e.g. cloud
+  metadata, `127.0.0.1`, other containers on the LAN) and the proxy would
+  fetch and stream it back. Fixed with an httpx response event hook that
+  re-runs the same guard on every redirect hop before it's followed. Also
+  fixes a pre-existing resource leak on this path: `HTTPException` raised
+  mid-`send()` isn't an `httpx.HTTPError`, so it skipped the existing
+  cleanup block and never closed the client — added a broader `except`
+  around the send to close it on any exception. Verified against live
+  redirect chains (redirect to loopback: blocked; redirect to link-local/
+  metadata address: blocked; normal public-to-public redirect: still
+  works) before shipping, not just unit-tested in isolation. Found via a
+  full-codebase security audit.
 
 Replace World genre with Latin/Hispanic, add a new Afrobeat genre.
 

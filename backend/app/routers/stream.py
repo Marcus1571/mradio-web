@@ -96,8 +96,21 @@ async def stream(request: Request,
         raise HTTPException(400, "url must be a valid http(s) stream URL")
     await _reject_private_targets(parsed.hostname)
 
-    client = httpx.AsyncClient(follow_redirects=True,
-                               timeout=httpx.Timeout(10.0, read=None))
+    async def _reject_redirect_to_private(response: httpx.Response) -> None:
+        # follow_redirects=True normally follows a 3xx with no further
+        # checks, which would let a station URL that passes the guard above
+        # redirect to a private/internal target and bypass it entirely.
+        # This hook re-runs the same guard on every redirect hop.
+        if response.is_redirect:
+            location = response.headers.get("location")
+            if location:
+                target_host = response.request.url.join(location).host
+                if target_host:
+                    await _reject_private_targets(target_host)
+
+    client = httpx.AsyncClient(
+        follow_redirects=True, timeout=httpx.Timeout(10.0, read=None),
+        event_hooks={"response": [_reject_redirect_to_private]})
     try:
         req = client.build_request(
             "GET", url, headers={"Icy-MetaData": "1", "User-Agent": _USER_AGENT})
@@ -105,6 +118,12 @@ async def stream(request: Request,
     except httpx.HTTPError as e:
         await client.aclose()
         raise HTTPException(502, f"could not reach station: {e}")
+    except Exception:
+        # Catches HTTPException raised by _reject_redirect_to_private mid-send
+        # (not an httpx.HTTPError, so it skips the block above) — without
+        # this the client would never get closed on that path.
+        await client.aclose()
+        raise
 
     if upstream.status_code >= 400:
         await upstream.aclose()
