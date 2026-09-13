@@ -9,6 +9,9 @@ export type Genre =
   | 'chill'
   | 'funk'
   | 'hiphop'
+  | 'electronic'
+  | 'world'
+  | 'metal'
   | 'other'
 
 export interface Station {

@@ -5,11 +5,12 @@
 MAX_FAV = 12  # total favorites slots
 
 GENRES = ("classical", "jazz", "blues", "country", "rock", "pop", "focus",
-          "chill", "funk", "hiphop", "other")
+          "chill", "funk", "hiphop", "electronic", "world", "metal", "other")
 GENRE_LABELS = {"classical": "Classical", "jazz": "Jazz",
                 "blues": "Blues", "country": "Country", "rock": "Rock",
                 "pop": "Pop", "focus": "Focus", "chill": "Chill",
-                "funk": "Funk", "hiphop": "Hip-Hop", "other": "Other"}
+                "funk": "Funk", "hiphop": "Hip-Hop", "electronic": "Electronic",
+                "world": "World", "metal": "Metal", "other": "Other"}
 
 _GENRE_KEYWORDS = {
     "blues": ("blues",),
@@ -19,7 +20,7 @@ _GENRE_KEYWORDS = {
                   "musique", "recital", "sonata", "concerto"),
     "country": ("country", "americana", "bluegrass", "honky tonk", "honky-tonk",
                 "nash"),
-    "rock": ("rock", "rockabilly", "metal", "hard rock", "punk"),
+    "rock": ("rock", "rockabilly", "hard rock", "punk"),
     "pop": ("pop", "top 40", "top40", "hits"),
     "focus": ("focus", "meditation", "meditat", "relax", "new age", "newage",
               "yoga", "zen", "ambient", "drone", "instrumental"),
@@ -27,6 +28,12 @@ _GENRE_KEYWORDS = {
     "funk": ("funk", "funky", "groove", "grooves", "boogie", "soul", "r&b",
              "rnb", "rhythm and blues", "disco funk", "jazz funk"),
     "hiphop": ("hip hop", "hip-hop", "hiphop", "rap", "urban", "jamz"),
+    "electronic": ("electronic", "edm", "house", "techno", "trance", "dance",
+                   "dubstep", "drum and bass", "drum & bass", "dnb", "idm"),
+    "world": ("world", "reggae", "dancehall", "salsa", "latin", "afrobeat",
+              "afrofusion", "bollywood", "reggaeton"),
+    "metal": ("metal", "thrash", "death metal", "black metal", "power metal",
+              "doom", "metalcore", "grindcore"),
 }
 
 DEFAULT_STATIONS = [
@@ -256,14 +263,84 @@ DEFAULT_STATIONS = [
     {"name": "Top Urbano",
      "url": "https://radio.dominiserver.com/proxy/topurbano?mp=/stream",
      "genre": "hiphop"},
+    {"name": "Dance Wave!", "url": "https://dancewave.online/dance.mp3",
+     "genre": "electronic"},
+    {"name": "SomaFM Beat Blender",
+     "url": "https://ice1.somafm.com/beatblender-128-mp3", "genre": "electronic"},
+    {"name": "SomaFM The Trip",
+     "url": "https://ice1.somafm.com/thetrip-128-mp3", "genre": "electronic"},
+    {"name": "SomaFM Dub Step Beyond",
+     "url": "https://ice1.somafm.com/dubstep-128-mp3", "genre": "electronic"},
+    {"name": "SomaFM cliqhop idm",
+     "url": "https://ice1.somafm.com/cliqhop-128-mp3", "genre": "electronic"},
+    {"name": "Frisky Radio",
+     "url": "http://stream2.friskyradio.com/frisky_mp3_hi", "genre": "electronic"},
+    {"name": "Ibiza X Radio",
+     "url": "https://stream.radiojar.com/p1f2vpv37reuv", "genre": "electronic"},
+    {"name": "Radio Intense - We love Dance",
+     "url": "https://secure.live-streams.nl/main", "genre": "electronic"},
+    {"name": "EuroDance 90 Radio",
+     "url": "https://stream-eurodance90.fr/radio/8000/128.mp3", "genre": "electronic"},
+    {"name": "FM4 (ORF)", "url": "https://orf-live.ors-shoutcast.at/fm4-q2a",
+     "genre": "electronic"},
+    {"name": "RFI Monde", "url": "http://live02.rfi.fr/rfimonde-64.mp3",
+     "genre": "world"},
+    {"name": "WDR COSMO",
+     "url": "http://wdr-cosmo-live.icecast.wdr.de/wdr/cosmo/live/mp3/128/stream.mp3",
+     "genre": "world"},
+    {"name": "Radio Paradise World/Etc",
+     "url": "https://stream.radioparadise.com/world-etc-320", "genre": "world"},
+    {"name": "REGGAE CHILL CAFE",
+     "url": "https://maggie.torontocast.com:2020/stream/reggaechillcafe",
+     "genre": "world"},
+    {"name": "Z 92 Miami (Salsa/Latin)",
+     "url": "https://liveaudio.lamusica.com/MIA_WCMQ_icy", "genre": "world"},
+    {"name": "Colombia Salsa Dura",
+     "url": "https://play10.tikast.com/proxy/colsalsadura?mp=/stream",
+     "genre": "world"},
+    {"name": "Softlife Afrofusion Radio",
+     "url": "https://a10.asurahosting.com:7540/radio.mp3", "genre": "world"},
+    {"name": "Afrobeats Gospel Radio",
+     "url": "https://stream.zeno.fm/zyd9stmdlnlvv", "genre": "world"},
+    {"name": "Mirchi Top 20 (Bollywood)",
+     "url": "https://drive.uber.radio/uber/bollywoodnow/icecast.audio",
+     "genre": "world"},
+    {"name": "Radio Udaan (Bollywood)",
+     "url": "https://stream.radioudaan.com/listen/radio_udaan/radio.mp3",
+     "genre": "world"},
+    {"name": "Rock Antenne - Heavy Metal",
+     "url": "http://mp3channels.webradio.rockantenne.de/heavy-metal",
+     "genre": "metal"},
+    {"name": "100 Greatest Heavy Metal",
+     "url": "https://cast1.torontocast.com:4660/stream", "genre": "metal"},
+    {"name": "La Grosse Radio Metal",
+     "url": "https://hd.lagrosseradio.info/lagrosseradio-metal-192.mp3",
+     "genre": "metal"},
+    {"name": "Bandit Metal",
+     "url": "https://wr03-ice.stream.khz.se/wr03_mp3", "genre": "metal"},
+    {"name": "Badrock Hard & Heavy",
+     "url": "https://streams.badrockradio.net/hard-heavy", "genre": "metal"},
+    {"name": "Radio Caprice - Thrash Metal",
+     "url": "http://79.120.77.11:9101/", "genre": "metal"},
+    {"name": "DrGnu - Death Metal",
+     "url": "http://streams.radiobob.de/deathmetal/mp3-192/mediaplayer/",
+     "genre": "metal"},
+    {"name": "Radio BOB - Power Metal",
+     "url": "http://streams.radiobob.de/powermetal/mp3-192/streams.radiobob.de/",
+     "genre": "metal"},
+    {"name": "Exclusive Radio - Black Sabbath (Doom)",
+     "url": "https://streaming.exclusive.radio/er/blacksabbath/icecast.audio",
+     "genre": "metal"},
+    {"name": "SomaFM Metal Detector",
+     "url": "https://ice2.somafm.com/metal-128-aac", "genre": "metal"},
 ]
 
 
 def genre_of(name):
     """Best-effort genre for a station by its name; 'other' when unknown."""
     n = (name or "").lower()
-    for genre in ("blues", "jazz", "country", "rock", "pop", "focus", "chill",
-                  "funk", "hiphop", "classical"):
+    for genre in ("blues", "jazz", "country", "metal", "rock", "pop", "focus",
+                  "chill", "funk", "hiphop", "classical", "electronic", "world"):
         for kw in _GENRE_KEYWORDS[genre]:
             if kw in n:
                 return genre
@@ -295,7 +372,8 @@ def genre_stations_for(fav_stations, genre):
             if not is_empty_slot(e)
             and (e.get("genre") or "other") == genre]
     if genre not in ("classical", "jazz", "blues", "country", "rock", "pop",
-                     "focus", "chill", "funk", "hiphop"):
+                     "focus", "chill", "funk", "hiphop", "electronic",
+                     "world", "metal"):
         return favs
     seen = set()
     out = []
