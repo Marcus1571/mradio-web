@@ -160,10 +160,11 @@ if STATIC_DIR.is_dir():
       document.getElementById('close').onclick = function () { window.close(); };
     })();
     """
-        return HTMLResponse(
-            _SERVICE_CALLBACK_HTML.format(service=service, message=message, script=script),
-            headers={"Cache-Control": "no-store"},
-        )
+        html = (_SERVICE_CALLBACK_HTML
+                .replace("{service}", service)
+                .replace("{message}", message)
+                .replace("{script}", script))
+        return HTMLResponse(html, headers={"Cache-Control": "no-store"})
 
     # OAuth popups need to close after authorization instead of leaving the
     # user on a settings page inside the popup.

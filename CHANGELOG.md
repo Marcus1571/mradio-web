@@ -1,6 +1,20 @@
 # Changelog
 
-## [1.18.2] - 2026-09-13
+## [1.18.3] - 2026-09-13
+
+Fix a crash on failed OAuth callback (Spotify and Deezer).
+
+- The OAuth popup callback page (`_callback_response` in `backend/app/main.py`,
+  shared by `/spotify-callback` and `/deezer-callback`) used `str.format()` on
+  an HTML template containing literal CSS and JS braces (e.g.
+  `body { font-family: ... }`). `.format()` treats every `{...}` as a
+  placeholder, so any connection failure — not just the happy path — crashed
+  with `KeyError` instead of showing the "connection failed" message. Switched
+  to plain `.replace()` for the three real placeholders (`service`, `message`,
+  `script`), leaving the CSS/JS braces untouched. Found live: a real Spotify
+  OAuth failure (403 from `/v1/me`, "user not registered for this
+  application" — a Development Mode app restriction, unrelated to this bug)
+  surfaced this crash instead of a readable error.
 
 Re-enable Spotify.
 
