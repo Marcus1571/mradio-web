@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.18.1] - 2026-09-13
+
+Deploy fix, Spotify parked in the UI, three new genres.
+
+- Fixed the production deploy path: the GitHub Actions workflow and manual
+  deploy commands checked for a git checkout directly under
+  `<appdata>/mradio-web`, but it actually lives one level deeper at
+  `<appdata>/mradio-web/app`. Both `deploy.yml` and `AGENTS.md` corrected;
+  `deploy.yml` now also dumps a directory listing on failure for faster
+  diagnosis next time.
+- Retracted a false claim in `AGENTS.md` that a safety classifier blocks the
+  assistant from running direct SSH commands against the production host —
+  it doesn't; direct SSH deploys are the current path until the GitHub
+  Actions workflow has its secrets configured.
+- Spotify is documented as "parked" (pending a Premium-owned Developer app)
+  but was never actually disabled in the UI: the star button still showed
+  and routed to Spotify OAuth whenever the server had Spotify credentials
+  configured. `NowPlayingPanel.tsx` now force-disables Spotify regardless of
+  server config, so only Deezer is offered until Spotify is deliberately
+  re-enabled.
+- Added three new station genres — Electronic, World, and Metal — with 10
+  curated stations each, sourced from radio-browser.info ranked by listener
+  count. Fixed a latent classifier bug where `"metal"` was a `rock` keyword,
+  which would have shadowed the new Metal genre in auto-classification.
+
 ## [1.18.0] - 2026-09-12
 
 Deezer per-user playlist integration and selectable music service.

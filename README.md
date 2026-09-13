@@ -19,8 +19,8 @@ This page is just the overview.
 ## What it does
 
 - **Play any station** from a curated list (classical, jazz, blues,
-  country, rock, pop, focus, chill, funk) or your own stream URL, with up
-  to 12 favorite slots per person.
+  country, rock, pop, focus, chill, funk, hip-hop, electronic, world,
+  metal) or your own stream URL, with up to 12 favorite slots per person.
 - **Live now-playing** — artist/track parsed straight off the station's
   ICY metadata, pushed to the browser over a WebSocket as it changes.
 - **AI liner notes** — a short, factual write-up about the piece and its

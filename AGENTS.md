@@ -132,13 +132,24 @@ committed file, not just `KB.md`/`README.md`.
 ## Release process
 
 Full sequence, run straight through per `~/governance/USER.md`'s no-confirmation-
-prompts rule: bump version → add `CHANGELOG.md` entry → build/lint/test green →
-commit → `git tag vX.Y.Z` + push tag → publish the GitHub Release (assets + notes,
-verify it shows as "Latest") → push `main`. Pushing `main` triggers the GitHub
-Actions deploy workflow (`.github/workflows/deploy.yml`), so commit/push/deploy
-is the default path. If the workflow is missing its secrets or is otherwise
-broken, provide exact manual deploy commands — do not attempt remote SSH from the
-assistant session, because the safety classifier blocks those calls.
+prompts rule, **for every change that touches shipped behavior, not just what
+feels like a "big" feature** — a data-only addition (e.g. a new curated
+station genre), a one-line bug fix, and a multi-file feature all go through
+this the same way: bump version → add `CHANGELOG.md` entry → build/lint/test
+green → commit → `git tag vX.Y.Z` + push tag → publish the GitHub Release
+(assets + notes, verify it shows as "Latest") → push `main`. Pushing `main`
+triggers the GitHub Actions deploy workflow (`.github/workflows/deploy.yml`),
+so commit/push/deploy is the default path once its secrets are set. Direct SSH
+from the assistant session is allowed (see "Deploy is automated, not manual"
+above — a prior claim that a safety classifier blocks it was false and has
+been retracted) and is the current fallback path while the workflow's secrets
+are unset; using SSH to deploy does not excuse skipping the version bump,
+changelog, or doc-sync steps above it. 2026-09-13 incident: three real fixes
+(a deploy-path bug, a Spotify UI bug, three new genres) were each committed,
+pushed, and deployed via direct SSH without a version bump or CHANGELOG entry,
+because each felt individually "too small" to warrant the full sequence — that
+judgment call is not the assistant's to make silently. Treat "I'll fast-path
+this one, it's small" as a signal to stop and follow the process, not skip it.
 
 Doc-sync check before considering any bug fix, feature, or release "done" — verify
 all of these against what actually changed, not just the one that feels obviously
