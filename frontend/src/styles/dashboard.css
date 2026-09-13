@@ -374,10 +374,19 @@
    lower divider, which is the opposite of what small screens want.
    Shrink it instead: it costs the station name less header width
    (which truncates early at this size), and the extra band height
-   below it reads as ordinary breathing room rather than a gap. */
+   below it reads as ordinary breathing room rather than a gap.
+   The logo is absolutely positioned on top of .panel-head so its width
+   is not reserved in the flex layout — reserve it here so the text wraps
+   away from it. */
 @media (max-width: 480px) {
   .panel {
     --logo-size: 2.75rem;
+  }
+
+  /* Reserve space for the 44px-tall logo (width varies by aspect ratio;
+     4.5rem ≈ 72px covers most logos comfortably) plus the 4px inset. */
+  .station-strip {
+    padding-inline-end: 4.5rem;
   }
 }
 
