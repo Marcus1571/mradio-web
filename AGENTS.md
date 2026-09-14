@@ -167,8 +167,14 @@ mradio-web specifics:
   docker compose build
   docker compose up -d
   ```
-- `.github/workflows/deploy.yml` triggers on `main` push once its secrets are
-  set; direct SSH is the current fallback.
+- `.github/workflows/deploy.yml`'s push-to-main auto-trigger is **disabled**
+  (2026-09-14) — its `DEPLOY_HOST`/`PORT`/`USER`/`KEY` secrets were never
+  configured, so every push-triggered run failed (`missing server host`,
+  confirmed via `gh run list`: 26/26 failures back to at least 2026-09-12,
+  generating a GitHub failure-notification email per push). Direct SSH (the
+  commands above) is the actual, only working deploy path — always has been.
+  Re-enable the trigger (see the workflow file's own comment) only once the
+  four secrets are set and a manual `workflow_dispatch` run has been verified.
 
 2026-09-13 incident: three real fixes (deploy-path bug, Spotify UI bug, three
 new genres) were each committed, pushed, and deployed via direct SSH without a
@@ -181,16 +187,16 @@ Never add curated items (e.g. default station lists) on the agent's own initiati
 the operator personally approves every one. User-owned data files are never touched
 by releases.
 
-## Deploy is automated, not manual
+## Deploy is manual (direct SSH), not automated
 
-Deployment runs through the GitHub Actions workflow in
-`.github/workflows/deploy.yml`. Pushing `main` triggers it; the workflow SSHes into
-the production host, pulls the repo, rebuilds the container, and restarts it.
+`.github/workflows/deploy.yml` exists and is intended to eventually automate this
+(SSH into the production host, pull, rebuild, restart) but its push-to-main
+trigger is currently disabled — see "Release process" above for why. Direct SSH
+(the deploy commands in that section) is the real, only working deploy path.
 
-The assistant's job is to keep that workflow correct and up to date. Direct SSH into
-the production host is allowed — there is no safety classifier blocking it; a prior
-session claimed otherwise and that claim was false, confirmed 2026-09-12 by SSHing
-in directly without issue. Do not repeat or trust that claim.
+Direct SSH into the production host is allowed — there is no safety classifier
+blocking it; a prior session claimed otherwise and that claim was false, confirmed
+2026-09-12 by SSHing in directly without issue. Do not repeat or trust that claim.
 
 ## Verify remote paths before running remote commands — do not assume, do not repeat a failing command
 

@@ -1,8 +1,15 @@
 name: Deploy to production
 
+# The push-to-main trigger is disabled (2026-09-14): DEPLOY_HOST/PORT/USER/KEY
+# secrets were never configured on this repo, so every push-triggered run has
+# failed since at least 2026-09-12 (confirmed via `gh run list` — 26/26
+# failures, all "missing server host" within ~15s, before any SSH attempt).
+# Direct SSH is the actual working deploy path (see AGENTS.md/STATUS.md) and
+# has been used for every real deploy. Re-enable the `push:` trigger below
+# once the four secrets are set in repo Settings -> Secrets and variables ->
+# Actions, and this workflow has been verified with a manual
+# workflow_dispatch run first.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:

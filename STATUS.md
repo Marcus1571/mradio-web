@@ -23,6 +23,18 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **`.github/workflows/deploy.yml`'s push-to-main auto-trigger disabled,
+  2026-09-14** (operator reported a burst of GitHub failure-notification
+  emails). Root cause: `DEPLOY_HOST`/`PORT`/`USER`/`KEY` repo secrets were
+  never configured — `gh run list` showed 26/26 failures going back to at
+  least 2026-09-12, each failing in ~15s with `missing server host`
+  before any SSH attempt. Not related to how commits were made; this
+  workflow has been failing silently on every push since it was written,
+  unrelated to today's or any other session's actual deploys, which have
+  all gone through direct SSH (the real working path — see `AGENTS.md`'s
+  now-corrected "Deploy is manual" section, previously mislabeled
+  "Deploy is automated"). Trigger left as `workflow_dispatch`-only until
+  the four secrets are set and a manual run is verified.
 - **v1.21.0 tagged, released, and deployed to LT 2026-09-14.** Ships the
   search-only music-service link feature investigated and designed
   earlier the same day (see "Grand project: multi-service playlist
