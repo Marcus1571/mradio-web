@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.21.2] - 2026-09-14
+
+Fixes a real bug the operator reported: switching to Deezer, then
+clicking the (correctly Deezer-colored) music-service icon, opened a
+Spotify URL instead.
+
+Root cause: `GET /api/music-link?raw_title=...`'s query string is
+deliberately just the raw title — the active service is resolved
+server-side, not sent by the client — but that means the exact same URL
+returns a different answer depending on server-side state the browser
+can't see. With no `Cache-Control` header, the browser's default
+heuristic HTTP caching (a GET response with no cache directives may
+still be cached and reused for an identical URL) served an old Spotify
+response after the user had already switched to Deezer, without the
+server ever seeing the second request. Verified live: server-side, the
+`(service, raw_title)`-keyed cache and service resolution were both
+already correct — a fresh request for the exact same track, after
+switching, does return the right Deezer URL. The bug was entirely a
+missing cache-control header letting the browser skip that request.
+
+- `routers/music_link.py`: sets `Cache-Control: no-store` on every
+  response, matching the same pattern already used by `stream.py`.
+
 ## [1.21.1] - 2026-09-14
 
 Fixes the music-service link icon from v1.21.0: it was a rough hand-drawn

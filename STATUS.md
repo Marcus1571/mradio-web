@@ -23,6 +23,20 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.21.2 tagged, released, and deployed to LT 2026-09-14.** Fixed a
+  real bug the operator reported: after switching to Deezer, clicking
+  the (correctly Deezer-colored) music-service icon opened a stale
+  Spotify URL. Root cause: `GET /api/music-link`'s query string is just
+  `raw_title` — the active service is deliberately resolved server-side,
+  not sent by the client — so the same URL can legitimately return a
+  different answer over time, but had no `Cache-Control` header, so the
+  browser's default heuristic caching served an old response from before
+  the switch without the server ever seeing the new request. Confirmed
+  server-side logic was already correct (verified live: the
+  `(service, raw_title)`-keyed cache and service resolution both return
+  the right Deezer URL for the exact track in question) — this was
+  purely a missing no-store header. Fixed, matching the same pattern
+  `stream.py` already uses.
 - **`.github/workflows/deploy.yml`'s push-to-main auto-trigger disabled,
   2026-09-14** (operator reported a burst of GitHub failure-notification
   emails). Root cause: `DEPLOY_HOST`/`PORT`/`USER`/`KEY` repo secrets were

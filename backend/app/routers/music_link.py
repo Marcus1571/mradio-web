@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 
 from .. import deezer, music_link_cache, spotify
 from ..deps import get_active_user
@@ -12,7 +12,9 @@ _DEFAULT_SERVICE = "spotify"
 
 @router.get("")
 async def get_music_link(
-    raw_title: str = Query(...), user: dict = Depends(get_active_user)
+    response: Response,
+    raw_title: str = Query(...),
+    user: dict = Depends(get_active_user),
 ) -> dict:
     """Returns {"url": <track page URL> | None} for the current user's
     active music service (music_service in their config — resolved here,
@@ -21,7 +23,22 @@ async def get_music_link(
     window after switching services could otherwise return a URL for a
     service the UI no longer thinks is active. Read-only, no OAuth, no
     per-user connection state — see AI.md/findings.md's "search-only
-    music-service links" entry for the full design rationale."""
+    music-service links" entry for the full design rationale.
+
+    Cache-Control: no-store is mandatory here, not optional — the query
+    string is just raw_title, deliberately excluding the service (see the
+    server-side-resolution reasoning above), so this endpoint returns a
+    DIFFERENT answer for the SAME URL depending on server-side state the
+    browser can't see. Without an explicit no-store, a browser's default
+    heuristic HTTP caching (RFC 7234 — GET responses with no cache
+    directives may still be cached and reused for an identical URL) can
+    silently serve a stale answer from before a service switch, with the
+    server never even seeing the second request. Confirmed as the real
+    cause of a 2026-09-14 production bug report: switching to Deezer and
+    clicking the (correctly Deezer-colored) icon opened a stale Spotify
+    URL for a track that had been looked up under Spotify moments
+    earlier, in the same page session, before the switch."""
+    response.headers["Cache-Control"] = "no-store"
     raw_title = (raw_title or "").strip()
     if not raw_title:
         return {"url": None}
