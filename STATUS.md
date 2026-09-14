@@ -274,11 +274,28 @@ for the shelved star feature (`spotify.py`'s `find_best_track()` and
 friends) is directly reusable. **A working Spotify Client ID/Secret pair
 is now saved in production `settings.json`** — the previously-stale pair
 was replaced and live-verified (real token exchange + real search
-results) the same session. Research-only, no code written yet — see
-`findings.md`'s 2026-09-14 "search-only music-service links" entry for
-the full investigation, live API verification, and remaining open
-questions (match-confidence threshold, caching strategy, Deezer query
-syntax).
+results) the same session. **Shipped as v1.21.0-v1.21.2** — see the
+"Status" section above for the release entries and the two real bugs
+(Spotify's search `limit=20` vs. its current 10 cap; Deezer's `_api()`
+sending an empty `access_token`) found and fixed during live
+verification. See `findings.md`'s "search-only music-service links"
+entry for the full investigation.
+
+**Apple Music via SearXNG investigated 2026-09-14, not pursued.** The
+operator proposed the same search-only pattern for Apple Music, using
+the self-hosted SearXNG instance on LT (see `~/governance/USER.md`) as
+a free stand-in for Apple's $99/year-gated official Search API.
+Confirmed SearXNG can surface real `music.apple.com` track URLs, but
+found two real problems: no structured metadata to match against
+reliably (unlike Spotify/Deezer's ISRC/artist/album fields — SearXNG
+gives only a title string and URL, with multiple competing regional/
+remaster URLs common for the same track and zero results for some
+real, well-known tracks), and **this session's own light manual
+testing was enough to get SearXNG's underlying engines
+(Google CSE, Brave, DuckDuckGo) rate-limited/CAPTCHA-blocked** — a
+real production feature firing on every track change would hit this
+far harder. See `findings.md`'s "Apple Music via SearXNG" entry for
+the full writeup.
 
 ## Local development
 

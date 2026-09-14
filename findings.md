@@ -375,3 +375,31 @@ Returned real results with `isrc`, artist/album match fields, and `"link": "http
 - **Deezer's advanced query filter syntax returned zero results in this session's one test** (`artist:"..." track:"..."` form) while the plain free-text form worked — worth confirming the right query construction before reusing `find_best_track()`'s scoring approach, which was built assuming Spotify's query shape.
 - **Caching strategy**: reuse `cache.json`'s existing shared-cache pattern, or a new small table/file — a design decision, not a blocker either way.
 - Nothing found in this research suggests any ToS risk in linking out to a public track page — this is the same mechanism every "listen on Spotify" button on the internet already uses.
+
+---
+
+Date: 2026-09-14 (Apple Music via SearXNG — investigated, not pursued for now)
+Scope: the operator proposed using the self-hosted SearXNG instance on LT (see `~/governance/USER.md`'s SearXNG section, added earlier the same day) as a free workaround for Apple Music's $99/year Apple Developer Program requirement (the original blocker documented at the top of this file) — search the web for "artist title site:music.apple.com" and extract a real track URL from the results, same "search + deep link, no OAuth" pattern already shipped for Spotify/Deezer (v1.21.0).
+
+## Executive summary
+
+**Technically possible, but meaningfully less reliable than Spotify/Deezer, and — more importantly — this session's own light manual testing was enough to get SearXNG's underlying search engines rate-limited/blocked.** Recommend not pursuing this without first addressing the rate-limit risk, since a per-track-change production feature would hit these limits far harder and faster than the handful of manual test queries that triggered them here.
+
+## What works
+
+A direct query like `Miles Davis So What site:music.apple.com` against the SearXNG JSON API (`GET /search?q=...&format=json`, confirmed reachable per `USER.md`) returned a clean, correct result: `https://music.apple.com/us/song/so-what/300865220`, with a real page title (`"So What - Song by Miles Davis - Apple Music"`). For a well-documented, mainstream track, this works essentially as well as the idea proposes.
+
+## What doesn't work reliably
+
+- **No structured metadata.** Unlike Spotify's/Deezer's search APIs (which return `{artist, title, album_type, isrc, popularity}` — the exact fields `_score_candidate()` in `spotify.py`/`deezer.py` uses to pick a confident best match), SearXNG returns only a title string, a content snippet, and a URL. Any matching logic here would need to be built from scratch, working off much weaker signals (regex-parsing a page title like `"Chan Chan - Song by Compay Segundo - Apple Music"`, no reliable artist/ISRC cross-check).
+- **Multiple competing `/song/` URLs for the same title are common** — confirmed live for "Chan Chan": at least 4 different `/song/` URLs across different regions (`us`, `fr`, `mx`) and at least one "remasterizado" variant, plus unrelated `/album/` and `/playlist/` results mixed into the same result set. Picking "the" canonical one isn't a solved problem with the data available.
+- **Results are inconsistent by track.** A `site:music.apple.com/us/song` path-scoped query returned multiple plausible results for a Beethoven symphony movement, but **zero results** for two other real, well-known tracks (Robert Palmer's "Every Kinda People," Pretenders' "Brass In Pocket") that resolve cleanly on both Spotify and Deezer — not a syntax issue, confirmed by retrying with a broader unscoped query, which also returned zero.
+- **Rate limiting / CAPTCHA blocking, confirmed live and directly caused by this session's own testing.** After roughly a dozen manual test queries in quick succession, SearXNG's JSON responses started returning `"unresponsive_engines": [["brave", "Suspended: too many requests"], ["duckduckgo", "CAPTCHA"], ["google cse", "Suspended: too many requests"]]` — all three of the engines actually producing real `music.apple.com` results in the working tests above. This did not clear after a 30-second wait; likely a longer (possibly daily-quota-based, for Google CSE specifically) cooldown. The instance's `settings.yml` uses `use_default_settings: true` with no custom per-engine throttling — this is stock SearXNG behavior under load, not a misconfiguration specific to this instance.
+
+## Why the rate-limit finding matters most
+
+The existing Spotify/Deezer music-link feature fires a lookup on every track change, for every listener, for every station — mitigated by a shared, per-track cache (`music_link_cache.py`) so a popular track is only ever looked up once. The same caching approach would help here too, but the underlying problem is structural: SearXNG here depends on a handful of upstream engines (Google Custom Search Engine, Brave, DuckDuckGo) that each impose their own request-volume limits on SearXNG's own outbound queries — this is a shared, finite resource this session's own testing exhausted in minutes with light manual use, not sustained production traffic. A real feature would need either much more conservative usage (aggressive caching, maybe a long negative-cache TTL so misses aren't retried constantly) or a different underlying search source for Apple Music specifically.
+
+## Recommendation
+
+**Do not build this now.** Two separate problems would need solving, not one: (1) a genuinely reliable matching layer without the structured metadata Spotify/Deezer provide, and (2) protecting SearXNG's shared, rate-limited upstream engines from a production traffic pattern this session's own light testing already exhausted. Revisit only if either: SearXNG's engine configuration is hardened against this (dedicated API keys for Google CSE with a real quota, disabling engines prone to CAPTCHA-blocking a shared instance), or the operator decides the $99/year Apple Developer fee is worth paying for the real, structured, reliable Apple Music Search API instead.
