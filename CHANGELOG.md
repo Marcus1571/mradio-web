@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.21.1] - 2026-09-14
+
+Fixes the music-service link icon from v1.21.0: it was a rough hand-drawn
+approximation ("suggestive of" Spotify/Deezer's marks, per the old code
+comments) rendered at 17px, meant for small toolbar icons — much too
+small and not actually recognizable next to a hero-sized track title.
+
+- `SpotifyIcon`/`DeezerIcon` now use the real official brand marks (path
+  data sourced from Wikimedia Commons' Spotify and Deezer logo files),
+  in their real brand colors (`#1ED760` green, `#A238FF` purple) instead
+  of `currentColor`.
+- Sized up to 2.25rem (from the shared `.icon-btn` default of 17px) via
+  a dedicated `.music-service-link` override — big enough to actually
+  read the mark at a glance.
+- Verified visually via a static fixture screenshot (playwright), not
+  just a clean build, per `AGENTS.md`'s verification-discipline rule for
+  visual changes.
+
 ## [1.21.0] - 2026-09-14
 
 Replaces the dead-end OAuth playlist-write star button with a read-only

@@ -471,13 +471,21 @@
   min-width: 0;
 }
 
+/* Overrides .icon-btn's own 2rem box / 17px svg (sized for small toolbar
+   icons) — this sits next to the hero-sized track title and is a
+   recognizable brand mark, not a utility icon, so it gets real size. */
 .music-service-link {
-  color: var(--accent);
+  width: 2.25rem;
+  height: 2.25rem;
   flex-shrink: 0;
 }
 
+.music-service-link svg {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
 .music-service-link--unresolved {
-  color: var(--ink-3);
   opacity: 0.35;
   filter: grayscale(1);
   cursor: default;
