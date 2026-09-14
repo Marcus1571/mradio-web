@@ -494,13 +494,36 @@ not yet a controlled re-test of the same original error (grounding was
 not enabled for this run either).
 
 **Known issues / limitations:**
-- **`dahl_timeout`'s 30s default is too short for the hardened prompt.**
-  All 4 hardened-prompt test runs (2026-09-14 follow-up) took 42-58
-  seconds — every one would fail at the current default and silently
-  fall through to the next provider in the fallback chain, making DAHL
-  look unreliable for reasons unrelated to model quality. **Not yet
-  fixed in code** — recommend raising to at least 75s (Ollama's
-  `gpt-oss` precedent) or 90s (OpenRouter's reasoning-token precedent).
+- **`dahl_timeout`'s 30s default was too short for the hardened prompt —
+  fixed in code, but the fix didn't apply to an already-running install
+  until manually patched.** All 4 hardened-prompt test runs (2026-09-14
+  follow-up) took 42-58 seconds; `_DEFAULTS["dahl_timeout"]` was raised
+  30→90 the same day. But `settings.load()` merges `_DEFAULTS` under
+  whatever's already saved in `settings.json` (`merged = dict(_DEFAULTS);
+  merged.update(data)`) — a value written to disk once (when the admin
+  first saved the DAHL section, while the default was still 30) stays 30
+  forever regardless of later code changes, with no migration path.
+  **Confirmed this actually happened**: a real production enrichment
+  request timed out at exactly 30,042ms and DAHL auto-hid itself
+  (`ai_requests` row: `elapsed_ms=30042, outcome=no_output`), hours after
+  the "fix" shipped — traced to `/data/settings.json` still holding
+  `dahl_timeout: 30`, manually patched to `90` on the live install. **This
+  is not DAHL-specific** — `KB.md`'s NIM section documents the same class
+  of problem (a retired model ID as the old default, changed in code, but
+  nothing forces an existing install to pick up the new one). No general
+  settings-migration mechanism exists for this; each future default
+  change needs either a manual on-disk patch on existing installs or a
+  deliberate decision to add one. Not built here — scope judged too large
+  for what this investigation actually needed.
+- **Timeout-triggered fallback added.** The intra-DAHL model fallback
+  (below) originally retried only on HTTP 429; the production incident
+  above showed a slow/stuck model timing out looks identical in effect
+  (no answer) and deserves the same treatment. `llm_dahl()` now retries
+  on `httpx.TimeoutException` too, splitting `dahl_timeout` unevenly
+  across attempts (each gets half of what's left, floored at 20s so no
+  attempt gets a token amount of time) rather than giving every attempt
+  the full configured timeout, which would let a chain of slow models
+  multiply total wait time past what's tolerable for one live request.
 - A character-counting reasoning loop was found in MiniMax-M2.7 under a
   **raw, unhardened** test prompt containing an exact numeric
   character-count target ("750-850 characters, hard max 850") — the

@@ -466,11 +466,13 @@ def _strip_think(text: str) -> str | None:
 async def _dahl_request(model: str, api_key: str, timeout: float,
                         prompt: str) -> tuple[str | None, bool]:
     """One DAHL chat/completions call. Returns (content, retryable) —
-    retryable is True only on HTTP 429 (model at concurrency capacity),
-    the one failure mode worth trying a different model for; any other
-    error (auth, network, malformed response) returns (None, False) so
-    the caller doesn't burn three more requests on a problem no model
-    swap will fix."""
+    retryable on HTTP 429 (model at concurrency capacity) or a client-side
+    timeout (a slow/stuck model — 2026-09-14 production incident: MiniMax
+    took long enough that a too-short timeout looked like total DAHL
+    failure when a different model would likely have answered in time,
+    see AI.md's dahl section). Any other error (auth, network, malformed
+    response) returns (None, False) so the caller doesn't burn the rest
+    of its time budget on a problem no model swap will fix."""
     payload = {
         "model": model,
         "messages": [
@@ -493,8 +495,22 @@ async def _dahl_request(model: str, api_key: str, timeout: float,
             data = r.json()
         content = (data.get("choices") or [{}])[0].get("message", {}).get("content") or ""
         return _strip_think(content), False
+    except httpx.TimeoutException:
+        return None, True
     except (httpx.HTTPError, ValueError, IndexError):
         return None, False
+
+
+# Each fallback attempt gets half of whatever budget is left, so the
+# first (usually the admin's chosen model) gets the most patience and a
+# chain of several slow/stuck models can't each eat a full-size share
+# and blow past what a user waiting on one enrichment request will
+# tolerate. This floor is the minimum worth giving any single attempt —
+# once the remaining budget drops below it, llm_dahl() stops trying more
+# models rather than firing off a request with no real chance to
+# complete (a 2-second "attempt" against a model with 40s+ typical
+# latency is theater, not a genuine retry).
+_DAHL_MIN_ATTEMPT_TIMEOUT = 20.0
 
 
 async def llm_dahl(settings: dict, prompt: str) -> tuple[str, str] | None:
@@ -508,22 +524,39 @@ async def llm_dahl(settings: dict, prompt: str) -> tuple[str, str] | None:
     full details.
 
     Tries the admin's configured model first, then falls through
-    _DAHL_MODEL_FALLBACK on a 429 (model at capacity) only — see that
-    list's comment for why the fallback order is fixed rather than
-    following DAHL's own error-body suggestion. Returns (content, model)
-    rather than bare content, unlike every other provider function here —
-    enricher.py's dispatch loop uses the returned model (not the
-    admin-configured one) when logging to ai_requests, so a fallback to a
-    different DAHL model is recorded accurately rather than misattributed
-    to whichever model the admin happened to have configured."""
+    _DAHL_MODEL_FALLBACK on a 429 (model at capacity) OR a client-side
+    timeout (a slow/stuck model) — see that list's comment for why the
+    fallback order is fixed rather than following DAHL's own error-body
+    suggestion. dahl_timeout is the TOTAL budget across every attempt,
+    not per-attempt — split unevenly (first attempt gets the largest
+    share) so trying several models can't multiply the wait a user
+    actually experiences; see _DAHL_MIN_ATTEMPT_TIMEOUT. Returns
+    (content, model) rather than bare content, unlike every other
+    provider function here — enricher.py's dispatch loop uses the
+    returned model (not the admin-configured one) when logging to
+    ai_requests, so a fallback to a different DAHL model is recorded
+    accurately rather than misattributed to whichever model the admin
+    happened to have configured."""
     api_key = settings.get("dahl_api_key")
     if not api_key:
         return None
-    timeout = float(settings.get("dahl_timeout", 90))
+    total_timeout = float(settings.get("dahl_timeout", 90))
     configured = settings.get("dahl_model") or _DAHL_MODEL_FALLBACK[0]
     order = [configured] + [m for m in _DAHL_MODEL_FALLBACK if m != configured]
+    remaining = total_timeout
     for model in order:
-        content, retryable = await _dahl_request(model, api_key, timeout, prompt)
+        # Each attempt gets half of whatever's left (so an early slow
+        # model can't eat the whole budget and starve the rest), but
+        # never less than _DAHL_MIN_ATTEMPT_TIMEOUT — an attempt that
+        # can't get a real chance isn't worth making. If the remaining
+        # budget can't even cover one floor-sized attempt, stop instead
+        # of firing off a request doomed to time out immediately.
+        if remaining < _DAHL_MIN_ATTEMPT_TIMEOUT:
+            return None
+        share = min(remaining, max(_DAHL_MIN_ATTEMPT_TIMEOUT, remaining / 2))
+        started = time.perf_counter()
+        content, retryable = await _dahl_request(model, api_key, share, prompt)
+        remaining -= (time.perf_counter() - started)
         if content is not None:
             return content, model
         if not retryable:

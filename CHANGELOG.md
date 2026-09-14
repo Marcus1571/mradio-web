@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.20.3] - 2026-09-14
+
+Fixes a real production incident: DAHL auto-hid itself hours after
+v1.20.2 shipped a `dahl_timeout` 30→90s fix, because that fix never
+actually applied. `settings.load()` merges code defaults underneath
+whatever's already saved in `settings.json` — a value saved once (while
+the old default was still live) stays saved forever, regardless of later
+default changes. Confirmed via a real `ai_requests` row
+(`elapsed_ms=30042`) and manually patched the live setting. This is not
+DAHL-specific — the same class of bug affected NIM's model default
+before — but no general fix was built this session; see `findings.md`
+for the open question about whether one is worth building.
+
+- Manually corrected the already-persisted `dahl_timeout` on the
+  production install (no code change fixes an already-saved value).
+- **Fixed a real gap in the intra-DAHL model fallback** (added in
+  v1.20.2): it only retried the next model on an HTTP 429, not on a
+  client-side timeout — exactly the failure mode that caused this
+  incident. `llm_dahl()` now retries on timeout too, splitting
+  `dahl_timeout` (the total budget) unevenly across attempts rather than
+  giving every fallback model the full configured timeout, which could
+  otherwise multiply total wait time well past what a live request
+  should tolerate.
+- Full incident writeup and the budget-splitting design in
+  `findings.md` and `AI.md`'s dahl section.
+
 ## [1.20.2] - 2026-09-14
 
 DAHL quality investigation (DeepSeek-V4-Flash, GLM-4.3-flash, Qwen3-235B

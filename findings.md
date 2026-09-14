@@ -306,3 +306,34 @@ Latency under the hardened prompt (42-58s) is meaningfully higher than the origi
 - Does creating a signed-in DAHL account (per the 429 error's own suggestion) change anonymous-key capacity treatment, or is that a separate, unrelated account tier?
 - Is the apparent `max_tokens` clamp to 4096 (seen even when 8192 was requested, in the earlier unhardened test) a real server-side limit on this model, a vLLM configuration detail, or an artifact specific to concurrency pressure? Not reproduced under the hardened prompt (all 4 runs completed well under 4096 completion tokens) — may be moot for production use.
 - Would raising `dahl_timeout` to 75-90s fully resolve the latency risk, or does MiniMax's hardened-prompt latency have a long enough tail (the original unhardened battery saw up to ~14s on some tracks, and these hardened runs ranged 42-58s) that an even higher ceiling is warranted? Worth watching real `ai_requests` data once the timeout is raised and traffic accumulates.
+
+---
+
+Date: 2026-09-14 (second follow-up — production incident)
+Scope: hours after v1.20.2 shipped the `dahl_timeout` 30→90s fix above, the operator reported DAHL auto-hid itself in production with a real enrichment failure. Investigated the actual cause.
+
+## What happened
+
+`ai_requests` showed one real production DAHL row: `elapsed_ms=30042, outcome=no_output, model=''`, timestamped hours after the v1.20.2 deploy that raised the code default to 90s. 30,042ms is unmistakably a 30-second client timeout, not 90 — meaning the fix hadn't actually taken effect for this install.
+
+**Root cause: `settings.load()` merges `_DEFAULTS` underneath whatever's already saved in `settings.json`** (`merged = dict(_DEFAULTS); merged.update(data)`). The admin had already saved the DAHL section once, back when the code default was still 30 — that write persisted `dahl_timeout: 30` to `/data/settings.json` on disk. Changing `_DEFAULTS["dahl_timeout"]` to 90 in code has zero effect on a key that's already present in the saved file; `data`'s value always wins over `_DEFAULTS`' in the merge. Confirmed directly: `docker exec mradio-web python3 -c "import json; print(json.load(open('/data/settings.json'))['dahl_timeout'])"` returned `30` even after the v1.20.2 image (with the 90 default) was live and running.
+
+**This is not new or DAHL-specific** — `KB.md`'s NIM section already documents the same class of bug: `mistralai/mistral-nemotron` replaced `minimaxai/minimax-m3` as the default model because the old one was retired by NVIDIA (`410 Gone`), but nothing in that fix would have updated an existing install's already-saved `nim`/`openai`-slot model setting either. **No general settings-migration mechanism exists in this codebase for "a default changed, please pick up the new value even though I already saved the old one."** Each occurrence so far has been handled by manually patching the affected install's `settings.json` after the fact, which doesn't scale and is easy to forget for any future default change.
+
+**Immediate fix applied**: manually patched the live `/data/settings.json` on LT, setting `dahl_timeout` to `90` directly (`docker exec mradio-web python3 -c "... s['dahl_timeout']=90; json.dump(s, open(path,'w'))"`). Confirmed the change took: subsequent read of the file shows `90`.
+
+## Second gap found: fallback only retried on 429, not on timeout
+
+While tracing this, found that `llm_dahl()`'s fallback-to-next-model logic (shipped in v1.20.2) only treated an HTTP 429 as "try the next model" — a client-side timeout (`httpx.TimeoutException`, exactly what caused this incident) fell into the same `except` branch as a genuine unretryable error (bad auth, malformed response) and gave up immediately without trying MiniMax's siblings. Given a slow/stuck model is arguably the *most* likely reason to want a different model, this was a real gap in the fallback design as shipped, not just an artifact of the stale-settings bug.
+
+**Fixed**: `_dahl_request()` now also returns `retryable=True` on `httpx.TimeoutException`. `llm_dahl()`'s loop now splits `dahl_timeout` (the *total* budget across all attempts, not per-attempt) unevenly across however many models get tried — each attempt gets half of whatever budget remains, floored at 20s (`_DAHL_MIN_ATTEMPT_TIMEOUT`), and the loop stops early (rather than firing a doomed sub-floor attempt) once the remaining budget drops below the floor. Simulated worst-case (every model times out) at both the old stale 30s and the correct 90s budgets:
+
+- At 30s total: 1 real attempt (20s share), then stops — correctly avoids splitting into unusable slivers.
+- At 90s total: 3 real attempts (45s / 22.5s / 20s shares), then stops before a 4th attempt that would only get ~2.5s — correctly recognizes that's not a real chance and doesn't bother.
+
+This was deliberately NOT built as "give every model in the list an equal, full-size timeout" — at 90s × 4 models, a worst-case chain could take up to 6 minutes before giving up, far longer than a user waiting on one live "now playing" enrichment request would tolerate. The uneven split keeps total wall-clock time bounded by the configured total, not multiplied by the fallback list's length.
+
+## Integration implications
+
+- **Any future default-value change to an existing settings.json key needs its own explicit on-disk patch on every install that already saved that section**, or a real migration mechanism needs to be built. Neither this investigation nor the NIM precedent before it built the general mechanism — both were handled as one-off manual patches. Worth a deliberate decision (not made in this session) about whether that's an acceptable standing pattern or whether `settings.py` needs a `_MIGRATIONS`-style hook (parallel to `db.py`'s `_ensure_column` for schema changes) that runs once per changed default and updates already-persisted values that still match the *old* default exactly (to avoid clobbering a deliberate admin customization that happens to equal the old default by coincidence — a real edge case worth thinking through if this gets built).
+- The timeout-fallback fix (above) should reduce, but not eliminate, DAHL auto-hide events caused by pure latency — a genuinely slow response to the *last* model tried within budget will still fail the overall request, same as any provider. This is expected: DAHL's free tier remains capacity-constrained and MiniMax remains slow; the fix makes the system try harder within a bounded time, not guarantee success.

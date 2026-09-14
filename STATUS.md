@@ -23,6 +23,23 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.20.3 tagged, released, and deployed to LT 2026-09-14.** Fixed a
+  real production incident, reported by the operator: DAHL auto-hid
+  itself hours after v1.20.2's `dahl_timeout` 30→90s fix, because
+  `settings.load()` merges code defaults *underneath* whatever's already
+  saved in `settings.json` — the admin's already-persisted `30` value
+  never picked up the new code default. Confirmed via a real
+  `ai_requests` row (`elapsed_ms=30042`), manually patched the live
+  install's setting to 90. **This is a general, recurring gap, not
+  DAHL-specific** — `KB.md`'s NIM model-default fix hit the same class of
+  problem before — and no systemic migration mechanism was built this
+  session; see `findings.md` for the open design question. Also fixed a
+  real bug in the fallback logic added the same day: it only retried on
+  HTTP 429, not on the timeout that actually caused this incident — now
+  retries on both, splitting the total timeout budget unevenly across
+  attempts (never giving a fallback model an unrealistically short
+  sliver, and never letting several slow models multiply the total wait
+  past what a live request should tolerate).
 - **v1.20.2 tagged, released, and deployed to LT 2026-09-14.** Attempted
   DeepSeek-V4-Flash/GLM-4.3-flash/Qwen3-235B quality testing per the
   operator's request — all three were unreachable (HTTP 429
