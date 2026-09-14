@@ -225,11 +225,14 @@ write/OAuth path, irrelevant here); Spotify's search works via the
 Client Credentials flow, confirmed exempt from the 5-user cap since it
 establishes no user identity. The existing track-matching pipeline built
 for the shelved star feature (`spotify.py`'s `find_best_track()` and
-friends) is directly reusable. Research-only — see `findings.md`'s
-2026-09-14 "search-only music-service links" entry for the full
-investigation, live API verification, and open questions (a working
-Spotify Client ID/Secret pair still needs sourcing — the one saved on
-this install returned `invalid_client` in a live test).
+friends) is directly reusable. **A working Spotify Client ID/Secret pair
+is now saved in production `settings.json`** — the previously-stale pair
+was replaced and live-verified (real token exchange + real search
+results) the same session. Research-only, no code written yet — see
+`findings.md`'s 2026-09-14 "search-only music-service links" entry for
+the full investigation, live API verification, and remaining open
+questions (match-confidence threshold, caching strategy, Deezer query
+syntax).
 
 ## Local development
 
