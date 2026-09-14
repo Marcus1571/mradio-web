@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.20.1] - 2026-09-14
+
+Bug fix: DAHL's API key couldn't be saved and Test always failed with
+"Could not reach the server to run the test." Root cause: v1.20.0 wired
+DAHL into `providers.py`/`settings.py`/`enricher.py`/`textutil.py`, but
+missed the two files that actually expose the admin-facing API —
+`AISettingsUpdate` (`models.py`) had no `dahl_*` fields, so FastAPI
+silently dropped them from every PATCH body before saving; and the
+`/api/settings/ai/test` route's `Literal[...]` provider list didn't
+include `"dahl"`, so FastAPI rejected the request with a 422 before it
+reached the test logic, which the frontend's generic error handler
+rendered as a network-reachability error rather than a validation one.
+Also fixes a display bug where DAHL-generated trivia would render an
+undefined provider label in the now-playing trivia history strip.
+
+- `models.py`: add `dahl_api_key`/`dahl_model`/`dahl_timeout`/
+  `dahl_manually_enabled` to `AISettingsUpdate`.
+- `routers/settings.py`: add `"dahl"` to the test endpoint's `Literal`.
+- `NowPlayingPanel.tsx`: add `dahl: 'DAHL'` to `_PROVIDER_LABEL`.
+
 ## [1.20.0] - 2026-09-14
 
 Adds DAHL as a new AI provider (research-only status): a free,

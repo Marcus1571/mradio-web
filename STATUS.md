@@ -23,6 +23,24 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.20.1 tagged, released, and deployed to LT 2026-09-14.** Fixes two
+  real bugs the v1.20.0 cleanup missed, reported by the operator from the
+  live AI providers page: the DAHL API key silently failed to save, and
+  Test always returned "Could not reach the server." Root cause: DAHL was
+  wired into `providers.py`/`settings.py`/`enricher.py`/`textutil.py` but
+  never added to `AISettingsUpdate` (`models.py`) or the test endpoint's
+  provider `Literal` (`routers/settings.py`) — the two files that
+  actually define the admin-facing `/api/settings/ai` API. FastAPI
+  silently dropped unknown PATCH fields (explaining the save failure) and
+  rejected the test request with a 422 before it ever reached
+  `run_provider_test()` (explaining the misleading "could not reach"
+  message — a validation failure, not a network one). Also fixes an
+  undefined provider label for DAHL-generated trivia in the now-playing
+  history strip (`NowPlayingPanel.tsx`'s `_PROVIDER_LABEL` map).
+  Audited every other provider-enumeration point (`PROVIDERS`,
+  `ADMIN_ONLY_PROVIDERS`, `AUTO_HIDE_PROVIDERS`, `_CATEGORICAL_PROVIDERS`,
+  frontend `Provider`/`ProviderInfo` types, hooks, CSS) for the same
+  missed-file pattern — no further gaps found.
 - **v1.20.0 tagged, released, and deployed to LT 2026-09-14.** Adds DAHL as
   a new AI provider (research-only, non-admin-only, free key). Cleaned up
   after a prior session's in-progress attempt at this same work left a

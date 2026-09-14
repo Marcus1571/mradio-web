@@ -89,6 +89,10 @@ class AISettingsUpdate(BaseModel):
     mistral_model: str | None = None
     mistral_timeout: int | None = None
     mistral_manually_enabled: bool | None = None
+    dahl_api_key: str | None = None
+    dahl_model: str | None = None
+    dahl_timeout: int | None = None
+    dahl_manually_enabled: bool | None = None
     spotify_client_id: str | None = None
     spotify_client_secret: str | None = None
     deezer_app_id: str | None = None

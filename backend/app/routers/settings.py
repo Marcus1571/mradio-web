@@ -38,7 +38,7 @@ async def update_ai_settings(body: AISettingsUpdate, admin: dict = Depends(requi
 
 @router.post("/ai/test", response_model=AITestResult)
 async def test_ai_provider(
-    provider: Literal["ollama", "openai", "opencode", "grok", "gemini", "openrouter", "mistral"],
+    provider: Literal["ollama", "openai", "opencode", "grok", "gemini", "openrouter", "mistral", "dahl"],
     overrides: AISettingsUpdate,
     admin: dict = Depends(require_admin),
 ) -> AITestResult:

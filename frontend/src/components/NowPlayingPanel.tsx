@@ -32,6 +32,7 @@ const _PROVIDER_LABEL: Record<string, string> = {
   gemini: 'Gemini',
   openrouter: 'OpenRouter',
   mistral: 'Mistral',
+  dahl: 'DAHL',
 }
 
 function TriviaHistoryStrip({ version, t }: { version: number; t: TFunction }) {
