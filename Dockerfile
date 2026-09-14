@@ -28,7 +28,7 @@ RUN npm install --global opencode-ai@${OPENCODE_VERSION}
 # package name needed. Version pinned for the same reproducibility
 # reason as opencode above.
 FROM node:22-slim AS codex-build
-ARG CODEX_VERSION=0.153.4
+ARG CODEX_VERSION=0.154.0
 RUN npm install --global @openai/codex@${CODEX_VERSION}
 
 FROM python:3.11-slim AS backend
