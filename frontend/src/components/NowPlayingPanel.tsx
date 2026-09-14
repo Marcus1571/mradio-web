@@ -3,12 +3,13 @@ import { api } from '../api/client'
 import type { MusicService, Station, TriviaHistoryEntry } from '../api/types'
 import type { TFunction } from '../i18n'
 import type { PlayerState } from '../hooks/usePlayer'
-import { useDeezer } from '../hooks/useDeezer'
+import { useMusicLink } from '../hooks/useMusicLink'
 import { useMusicService } from '../hooks/useMusicService'
 import { useProviders } from '../hooks/useProviders'
-import { useSpotify } from '../hooks/useSpotify'
 import { useStationLogo } from '../hooks/useStationLogo'
 import { formatCache, formatElapsed, formatKHz, formatKbps } from '../utils/format'
+import type { ComponentType } from 'react'
+import type { IconProps } from './Icons'
 import {
   ChevronDownIcon,
   DeezerIcon,
@@ -18,7 +19,6 @@ import {
   RefreshIcon,
   SparkleIcon,
   SpotifyIcon,
-  StarIcon,
   StopIcon,
   VolumeIcon,
 } from './Icons'
@@ -33,6 +33,13 @@ const _PROVIDER_LABEL: Record<string, string> = {
   openrouter: 'OpenRouter',
   mistral: 'Mistral',
   dahl: 'DAHL',
+}
+
+// One entry per MusicService member — adding a service later is "add a
+// union member + one map entry" instead of a growing if/else chain.
+const SERVICE_ICON: Record<MusicService, ComponentType<IconProps>> = {
+  spotify: SpotifyIcon,
+  deezer: DeezerIcon,
 }
 
 function TriviaHistoryStrip({ version, t }: { version: number; t: TFunction }) {
@@ -117,9 +124,8 @@ export function NowPlayingPanel({
   t: TFunction
 }) {
   const { providers, active, activate } = useProviders()
-  const spotify = useSpotify(state.rawTitle)
-  const deezer = useDeezer(state.rawTitle)
   const musicService = useMusicService()
+  const musicLinkUrl = useMusicLink(state.rawTitle, musicService.service)
   const [providerOpen, setProviderOpen] = useState(false)
   const [serviceOpen, setServiceOpen] = useState(false)
   const [triviaExpanded, setTriviaExpanded] = useState(true)
@@ -144,34 +150,8 @@ export function NowPlayingPanel({
     return () => document.removeEventListener('mousedown', onClick)
   }, [serviceOpen])
 
-  // Both playlist services are dead ends for this project right now: Spotify
-  // caps Development Mode apps at 5 allowlisted users (Feb 2026 policy, no
-  // path past it without a 250k-MAU business), and Deezer has closed new
-  // developer app registration with no reopening date. Force-disabled here
-  // regardless of server config until either changes. See STATUS.md/findings.md.
-  const configuredServices = {
-    spotify: false,
-    deezer: false,
-  }
-
-  useEffect(() => {
-    if (musicService.loading) return
-    if (!configuredServices.spotify && configuredServices.deezer && musicService.service !== 'deezer') {
-      void musicService.setMusicService('deezer')
-    } else if (!configuredServices.deezer && configuredServices.spotify && musicService.service !== 'spotify') {
-      void musicService.setMusicService('spotify')
-    }
-    // We only care about the individual properties, not the whole hook object.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [configuredServices.deezer, configuredServices.spotify, musicService.loading, musicService.service, musicService.setMusicService])
-
-  const effectiveService: MusicService =
-    !configuredServices.spotify && configuredServices.deezer
-      ? 'deezer'
-      : !configuredServices.deezer && configuredServices.spotify
-        ? 'spotify'
-        : musicService.service
-  const serviceState = effectiveService === 'spotify' ? spotify : deezer
+  const effectiveService: MusicService = musicService.service
+  const ServiceIcon = SERVICE_ICON[effectiveService]
   const serviceLabel = effectiveService === 'spotify' ? 'Spotify' : 'Deezer'
 
   const hasStation = state.station !== null
@@ -224,37 +204,21 @@ export function NowPlayingPanel({
             {state.artist && <p className="np-composer">{state.artist}</p>}
             <div className="np-track-row">
               <h1 className="np-track">{state.title || state.rawTitle}</h1>
-              {(configuredServices.spotify || configuredServices.deezer) && (
-                <button
-                  className={`icon-btn music-service-star ${serviceState.inPlaylist ? 'active' : ''} ${serviceState.toggling || serviceState.loading ? 'busy' : ''}`}
-                  type="button"
-                  onClick={() => void serviceState.toggle()}
-                  disabled={serviceState.toggling || serviceState.loading}
-                  aria-label={
-                    effectiveService === 'spotify'
-                      ? serviceState.inPlaylist
-                        ? t('nowPlaying.removeFromSpotify')
-                        : t('nowPlaying.addToSpotify')
-                      : serviceState.inPlaylist
-                        ? t('nowPlaying.removeFromDeezer')
-                        : t('nowPlaying.addToDeezer')
-                  }
-                  title={
-                    serviceState.connected
-                      ? effectiveService === 'spotify'
-                        ? serviceState.inPlaylist
-                          ? t('nowPlaying.removeFromSpotify')
-                          : t('nowPlaying.addToSpotify')
-                        : serviceState.inPlaylist
-                          ? t('nowPlaying.removeFromDeezer')
-                          : t('nowPlaying.addToDeezer')
-                      : effectiveService === 'spotify'
-                        ? t('nowPlaying.connectSpotify')
-                        : t('nowPlaying.connectDeezer')
-                  }
+              {musicLinkUrl ? (
+                <a
+                  className="icon-btn music-service-link"
+                  href={musicLinkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={t('nowPlaying.openOnService', { service: serviceLabel })}
+                  title={t('nowPlaying.openOnService', { service: serviceLabel })}
                 >
-                  <StarIcon filled={serviceState.inPlaylist} />
-                </button>
+                  <ServiceIcon />
+                </a>
+              ) : (
+                <span className="icon-btn music-service-link music-service-link--unresolved" aria-hidden="true">
+                  <ServiceIcon />
+                </span>
               )}
             </div>
             {state.performer && <p className="np-performer">{state.performer}</p>}
@@ -374,42 +338,40 @@ export function NowPlayingPanel({
           )}
         </div>
 
-        {configuredServices.spotify && configuredServices.deezer && (
-          <div className="dropdown-picker" ref={serviceRef}>
-            <button className="dropdown-chip" type="button" onClick={() => setServiceOpen((v) => !v)}>
-              {t('nowPlaying.musicService')} · <b>{serviceLabel}</b>
-              <ChevronDownIcon />
-            </button>
-            {serviceOpen && (
-              <div className="dropdown-menu dropdown-menu--up">
-                <button
-                  className={`dropdown-option ${effectiveService === 'spotify' ? 'active' : ''}`}
-                  type="button"
-                  onClick={() => {
-                    void musicService.setMusicService('spotify')
-                    setServiceOpen(false)
-                  }}
-                >
-                  <span className="dropdown-option-icon">
-                    <SpotifyIcon /> Spotify
-                  </span>
-                </button>
-                <button
-                  className={`dropdown-option ${effectiveService === 'deezer' ? 'active' : ''}`}
-                  type="button"
-                  onClick={() => {
-                    void musicService.setMusicService('deezer')
-                    setServiceOpen(false)
-                  }}
-                >
-                  <span className="dropdown-option-icon">
-                    <DeezerIcon /> Deezer
-                  </span>
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+        <div className="dropdown-picker" ref={serviceRef}>
+          <button className="dropdown-chip" type="button" onClick={() => setServiceOpen((v) => !v)}>
+            {t('nowPlaying.musicService')} · <b>{serviceLabel}</b>
+            <ChevronDownIcon />
+          </button>
+          {serviceOpen && (
+            <div className="dropdown-menu dropdown-menu--up">
+              <button
+                className={`dropdown-option ${effectiveService === 'spotify' ? 'active' : ''}`}
+                type="button"
+                onClick={() => {
+                  void musicService.setMusicService('spotify')
+                  setServiceOpen(false)
+                }}
+              >
+                <span className="dropdown-option-icon">
+                  <SpotifyIcon /> Spotify
+                </span>
+              </button>
+              <button
+                className={`dropdown-option ${effectiveService === 'deezer' ? 'active' : ''}`}
+                type="button"
+                onClick={() => {
+                  void musicService.setMusicService('deezer')
+                  setServiceOpen(false)
+                }}
+              >
+                <span className="dropdown-option-icon">
+                  <DeezerIcon /> Deezer
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <TriviaHistoryStrip version={state.triviaHistoryVersion} t={t} />

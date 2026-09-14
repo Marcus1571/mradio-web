@@ -278,12 +278,7 @@ const en = {
     musicService: 'Music service',
     none: 'none',
     historyTitle: 'Recently played',
-    addToSpotify: 'Add to Spotify playlist',
-    removeFromSpotify: 'Remove from Spotify playlist',
-    connectSpotify: 'Connect Spotify to save tracks',
-    addToDeezer: 'Add to Deezer playlist',
-    removeFromDeezer: 'Remove from Deezer playlist',
-    connectDeezer: 'Connect Deezer to save tracks',
+    openOnService: 'Open on {service}',
   },
   analytics: {
     title: 'Analytics',

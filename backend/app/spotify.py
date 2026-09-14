@@ -143,6 +143,60 @@ async def refresh_access_token(refresh_token: str) -> dict[str, Any] | None:
     )
 
 
+# App-level auth (Client Credentials) — for read-only catalog search on
+# behalf of no particular user, e.g. the music-link feature. Deliberately
+# NOT routed through _token_request(): that helper requires _redirect_uri()
+# to be set, which is an authorization-code-flow requirement (redirect_uri
+# is only meaningful when a user is being sent through Spotify's consent
+# screen) and has no bearing on Client Credentials. An install with Spotify
+# client id/secret configured but no MRADIO_SPOTIFY_REDIRECT_URI env var set
+# (a real possible state — the redirect URI is only needed for the OAuth
+# star-feature flow, which may never have been set up) would otherwise fail
+# here for no real reason. Confirmed live 2026-09-14: this grant works with
+# real credentials and returns a token that Spotify's /search endpoint
+# accepts with no user context at all — see findings.md's "search-only
+# music-service links" entry.
+_app_token: str | None = None
+_app_token_expires_at: float = 0.0
+
+
+async def get_app_token() -> str | None:
+    """Returns a cached Client Credentials access token, refreshing it once
+    it's within 60s of expiry. Not user-scoped — safe to share across every
+    request, unlike the per-user OAuth tokens elsewhere in this file."""
+    global _app_token, _app_token_expires_at
+    if _app_token and time.time() < _app_token_expires_at - 60:
+        return _app_token
+    creds = _client_creds()
+    if not creds:
+        return None
+    cid, secret = creds
+    auth = base64.b64encode(f"{cid}:{secret}".encode()).decode()
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            r = await client.post(
+                f"{SPOTIFY_ACCOUNTS}/api/token",
+                data={"grant_type": "client_credentials"},
+                headers={"Authorization": f"Basic {auth}"},
+            )
+    except httpx.HTTPError:
+        logger.warning("spotify client_credentials request failed", exc_info=True)
+        return None
+    if r.status_code != 200:
+        logger.warning(
+            "spotify client_credentials endpoint returned %s: %s",
+            r.status_code, r.text[:500],
+        )
+        return None
+    data = r.json()
+    token = data.get("access_token")
+    if not token:
+        return None
+    _app_token = token
+    _app_token_expires_at = time.time() + float(data.get("expires_in", 3600))
+    return _app_token
+
+
 # ---------------------------------------------------------------------------
 # Token storage
 # ---------------------------------------------------------------------------
@@ -386,8 +440,17 @@ async def fetch_playlist_tracks(
 
 
 async def search_tracks(
-    access_token: str, query: str, market: str, limit: int = 20
+    access_token: str, query: str, market: str, limit: int = 10
 ) -> list[dict[str, Any]]:
+    # limit=10 is Spotify's current hard cap on /search (a 2026 API change,
+    # confirmed live 2026-09-14 — anything above 10 returns a 400 "Invalid
+    # limit" and search_tracks() used to silently swallow that into an
+    # empty list via the status-code check below, making find_best_track()
+    # non-functional with no visible error. The old default here was 20,
+    # inherited from before the cap existed; this bug predates the
+    # search-only music-link feature and would have affected the OAuth
+    # star feature identically if it were ever re-enabled.
+    limit = min(limit, 10)
     params: dict[str, Any] = {"q": query, "type": "track", "limit": limit}
     if market:
         params["market"] = market

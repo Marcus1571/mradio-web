@@ -55,6 +55,10 @@ export interface Config {
 
 export type MusicService = 'spotify' | 'deezer'
 
+export interface MusicLinkResponse {
+  url: string | null
+}
+
 export interface ProviderInfo {
   name: 'opencode' | 'openai' | 'ollama' | 'codex' | 'grok' | 'gemini' | 'openrouter' | 'mistral' | 'dahl'
   enabled: boolean

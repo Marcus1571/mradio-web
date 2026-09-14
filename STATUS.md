@@ -23,6 +23,26 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.21.0 tagged, released, and deployed to LT 2026-09-14.** Ships the
+  search-only music-service link feature investigated and designed
+  earlier the same day (see "Grand project: multi-service playlist
+  export" below) — replaces the dead OAuth star button with a read-only
+  link to the current track's page on the listener's active service
+  (Spotify/Deezer), no OAuth, no write, no per-user connection state.
+  Full design writeup in `findings.md`'s "search-only music-service
+  links" entry. **Two real, previously-dormant bugs were found and fixed
+  during live verification**, both pre-existing in the original star
+  feature's code and invisible until this feature actually exercised
+  unauthenticated/high-limit search calls in production: Spotify's
+  `search_tracks()` used a `limit=20` default against an API that now
+  hard-caps at 10 (silently returned zero results, not an error);
+  Deezer's `_api()` always sent an empty `access_token` query param,
+  which Deezer's API treats differently from an *omitted* one (a
+  200-status error body that also looked like "zero results"). Both
+  fixed and live-verified with real matches on both services before
+  deploying. `useSpotify.ts`/`useDeezer.ts` and the dead
+  `configuredServices` UI gate are removed; the OAuth backend routes and
+  DB tables are left untouched and dormant, not deleted.
 - **v1.20.3 tagged, released, and deployed to LT 2026-09-14.** Fixed a
   real production incident, reported by the operator: DAHL auto-hid
   itself hours after v1.20.2's `dahl_timeout` 30→90s fix, because

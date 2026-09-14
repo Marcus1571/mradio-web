@@ -273,19 +273,10 @@ const ja: Dict = {
     unmute: 'ミュート解除',
     volume: '音量',
     aiProvider: 'AIプロバイダー',
-    none: 'なし',
-    historyTitle: 'Recently played',
-    addToSpotify: 'Add to Spotify playlist',
-    removeFromSpotify: 'Remove from Spotify playlist',
-    connectSpotify: 'Connect Spotify to save tracks',
-
     musicService: 'Music service',
-
-    addToDeezer: 'Add to Deezer playlist',
-
-    removeFromDeezer: 'Remove from Deezer playlist',
-
-    connectDeezer: 'Connect Deezer to save tracks',
+    historyTitle: 'Recently played',
+    openOnService: 'Open on {service}',
+    none: 'なし',
   },
   analytics: {
     title: '統計',

@@ -278,19 +278,10 @@ const el: Dict = {
     unmute: 'Κατάργηση σίγασης',
     volume: 'Ένταση',
     aiProvider: 'Πάροχος AI',
-    none: 'κανένας',
-    historyTitle: 'Recently played',
-    addToSpotify: 'Add to Spotify playlist',
-    removeFromSpotify: 'Remove from Spotify playlist',
-    connectSpotify: 'Connect Spotify to save tracks',
-
     musicService: 'Music service',
-
-    addToDeezer: 'Add to Deezer playlist',
-
-    removeFromDeezer: 'Remove from Deezer playlist',
-
-    connectDeezer: 'Connect Deezer to save tracks',
+    historyTitle: 'Recently played',
+    openOnService: 'Open on {service}',
+    none: 'κανένας',
   },
   analytics: {
     title: 'Αναλυτικά στοιχεία',

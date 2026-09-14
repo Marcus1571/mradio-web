@@ -278,19 +278,10 @@ const ru: Dict = {
     unmute: 'Включить звук',
     volume: 'Громкость',
     aiProvider: 'Провайдер ИИ',
-    none: 'нет',
-    historyTitle: 'Recently played',
-    addToSpotify: 'Add to Spotify playlist',
-    removeFromSpotify: 'Remove from Spotify playlist',
-    connectSpotify: 'Connect Spotify to save tracks',
-
     musicService: 'Music service',
-
-    addToDeezer: 'Add to Deezer playlist',
-
-    removeFromDeezer: 'Remove from Deezer playlist',
-
-    connectDeezer: 'Connect Deezer to save tracks',
+    historyTitle: 'Recently played',
+    openOnService: 'Open on {service}',
+    none: 'нет',
   },
   analytics: {
     title: 'Аналитика',

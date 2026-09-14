@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.21.0] - 2026-09-14
+
+Replaces the dead-end OAuth playlist-write star button with a read-only
+music-service link: search the current track against whichever service
+(Spotify or Deezer) the listener has picked as active, and show a
+greyed-out (unresolved) or full-color (matched) service icon in the
+track row that opens the track's public page in a new tab. No OAuth, no
+playlist write, no per-user connection state — the listener does any
+"add"/"heart" themselves in their own already-logged-in service session.
+Sidesteps both blockers that killed the old feature (Spotify's 5-user
+Development Mode cap, Deezer's closed developer-app registration) since
+neither applies to read-only catalog search.
+
+- New `GET /api/music-link?raw_title=...` endpoint (`routers/music_link.py`),
+  resolves the active service server-side from the listener's own config
+  (not a client-supplied param), dispatches to the existing
+  `find_best_track()` matching pipeline in `spotify.py`/`deezer.py`,
+  caches results (including misses) in a new shared
+  `music_link_cache.py`.
+- `spotify.py`: new `get_app_token()` — Client Credentials grant (app-level
+  auth, no user login), confirmed live exempt from the Development Mode
+  5-user cap. Live-verified end to end with real credentials.
+- **Two real pre-existing bugs found and fixed while verifying this
+  feature**, both dormant since the original star feature never exercised
+  these exact code paths in production:
+  - `spotify.py`'s `search_tracks()` defaulted to `limit=20`; Spotify's
+    `/search` now hard-caps at 10 (a 2026 API change) and silently
+    returned zero results for any larger request. Now clamped to 10.
+  - `deezer.py`'s `_api()` always sent `access_token=""` in the query
+    string for unauthenticated calls; Deezer's API accepts a *missing*
+    token param but rejects a *present-but-empty* one with a 200-status
+    error body that looked like "no results" to any caller checking only
+    the status code. Now omitted entirely when there's no real token.
+- Deletes `useSpotify.ts`/`useDeezer.ts` (OAuth-connect/toggle/mirror
+  hooks, ~90% irrelevant to a read-only lookup) and the dead
+  `configuredServices` UI gate; the existing "Music service" dropdown
+  (unchanged styling/position) now always renders and drives the new
+  lookup instead of the old star toggle.
+- The OAuth backend (`routers/spotify.py`/`deezer.py`'s connect/status/
+  toggle endpoints, the DB playlist-mirror tables) is untouched and
+  dormant, not removed — out of scope for this change.
+
 ## [1.20.3] - 2026-09-14
 
 Fixes a real production incident: DAHL auto-hid itself hours after

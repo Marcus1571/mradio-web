@@ -471,20 +471,16 @@
   min-width: 0;
 }
 
-.music-service-star,
-.spotify-star {
-  color: var(--ink-3);
+.music-service-link {
+  color: var(--accent);
   flex-shrink: 0;
 }
 
-.music-service-star.active,
-.spotify-star.active {
-  color: var(--accent);
-}
-
-.music-service-star.busy,
-.spotify-star.busy {
-  opacity: 0.6;
+.music-service-link--unresolved {
+  color: var(--ink-3);
+  opacity: 0.35;
+  filter: grayscale(1);
+  cursor: default;
 }
 
 .dropdown-option-icon {

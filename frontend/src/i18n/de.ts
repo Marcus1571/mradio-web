@@ -278,19 +278,10 @@ const de: Dict = {
     unmute: 'Ton an',
     volume: 'Lautstärke',
     aiProvider: 'KI-Anbieter',
-    none: 'keiner',
-    historyTitle: 'Recently played',
-    addToSpotify: 'Add to Spotify playlist',
-    removeFromSpotify: 'Remove from Spotify playlist',
-    connectSpotify: 'Connect Spotify to save tracks',
-
     musicService: 'Music service',
-
-    addToDeezer: 'Add to Deezer playlist',
-
-    removeFromDeezer: 'Remove from Deezer playlist',
-
-    connectDeezer: 'Connect Deezer to save tracks',
+    historyTitle: 'Recently played',
+    openOnService: 'Open on {service}',
+    none: 'keiner',
   },
   analytics: {
     title: 'Analysen',

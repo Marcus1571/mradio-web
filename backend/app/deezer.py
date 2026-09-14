@@ -253,7 +253,17 @@ async def _api(
     params: dict[str, Any] | None = None,
 ) -> httpx.Response:
     params = dict(params or {})
-    params["access_token"] = access_token
+    # Deezer's public catalog endpoints (search, /track, /album, etc.) work
+    # with no access_token param at all, but reject a PRESENT-but-empty one
+    # with a 200-status "Invalid OAuth access token" error body — confirmed
+    # live 2026-09-14 via a bare curl and again through this function.
+    # find_best_track() is called with access_token="" for the search-only
+    # music-link feature (no OAuth involved), so this must be omitted, not
+    # just passed through, or every one of those calls silently 200s into
+    # an error body that looks like "zero results" to callers checking only
+    # the status code.
+    if access_token:
+        params["access_token"] = access_token
     async with httpx.AsyncClient(timeout=30) as client:
         return await client.request(method, f"{DEEZER_API}{path}", params=params)
 

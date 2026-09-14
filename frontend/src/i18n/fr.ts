@@ -278,19 +278,10 @@ const fr: Dict = {
     unmute: 'Activer le son',
     volume: 'Volume',
     aiProvider: "Fournisseur d'IA",
-    none: 'aucun',
-    historyTitle: 'Recently played',
-    addToSpotify: 'Add to Spotify playlist',
-    removeFromSpotify: 'Remove from Spotify playlist',
-    connectSpotify: 'Connect Spotify to save tracks',
-
     musicService: 'Music service',
-
-    addToDeezer: 'Add to Deezer playlist',
-
-    removeFromDeezer: 'Remove from Deezer playlist',
-
-    connectDeezer: 'Connect Deezer to save tracks',
+    historyTitle: 'Recently played',
+    openOnService: 'Open on {service}',
+    none: 'aucun',
   },
   analytics: {
     title: 'Analyses',
