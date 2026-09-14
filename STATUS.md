@@ -213,6 +213,24 @@ track into a playlist on the music service of their choice.
 
 See `findings.md` for the full investigation.
 
+**Search-only alternative investigated 2026-09-14, not yet built.** The
+operator proposed sidestepping both blockers above entirely: instead of
+writing to a playlist, search the currently-playing track against
+Spotify/Deezer and show a colored (vs. greyed-out) service logo that
+deep-links to the track's page — no playlist write, no per-user OAuth,
+user does any "add"/"like" themselves in their own already-authenticated
+session. Confirmed viable: Deezer's catalog search needs zero credentials
+at all (its closed developer-portal registration only blocks the
+write/OAuth path, irrelevant here); Spotify's search works via the
+Client Credentials flow, confirmed exempt from the 5-user cap since it
+establishes no user identity. The existing track-matching pipeline built
+for the shelved star feature (`spotify.py`'s `find_best_track()` and
+friends) is directly reusable. Research-only — see `findings.md`'s
+2026-09-14 "search-only music-service links" entry for the full
+investigation, live API verification, and open questions (a working
+Spotify Client ID/Secret pair still needs sourcing — the one saved on
+this install returned `invalid_client` in a live test).
+
 ## Local development
 
 Confirmed working in-session (not theoretical) — this exact setup is how
