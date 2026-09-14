@@ -23,6 +23,15 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.21.3 tagged, released, and deployed to LT 2026-09-14.** The
+  music-service dropdown now defaults to **None**, not Spotify — a
+  fresh account (or one that's never touched the dropdown) previously
+  behaved as if Spotify were silently chosen. `MusicService | null`
+  threaded through `useMusicService`/`useMusicLink`/
+  `NowPlayingPanel.tsx`; `routers/music_link.py` no longer defaults an
+  unset service to `"spotify"`, returning `{"url": null}` immediately
+  instead. Existing accounts with an already-saved preference are
+  unaffected.
 - **v1.21.2 tagged, released, and deployed to LT 2026-09-14.** Fixed a
   real bug the operator reported: after switching to Deezer, clicking
   the (correctly Deezer-colored) music-service icon opened a stale

@@ -150,9 +150,9 @@ export function NowPlayingPanel({
     return () => document.removeEventListener('mousedown', onClick)
   }, [serviceOpen])
 
-  const effectiveService: MusicService = musicService.service
-  const ServiceIcon = SERVICE_ICON[effectiveService]
-  const serviceLabel = effectiveService === 'spotify' ? 'Spotify' : 'Deezer'
+  const effectiveService: MusicService | null = musicService.service
+  const ServiceIcon = effectiveService ? SERVICE_ICON[effectiveService] : null
+  const serviceLabel = effectiveService === 'spotify' ? 'Spotify' : effectiveService === 'deezer' ? 'Deezer' : t('nowPlaying.none')
 
   const hasStation = state.station !== null
   const hasTrack = state.rawTitle !== ''
@@ -204,7 +204,7 @@ export function NowPlayingPanel({
             {state.artist && <p className="np-composer">{state.artist}</p>}
             <div className="np-track-row">
               <h1 className="np-track">{state.title || state.rawTitle}</h1>
-              {musicLinkUrl ? (
+              {ServiceIcon && (musicLinkUrl ? (
                 <a
                   className="icon-btn music-service-link"
                   href={musicLinkUrl}
@@ -219,7 +219,7 @@ export function NowPlayingPanel({
                 <span className="icon-btn music-service-link music-service-link--unresolved" aria-hidden="true">
                   <ServiceIcon />
                 </span>
-              )}
+              ))}
             </div>
             {state.performer && <p className="np-performer">{state.performer}</p>}
 

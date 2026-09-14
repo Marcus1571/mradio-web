@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.21.3] - 2026-09-14
+
+The music-service dropdown now defaults to **None**, not Spotify.
+Previously a brand-new account (or any account that had never touched
+the dropdown) silently behaved as if Spotify were chosen — the icon
+would try to resolve against Spotify without the listener ever picking
+it. Now the icon area shows nothing at all until a service is
+explicitly selected; the dropdown's chip label reads "None" in that
+state. Once picked, the choice persists server-side exactly as before
+(the existing `music_service` config field, unchanged) and follows the
+account across devices.
+
+- `MusicService | null` throughout the frontend (`useMusicService`,
+  `useMusicLink`, `NowPlayingPanel.tsx`) — `null` means "no service
+  chosen," not an error state.
+- `routers/music_link.py` no longer silently defaults an unset service
+  to `"spotify"` — with no service configured, it returns `{"url":
+  null}` immediately, matching the frontend's own choice to skip the
+  lookup request entirely rather than guessing a service.
+- Existing accounts that already have a saved `spotify`/`deezer`
+  preference are unaffected — this only changes the *default* for
+  accounts that have never set one.
+
 ## [1.21.2] - 2026-09-14
 
 Fixes a real bug the operator reported: switching to Deezer, then

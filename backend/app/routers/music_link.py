@@ -7,8 +7,6 @@ from ..userdata import load_cfg
 
 router = APIRouter(prefix="/api/music-link", tags=["music-link"])
 
-_DEFAULT_SERVICE = "spotify"
-
 
 @router.get("")
 async def get_music_link(
@@ -44,9 +42,14 @@ async def get_music_link(
         return {"url": None}
 
     cfg = await load_cfg(user["id"])
-    service = cfg.get("music_service") or _DEFAULT_SERVICE
+    service = cfg.get("music_service")
+    # No silent default to "spotify" here — a user who hasn't picked a
+    # service yet (or explicitly has none set) gets no lookup at all,
+    # matching the frontend's own useMusicLink() behavior of skipping the
+    # request entirely when no service is active. There's nothing to
+    # search against without a chosen service.
     if service not in ("spotify", "deezer"):
-        service = _DEFAULT_SERVICE
+        return {"url": None}
 
     cached = await music_link_cache.get_cached(service, raw_title)
     if cached is not None:

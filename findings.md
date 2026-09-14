@@ -403,3 +403,43 @@ The existing Spotify/Deezer music-link feature fires a lookup on every track cha
 ## Recommendation
 
 **Do not build this now.** Two separate problems would need solving, not one: (1) a genuinely reliable matching layer without the structured metadata Spotify/Deezer provide, and (2) protecting SearXNG's shared, rate-limited upstream engines from a production traffic pattern this session's own light testing already exhausted. Revisit only if either: SearXNG's engine configuration is hardened against this (dedicated API keys for Google CSE with a real quota, disabling engines prone to CAPTCHA-blocking a shared instance), or the operator decides the $99/year Apple Developer fee is worth paying for the real, structured, reliable Apple Music Search API instead.
+
+---
+
+Date: 2026-09-14 (follow-up — a better free option found: the iTunes Search API)
+Scope: the operator asked (1) whether any other free search engine could help with Apple Music, and (2) whether anyone else has solved this same problem. Both questions point to the same answer, which supersedes the SearXNG conclusion above.
+
+## Executive summary
+
+**Apple has run a free, keyless, structured search API for over a decade — `itunes.apple.com/search` and `/lookup` — that returns exactly the kind of data SearXNG couldn't: real `artistName`/`trackName`/`trackId`/`trackViewUrl` fields, comparable in shape to Spotify's and Deezer's search responses.** This is a materially better fit than SearXNG for this exact need, and **someone has already built this same pattern**: an open-source project (`cadenza`, a music-library manager) has a merged feature doing precisely this — using the iTunes Search API for catalog matching/artwork/links when no Apple Developer Program key is configured, reserving MusicKit only for library-specific operations (playlists, user's own library) that genuinely require the paid key.
+
+## Live verification
+
+Tested `https://itunes.apple.com/search?term=<query>&entity=song&limit=N` against the same battery of tracks used throughout this session:
+
+- `Robert Palmer Every Kinda People` — clean match: `trackId: 1425290697`, `trackViewUrl: https://music.apple.com/us/album/every-kinda-people/1425289735?i=1425290697&uo=4`, plus `releaseDate`, `collectionName`. This is the exact track that returned **zero** results on SearXNG minutes earlier.
+- `Compay Segundo Chan Chan` — single clean, unambiguous match — no multi-region/remaster duplication problem like SearXNG showed for the same track.
+- `Kora Jazz Trio Round Midnight` (the deliberately obscure cover) — correctly returned 0 results. This is the right, honest behavior (no invented match), matching what Spotify/Deezer also do for the same track.
+- A 5-request burst returned `200` on every call — no immediate rate-limit issue during light testing, unlike SearXNG which was still blocked after this session's similarly light use.
+
+## Response shape (why this is a good fit for the existing matching pipeline)
+
+Real fields returned per track: `artistName`, `trackName`, `collectionName`, `trackId`, `collectionId`, `trackViewUrl`, `releaseDate`, `artworkUrl100`. This is structurally similar enough to Spotify's/Deezer's search responses that `_score_candidate()`-style title/artist matching (already built and proven in `spotify.py`/`deezer.py`) could be adapted with real fields to score against, rather than inventing a new heuristic from raw search-result titles as the SearXNG approach would have required.
+
+**One real, confirmed gap: no ISRC field.** The iTunes Search API does not return ISRC, which `_score_candidate()` currently uses for deduplication (not primary scoring) in the existing Spotify/Deezer implementations. Not a blocker — title/artist similarity scoring is the primary signal in both existing implementations anyway — but dedup logic would need to fall back to `trackId`/`collectionId` instead of ISRC for this service.
+
+## Prior art: someone else already built this
+
+[`AbdelmonemAwad/cadenza` issue #66](https://github.com/AbdelmonemAwad/cadenza/issues/66) and its merged [PR #67](https://github.com/AbdelmonemAwad/cadenza/pull/67) implement exactly this pattern for a different project (a self-hosted music library manager): a "catalogue-only mode" for their `AppleMusicProvider` that uses the iTunes Search API (`/search` and `/lookup`) instead of MusicKit when no Developer Program credentials are configured — covering search, album track listings (`lookup?id=`), artwork, artist/title/release-date metadata, and Apple Music links. Explicitly reserves MusicKit only for what genuinely requires it: library matching and account linking. Confirmed limitations stated in that project's own issue: ~20 requests/minute rate limit, no ISRC returned — both consistent with this session's own findings.
+
+## Rate limits
+
+External research (not independently load-tested this session, to avoid repeating the SearXNG mistake of exhausting a shared resource) puts the practical limit around **20 requests/minute**, with a `Retry-After` header on 429s. The existing `music_link_cache.py` pattern (cache both hits and misses, keyed by service+raw_title, shared across all users) already fits this well — the same design that makes Spotify/Deezer's music-link feature cheap in practice (one lookup per unique track, not per listener) would keep Apple Music's real request volume far under this limit for a self-hosted app at mradio-web's scale.
+
+## Other free options considered, ruled out for this specific need
+
+- **MusicBrainz** (`musicbrainz.org/ws/2`, free, keyless, ~1 req/sec, requires a descriptive `User-Agent` header) — a real, legitimate, canonical music metadata database (50M+ recordings), but doesn't provide streaming-service URLs itself; it's an identity/metadata source, not a storefront link resolver. Could be useful later as a cross-reference (e.g. resolving ISRC across services) but doesn't directly solve "give me an `music.apple.com` link."
+
+## Updated recommendation
+
+**This supersedes the SearXNG-based conclusion above.** The iTunes Search API is a better-fitting, already-proven-elsewhere, free, keyless option for Apple Music search-only links — no rate-limit risk shared with other projects' usage (unlike SearXNG's shared upstream-engine problem), structured response fields, and independent confirmation via `cadenza`'s own shipped implementation of the identical idea. Worth planning as a real implementation (extending the existing music-service dropdown/link pattern to a third service) rather than research-only — the open item is building the actual `apple.py`-equivalent module and scoring logic, not further feasibility research.

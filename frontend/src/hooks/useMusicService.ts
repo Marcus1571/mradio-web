@@ -2,8 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { api } from '../api/client'
 import type { Config, MusicService } from '../api/types'
 
-const DEFAULT_SERVICE: MusicService = 'spotify'
-
+/** No default service — a fresh account (or one that's never touched the
+ * dropdown) starts agnostic, with no music-service icon shown at all,
+ * until the listener explicitly picks one. That choice is then persisted
+ * server-side (via /api/config, same as every other saved preference) and
+ * follows the account across devices. */
 export function useMusicService() {
   const [config, setConfig] = useState<Config | null>(null)
   const [loading, setLoading] = useState(true)
@@ -21,10 +24,10 @@ export function useMusicService() {
       })
   }, [])
 
-  const service: MusicService =
+  const service: MusicService | null =
     config?.music_service === 'spotify' || config?.music_service === 'deezer'
       ? config.music_service
-      : DEFAULT_SERVICE
+      : null
 
   const setMusicService = useCallback(async (next: MusicService) => {
     setConfig((c) => ({ ...c, music_service: next }))
