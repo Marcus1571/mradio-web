@@ -133,6 +133,14 @@ _DEFAULTS = {
     "mistral_model": "open-mistral-nemo",
     "mistral_timeout": 30,
     "mistral_manually_enabled": True,
+    # DAHL direct API — OpenAI-compatible endpoint at inference.dahl.global.
+    # Free key auto-assigned when visiting the site, no card needed. See
+    # providers.py's llm_dahl() for full testing notes. max_tokens=4096 is
+    # baked into llm_dahl() itself, not a user-facing setting here.
+    "dahl_api_key": "",
+    "dahl_model": "MiniMaxAI/MiniMax-M2.7",
+    "dahl_timeout": 30,
+    "dahl_manually_enabled": True,
     # Spotify per-user playlist integration — client credentials are
     # admin-managed here; the OAuth redirect URI is env-only (must match
     # exactly what's registered in the Spotify app dashboard).
@@ -143,7 +151,7 @@ _DEFAULTS = {
 }
 
 _SECRET_FIELDS = {"api_key", "grok_api_key", "gemini_api_key", "openrouter_api_key",
-                  "mistral_api_key", "spotify_client_secret", "deezer_secret"}
+                  "mistral_api_key", "dahl_api_key", "spotify_client_secret", "deezer_secret"}
 
 
 def _seed_from_env() -> dict:

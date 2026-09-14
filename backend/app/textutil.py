@@ -258,7 +258,7 @@ CATEGORICAL_HALLUCINATION_RULES = (
 # admin's own paid account, genuinely untested for this failure mode)
 # or opencode (untested this round; revisit if it shows the same
 # pattern).
-_CATEGORICAL_PROVIDERS = frozenset({"mistral", "openai", "gemini", "openrouter", "ollama", "grok"})
+_CATEGORICAL_PROVIDERS = frozenset({"mistral", "openai", "gemini", "openrouter", "ollama", "grok", "dahl"})
 
 
 # gpt-oss-specific, not Ollama-provider-wide: this is a MODEL trait, not a

@@ -160,6 +160,7 @@ _MODEL_SETTINGS_KEY = {
     "gemini": "gemini_model",
     "openrouter": "openrouter_model",
     "mistral": "mistral_model",
+    "dahl": "dahl_model",
 }
 
 
@@ -446,6 +447,8 @@ class Enricher:
                 out = await providers.llm_mistral(settings, prompt)
             elif name == "opencode":
                 out = await _opencode.ask(settings, prompt)
+            elif name == "dahl":
+                out = await providers.llm_dahl(settings, prompt)
             else:
                 out = None
             elapsed_ms = round((time.perf_counter() - started) * 1000)

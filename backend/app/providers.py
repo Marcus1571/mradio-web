@@ -22,7 +22,7 @@ logger = logging.getLogger("mradio.providers")
 # subscription at the top, Mistral being the third" — a dropdown/list
 # order preference, not a functional grouping (mistral is a free-tier
 # key, not a subscription).
-PROVIDERS = ("codex", "grok", "mistral", "opencode", "ollama", "openai", "gemini", "openrouter")
+PROVIDERS = ("codex", "grok", "mistral", "opencode", "ollama", "openai", "gemini", "openrouter", "dahl")
 
 # Providers restricted to admins only. Three different reasons feed this
 # set: codex/grok (2026-09-07, user's explicit request) because a
@@ -77,7 +77,7 @@ def clear_offline() -> None:
 # check — no extra API calls for a provider nobody's using), and comes
 # back only after a real background retest passes, not blindly after a
 # timer (see health_retry_loop() below for the retest).
-AUTO_HIDE_PROVIDERS = frozenset({"codex", "grok", "gemini", "openrouter", "mistral"})
+AUTO_HIDE_PROVIDERS = frozenset({"codex", "grok", "gemini", "openrouter", "mistral", "dahl"})
 _RETRY_COOLDOWN_SECONDS = 30 * 60
 
 _provider_next_retry: dict[str, float] = {}
@@ -198,6 +198,8 @@ def provider_enabled(name: str, settings: dict) -> bool:
                       and settings.get("openrouter_manually_enabled", True),
         "mistral": bool(settings.get("mistral_api_key"))
                    and settings.get("mistral_manually_enabled", True),
+        "dahl": bool(settings.get("dahl_api_key"))
+                and settings.get("dahl_manually_enabled", True),
     }
     # Auto-hide on failure (see AUTO_HIDE_PROVIDERS) is a separate gate
     # from the manual switch above — a provider that just failed a real
@@ -211,7 +213,8 @@ def ai_configured(settings: dict) -> bool:
     return bool(settings.get("ollama_url")) or bool(settings.get("api_key")) \
         or bool(oc_port(settings)) or bool(codex_settings.load().get("access_token")) \
         or grok_enabled(settings) or bool(settings.get("gemini_api_key")) \
-        or bool(settings.get("openrouter_api_key")) or bool(settings.get("mistral_api_key"))
+        or bool(settings.get("openrouter_api_key")) or bool(settings.get("mistral_api_key")) \
+        or bool(settings.get("dahl_api_key"))
 
 
 def api_endpoint(base: str, suffix: str) -> str:
@@ -429,6 +432,36 @@ async def llm_mistral(settings: dict, prompt: str) -> str | None:
         float(settings.get("mistral_timeout", 30)),
         prompt,
     )
+
+
+_DAHL_BASE = "https://inference.dahl.global/v1"
+
+
+async def llm_dahl(settings: dict, prompt: str) -> str | None:
+    """DAHL direct API — OpenAI-compatible endpoint at inference.dahl.global.
+    Free key (auto-assigned when visiting the site), no card needed.
+    Tested with MiniMax-2.7 (2026-09-14): median ~9s, 8/8 success after
+    token-budget fix, 5/6 accuracy on fact-check battery. The model emits
+    chain-of-thought in <think>...</think> tags that must be stripped — this
+    function handles that before returning. max_tokens=4096 is the minimum
+    safe budget; at 1200 the reasoning chain consumes the whole budget and
+    content comes back empty. See AI.md's dahl section for full details."""
+    if not settings.get("dahl_api_key"):
+        return None
+    content = await _llm_openai_compatible(
+        _DAHL_BASE,
+        settings.get("dahl_model") or "MiniMaxAI/MiniMax-M2.7",
+        settings["dahl_api_key"],
+        float(settings.get("dahl_timeout", 30)),
+        prompt,
+        max_tokens=4096,
+    )
+    if content is None:
+        return None
+    # Strip chain-of-thought tags the model emits before the final answer
+    import re
+    cleaned = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
+    return cleaned or None
 
 
 async def llm_grok(settings: dict, prompt: str) -> str | None:
@@ -945,6 +978,50 @@ async def _test_mistral(settings: dict) -> tuple[bool, str]:
     return True, "Connected."
 
 
+async def _test_dahl(settings: dict) -> tuple[bool, str]:
+    """A real chat/completions call — DAHL's /models endpoint requires
+    authentication that a simple probe can't handle cleanly, so this
+    follows the same pattern as _test_mistral and uses a real generation
+    call for validation. max_tokens=4096 matches llm_dahl's budget."""
+    api_key = settings.get("dahl_api_key")
+    if not api_key:
+        return False, "No API key configured."
+    model = settings.get("dahl_model") or "MiniMaxAI/MiniMax-M2.7"
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": 'Reply with exactly: {"trivia": "pong"}'}],
+        "temperature": 0.1,
+        "max_tokens": 4096,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=_TEST_TIMEOUT) as client:
+            r = await client.post(
+                api_endpoint(_DAHL_BASE, "chat/completions"),
+                json=payload, headers={"Authorization": f"Bearer {api_key}"})
+            if r.status_code != 200:
+                try:
+                    err = r.json().get("error") or {}
+                    message = err.get("message") or ""
+                except ValueError:
+                    message = ""
+                if r.status_code in (401, 403):
+                    return False, "DAHL rejected the API key."
+                return False, (f"DAHL returned an error ({r.status_code}"
+                               f"{': ' + message if message else ''}).")
+            data = r.json()
+    except httpx.HTTPError as exc:
+        return False, f"Could not reach DAHL: {_exc_reason(exc)}"
+    except ValueError:
+        return False, "DAHL returned an unreadable response."
+    content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
+    # Strip think-block before checking
+    import re
+    content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
+    if not content:
+        return False, "DAHL returned an empty response."
+    return True, "Connected."
+
+
 async def _test_opencode(settings: dict) -> tuple[bool, str]:
     from . import enricher  # local import: avoids a circular import at module load
 
@@ -991,4 +1068,6 @@ async def run_provider_test(provider: str, settings: dict) -> tuple[bool, str]:
         return await _test_openrouter(settings)
     if provider == "mistral":
         return await _test_mistral(settings)
+    if provider == "dahl":
+        return await _test_dahl(settings)
     return False, "Unknown provider."

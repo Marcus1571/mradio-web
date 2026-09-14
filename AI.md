@@ -481,9 +481,18 @@ Jazz Trio cover, were factually sound.
   date hallucination the hardened prompt + Wikipedia grounding was built
   to suppress; re-test with grounding before promoting out of research.
 
-**Not yet integrated:** not present in `PROVIDERS` or the enricher
-dispatch chain. Integration would reuse `_llm_openai_compatible()` and
-add entries to `providers.py`, `textutil.py`, and `settings.py`.
+**Integration status (2026-09-14):** fully integrated — added to
+`PROVIDERS` tuple, `provider_enabled()` probe, `llm_dahl()` (which
+reuses `_llm_openai_compatible()` with `max_tokens=4096` and think-block
+stripping), `_test_dahl()` in `run_provider_test()`, `textutil.py`
+`_CATEGORICAL_PROVIDERS`, `enricher.py` dispatch and stats key, and
+`settings.py` defaults + secrets. Frontend: provider group in
+`AISettingsPage`, `types.ts`, and all 15 language files (English
+placeholders; translate as needed). KB.md entry added.
+
+**Re-test before promoting out of research:** the Bessie Smith error
+(1928-vs-1933) needs a grounded run to confirm the hardened prompt +
+Wikipedia grounding fixes it.
 
 ## Not yet coded / research-only
 
@@ -496,9 +505,6 @@ these exist in the app:
   judged secondary: valuable as a confidence *signal* (flag disagreement
   across samples/providers), not a primary fix; a critic pass without
   real retrieved evidence to check against suffers confirmation bias.
-- **DAHL direct API** — tested and documented above; pending code
-  integration and a grounded re-run to confirm the hardened prompt fixes
-  the observed 1928/1933 date error.
 
 ## Template for a new provider section
 

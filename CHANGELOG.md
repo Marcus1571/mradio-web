@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.20.0] - 2026-09-14
+
+Adds DAHL as a new AI provider (research-only status): a free,
+OpenAI-compatible inference endpoint serving MiniMax-M2.7. Reuses the
+existing OpenAI-compatible request path with a 4096-token budget (the
+model's chain-of-thought needs the headroom) and strips its
+`<think>...</think>` reasoning block before returning the answer. Gets
+the same categorical-hallucination prompt hardening and Wikipedia
+grounding as Mistral/Gemini/OpenRouter/Ollama/NIM.
+
+- `providers.py`: `llm_dahl()`, `_test_dahl()`, added to `PROVIDERS` and
+  `AUTO_HIDE_PROVIDERS`.
+- `settings.py`: `dahl_api_key`/`dahl_model`/`dahl_timeout`/
+  `dahl_manually_enabled` defaults; key added to `_SECRET_FIELDS`.
+- `textutil.py`: added to `_CATEGORICAL_PROVIDERS`.
+- `enricher.py`: dispatch + model-settings-key entry.
+- Frontend: new provider bubble in `AISettingsPage.tsx`, `DahlIcon`,
+  `types.ts` union, i18n strings in all 16 languages (non-English
+  strings are untranslated English placeholders for now).
+- `KB.md`: "Getting an API key" section for DAHL.
+
 ## [1.19.3] - 2026-09-13
 
 Bug fix: station name now wraps cleanly away from the station logo on mobile.

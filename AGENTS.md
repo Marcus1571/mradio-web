@@ -150,38 +150,30 @@ committed file, not just `KB.md`/`README.md`.
 
 ## Release process
 
-Full sequence, run straight through per `~/governance/USER.md`'s no-confirmation-
-prompts rule, **for every change that touches shipped behavior, not just what
-feels like a "big" feature** — a data-only addition (e.g. a new curated
-station genre), a one-line bug fix, and a multi-file feature all go through
-this the same way: bump version → add `CHANGELOG.md` entry → build/lint/test
-green → commit → `git tag vX.Y.Z` + push tag → publish the GitHub Release
-(assets + notes, verify it shows as "Latest") → push `main`. Pushing `main`
-triggers the GitHub Actions deploy workflow (`.github/workflows/deploy.yml`),
-so commit/push/deploy is the default path once its secrets are set. Direct SSH
-from the assistant session is allowed (see "Deploy is automated, not manual"
-above — a prior claim that a safety classifier blocks it was false and has
-been retracted) and is the current fallback path while the workflow's secrets
-are unset; using SSH to deploy does not excuse skipping the version bump,
-changelog, or doc-sync steps above it. 2026-09-13 incident: three real fixes
-(a deploy-path bug, a Spotify UI bug, three new genres) were each committed,
-pushed, and deployed via direct SSH without a version bump or CHANGELOG entry,
-because each felt individually "too small" to warrant the full sequence — that
-judgment call is not the assistant's to make silently. Treat "I'll fast-path
-this one, it's small" as a signal to stop and follow the process, not skip it.
+Follow the universal release and deploy posting sequence in
+`~/governance/USER.md`. All changes that touch shipped behavior go through it,
+regardless of perceived size — a data-only addition, a one-line bug fix, and a
+multi-file feature all go through the same steps.
 
-Doc-sync check before considering any bug fix, feature, or release "done" — verify
-all of these against what actually changed, not just the one that feels obviously
-relevant:
-- `STATUS.md` — does the current-state snapshot still match reality?
-- `CHANGELOG.md` — does this change have an entry, if release-worthy?
-- `KB.md` — did any setup step, config option, env var, or admin-facing behavior
-  change? Update every affected section, not just the one prompted directly — if one
-  AI provider's section gets a new setup note, audit whether sibling providers need
-  the same treatment.
-- `README.md` — does this change alter what a first-time reader understands the app
-  to *be* or *do*? A new major feature or changed pitch qualifies even if not asked
-  for by name.
+mradio-web specifics:
+- Version lives in `frontend/package.json`.
+- `CHANGELOG.md` and `STATUS.md` are at repo root.
+- Build/lint before tagging: `npm run build` (and `npm run lint` if available).
+- Deploy command on LT (via the `iplt` alias from USER.md):
+  ```
+  iplt
+  cd /mnt/user/appdata/mradio-web/app
+  git pull
+  docker compose build
+  docker compose up -d
+  ```
+- `.github/workflows/deploy.yml` triggers on `main` push once its secrets are
+  set; direct SSH is the current fallback.
+
+2026-09-13 incident: three real fixes (deploy-path bug, Spotify UI bug, three
+new genres) were each committed, pushed, and deployed via direct SSH without a
+version bump or CHANGELOG entry, because each felt individually "too small" —
+that judgment call is not the assistant's to make silently.
 
 ## Curated/user-owned data
 

@@ -56,7 +56,7 @@ export interface Config {
 export type MusicService = 'spotify' | 'deezer'
 
 export interface ProviderInfo {
-  name: 'opencode' | 'openai' | 'ollama' | 'codex' | 'grok' | 'gemini' | 'openrouter' | 'mistral'
+  name: 'opencode' | 'openai' | 'ollama' | 'codex' | 'grok' | 'gemini' | 'openrouter' | 'mistral' | 'dahl'
   enabled: boolean
   auto_hidden: boolean
 }
@@ -96,6 +96,10 @@ export interface AISettings {
   mistral_model: string
   mistral_timeout: number
   mistral_manually_enabled: boolean
+  dahl_api_key: string
+  dahl_model: string
+  dahl_timeout: number
+  dahl_manually_enabled: boolean
   spotify_client_id: string
   spotify_client_secret: string
   deezer_app_id: string

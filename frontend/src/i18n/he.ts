@@ -178,6 +178,13 @@ const he: Dict = {
     mistralNotePrefix: 'חדש ב-Mistral? ראה',
     mistralNoteLink: '״Getting an API key״ ב-KB.md',
     mistralNoteSuffix: 'להוראות קבלת מפתח API בחינם.',
+    dahlGroup: 'DAHL',
+    dahlIntro:
+      "MiniMax-M2.7 via DAHL's free inference endpoint — no credit card required, first 100M tokens free. " +
+      'Research-only for now; enable manually to test.',
+    dahlNotePrefix: 'New to DAHL? See',
+    dahlNoteLink: '"Getting an API key" in KB.md',
+    dahlNoteSuffix: 'for how to get a free API key.',
     providerEnableToggle: '״הצג בתפריט ה-AI של הנגן״',
     providerEnableToggleHint:
       'כבה כדי להסתיר מהתפריט הנפתח של כולם בלי להתנתק — שימושי כשמגיעים למכסת שימוש.',

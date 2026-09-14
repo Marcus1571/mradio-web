@@ -23,6 +23,17 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.20.0 tagged, released, and deployed to LT 2026-09-14.** Adds DAHL as
+  a new AI provider (research-only, non-admin-only, free key). Cleaned up
+  after a prior session's in-progress attempt at this same work left a
+  stray root-level `package.json`/`node_modules` (Playwright, banned per
+  `AGENTS.md`), a broadened `.claude/settings.json` unrelated to the
+  provider work (reverted), a dead `KB.md#dahl` anchor (fixed to
+  `#dahl-openai-compatible`), and i18n keys spliced mid-group in all 15
+  non-English locale files (moved to after the full mistral group,
+  matching `en.ts`). The backend integration itself (`providers.py`,
+  `settings.py`, `textutil.py`, `enricher.py`) and the core frontend
+  wiring were already correct and needed no changes.
 - **DAHL direct-API quality assessment complete, 2026-09-14.** MiniMax-2.7 via DAHL's direct endpoint (`inference.dahl.global`, free key) was tested against the full fact-check battery. Median latency ~8,900 ms (vs OpenCode's 21 s), reliability 8/8 after token-budget fix, accuracy 5/6 (fabricated Bessie Smith year 1933 vs correct 1928). `max_tokens=1200` is too low; needs 4096+. Documented in `AI.md` and `findings.md`. Not yet coded into the provider list — pending a grounded re-run to confirm the hardened prompt suppresses the date error. Integration would reuse `_llm_openai_compatible()` and add entries to `providers.py`, `textutil.py`, and `settings.py`.
 - **v1.19.3 tagged, released, and deployed to LT 2026-09-13.** Follow-up to v1.19.2: the original `min-width: 0` on `.panel-head` was insufficient — the logo is absolutely positioned and occupies no flex space, so the name still rendered under it. Adds `padding-inline-end: 4.5rem` to `.station-strip` inside the `max-width: 480px` media query to reserve the logo's width.
 - **v1.19.2 tagged, released, and deployed to LT 2026-09-13.** Fixes a mobile UI bug where long station names overflowed into the station logo in the now-playing panel header. `.station-name-strong` now uses `-webkit-line-clamp: 2`; `.panel-head` gains `min-width: 0` so flex children respect the logo's space.

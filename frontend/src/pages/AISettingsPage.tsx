@@ -4,14 +4,14 @@ import { ApiError, api } from '../api/client'
 import type { AISettings, AITestResult, CodexConnectResponse, GrokConnectResponse } from '../api/types'
 import { IDLE_TEST, KbNote, ProviderBubble, TestBadge } from '../components/AdminSettingsShared'
 import type { TestState } from '../components/AdminSettingsShared'
-import { ChatGPTIcon, GeminiIcon, GrokIcon, MistralIcon, NimIcon, OllamaIcon, OpenCodeIcon, OpenRouterIcon } from '../components/Icons'
+import { ChatGPTIcon, DahlIcon, GeminiIcon, GrokIcon, MistralIcon, NimIcon, OllamaIcon, OpenCodeIcon, OpenRouterIcon } from '../components/Icons'
 import { useCodexStatus } from '../hooks/useCodexStatus'
 import { useGrokStatus } from '../hooks/useGrokStatus'
 import { useProviders } from '../hooks/useProviders'
 import type { TFunction } from '../i18n'
 import '../styles/admin.css'
 
-type Provider = 'ollama' | 'openai' | 'opencode' | 'codex' | 'grok' | 'gemini' | 'openrouter' | 'mistral'
+type Provider = 'ollama' | 'openai' | 'opencode' | 'codex' | 'grok' | 'gemini' | 'openrouter' | 'mistral' | 'dahl'
 
 export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunction }) {
   const [settings, setSettings] = useState<AISettings | null>(null)
@@ -20,6 +20,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
   const [geminiApiKeyInput, setGeminiApiKeyInput] = useState('')
   const [openrouterApiKeyInput, setOpenrouterApiKeyInput] = useState('')
   const [mistralApiKeyInput, setMistralApiKeyInput] = useState('')
+  const [dahlApiKeyInput, setDahlApiKeyInput] = useState('')
   const [ollamaModels, setOllamaModels] = useState<{ name: string; size: number | null }[]>([])
   const [ollamaModelsStatus, setOllamaModelsStatus] = useState<'idle' | 'loading' | 'unreachable'>('idle')
   const [busy, setBusy] = useState(false)
@@ -33,6 +34,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
   const [geminiTest, setGeminiTest] = useState<TestState>(IDLE_TEST)
   const [openrouterTest, setOpenrouterTest] = useState<TestState>(IDLE_TEST)
   const [mistralTest, setMistralTest] = useState<TestState>(IDLE_TEST)
+  const [dahlTest, setDahlTest] = useState<TestState>(IDLE_TEST)
   const { status: codexStatus, refresh: refreshCodexStatus } = useCodexStatus()
   const [codexConnecting, setCodexConnecting] = useState(false)
   const [codexPromptResult, setCodexPromptResult] = useState<CodexConnectResponse | null>(null)
@@ -91,6 +93,8 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
       else delete body.openrouter_api_key
       if (mistralApiKeyInput) body.mistral_api_key = mistralApiKeyInput
       else delete body.mistral_api_key
+      if (dahlApiKeyInput) body.dahl_api_key = dahlApiKeyInput
+      else delete body.dahl_api_key
       const res = await api.patch<AISettings>('/api/settings/ai', body)
       setSettings(res)
       setApiKeyInput('')
@@ -98,6 +102,7 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
       setGeminiApiKeyInput('')
       setOpenrouterApiKeyInput('')
       setMistralApiKeyInput('')
+      setDahlApiKeyInput('')
       setSaved(true)
       await refreshProviders()
       window.setTimeout(() => setSaved(false), 2500)
@@ -203,6 +208,12 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
 
   async function setMistralManuallyEnabled(value: boolean) {
     const res = await api.patch<AISettings>('/api/settings/ai', { mistral_manually_enabled: value })
+    setSettings(res)
+    await refreshProviders()
+  }
+
+  async function setDahlManuallyEnabled(value: boolean) {
+    const res = await api.patch<AISettings>('/api/settings/ai', { dahl_manually_enabled: value })
     setSettings(res)
     await refreshProviders()
   }
@@ -536,6 +547,73 @@ export function AISettingsPage({ onBack, t }: { onBack?: () => void; t: TFunctio
                   {mistralTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
                 </button>
                 <TestBadge state={mistralTest} t={t} />
+              </div>
+            </ProviderBubble>
+
+            <ProviderBubble
+              icon={<DahlIcon className="provider-mark" />}
+              name={t('aiSettings.dahlGroup')}
+              enabled={isEnabled('dahl')}
+              defaultOpen={isEnabled('dahl')}
+              saveLabel={t('common.save')}
+              saveBusyLabel={t('common.saving')}
+              saveBusy={busy}
+            >
+              <p className="admin-note">{t('aiSettings.dahlIntro')}</p>
+              <label className="provider-enable-toggle">
+                <input
+                  type="checkbox"
+                  checked={settings.dahl_manually_enabled}
+                  onChange={(e) => void setDahlManuallyEnabled(e.target.checked)}
+                />
+                {t('aiSettings.providerEnableToggle')}
+              </label>
+              <p className="admin-note admin-note-hint">{t('aiSettings.providerEnableToggleHint')}</p>
+              {isAutoHidden('dahl') && <p className="auto-hidden-note">{t('aiSettings.autoHiddenNote')}</p>}
+              <KbNote
+                prefix={t('aiSettings.dahlNotePrefix')}
+                linkLabel={t('aiSettings.dahlNoteLink')}
+                anchor="dahl-openai-compatible"
+                suffix={t('aiSettings.dahlNoteSuffix')}
+              />
+              <div className="settings-row">
+                <label htmlFor="dahl_model">{t('aiSettings.model')}</label>
+                <input
+                  id="dahl_model"
+                  value={settings.dahl_model}
+                  onChange={(e) => field('dahl_model', e.target.value)}
+                />
+              </div>
+              <div className="settings-row">
+                <label htmlFor="dahl_api_key">{t('aiSettings.apiKey')}</label>
+                <input
+                  id="dahl_api_key"
+                  type="password"
+                  placeholder={settings.dahl_api_key || t('aiSettings.apiKeyNotSet')}
+                  value={dahlApiKeyInput}
+                  onChange={(e) => setDahlApiKeyInput(e.target.value)}
+                />
+              </div>
+              <div className="test-actions">
+                <button
+                  className="test-btn"
+                  type="button"
+                  disabled={dahlTest.status === 'testing'}
+                  onClick={() =>
+                    void testProvider(
+                      'dahl',
+                      {
+                        dahl_model: settings.dahl_model,
+                        dahl_timeout: settings.dahl_timeout,
+                        ...(dahlApiKeyInput ? { dahl_api_key: dahlApiKeyInput } : {}),
+                      },
+                      setDahlTest,
+                    )
+                  }
+                >
+                  {dahlTest.status === 'testing' ? t('aiSettings.testing') : t('aiSettings.test')}
+                </button>
+                <TestBadge state={dahlTest} t={t} />
               </div>
             </ProviderBubble>
 

@@ -310,6 +310,20 @@ blessed, and xAI could change or restrict what an OAuth token is
 entitled to at any time. If it breaks, switch to Option A or another
 provider; nothing else in the app is affected.
 
+### DAHL (OpenAI-compatible)
+
+**Getting an API key:**
+
+1. Go to [inference.dahl.global](https://inference.dahl.global) and sign up
+   with your email — no credit card required.
+2. Your DAHL API key is shown immediately on the dashboard.
+3. In mradio-web's admin **AI providers** page, paste the key in the
+   API key field and **Save**.
+
+**Note:** The default model is `MiniMaxAI/MiniMax-M2.7`, a vLLM-served
+free model. DAHL is currently in research-only status — use it as a test
+provider; it is not promoted for production use yet.
+
 ### NVIDIA NIM (OpenAI-compatible)
 
 **Getting an API key:**

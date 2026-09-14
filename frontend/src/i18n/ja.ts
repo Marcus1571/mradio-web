@@ -177,6 +177,13 @@ const ja: Dict = {
     mistralNotePrefix: 'Mistralが初めてですか？KB.mdの',
     mistralNoteLink: '「Getting an API key」',
     mistralNoteSuffix: 'をご覧ください。無料APIキーの取得方法が書かれています。',
+    dahlGroup: 'DAHL',
+    dahlIntro:
+      "MiniMax-M2.7 via DAHL's free inference endpoint — no credit card required, first 100M tokens free. " +
+      'Research-only for now; enable manually to test.',
+    dahlNotePrefix: 'New to DAHL? See',
+    dahlNoteLink: '"Getting an API key" in KB.md',
+    dahlNoteSuffix: 'for how to get a free API key.',
     providerEnableToggle: '「プレーヤーのAIメニューに表示」',
     providerEnableToggleHint:
       'オフにすると接続を切らずに全員のドロップダウンから非表示にできます。利用上限に達したときに便利です。',

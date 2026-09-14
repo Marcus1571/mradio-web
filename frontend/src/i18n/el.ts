@@ -182,6 +182,13 @@ const el: Dict = {
     mistralNotePrefix: 'Νέοι στο Mistral; Δείτε',
     mistralNoteLink: '«Getting an API key» στο KB.md',
     mistralNoteSuffix: 'για το πώς να αποκτήσετε ένα δωρεάν κλειδί API.',
+    dahlGroup: 'DAHL',
+    dahlIntro:
+      "MiniMax-M2.7 via DAHL's free inference endpoint — no credit card required, first 100M tokens free. " +
+      'Research-only for now; enable manually to test.',
+    dahlNotePrefix: 'New to DAHL? See',
+    dahlNoteLink: '"Getting an API key" in KB.md',
+    dahlNoteSuffix: 'for how to get a free API key.',
     providerEnableToggle: '«Εμφάνιση στο μενού AI του player»',
     providerEnableToggleHint:
       'Απενεργοποιήστε το για να το κρύψετε από το αναπτυσσόμενο μενού όλων χωρίς αποσύνδεση — χρήσιμο όταν εξαντληθεί το όριο χρήσης.',

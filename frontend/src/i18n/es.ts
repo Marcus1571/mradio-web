@@ -180,6 +180,13 @@ const es: Dict = {
     mistralNotePrefix: '¿Nuevo en Mistral? Consulta',
     mistralNoteLink: '«Getting an API key» en KB.md',
     mistralNoteSuffix: 'para obtener una clave API gratuita.',
+    dahlGroup: 'DAHL',
+    dahlIntro:
+      "MiniMax-M2.7 a través del endpoint de inferencia gratuita de DAHL — no requiere tarjeta de crédito, primeros 100M tokens gratuitos. " +
+      'Solo investigación por ahora; habilita manualmente para probar.',
+    dahlNotePrefix: '¿Nuevo en DAHL? Consulta',
+    dahlNoteLink: '«Getting an API key» en KB.md',
+    dahlNoteSuffix: 'para obtener una clave API gratuita.',
     providerEnableToggle: '«Mostrar en el menú de IA del reproductor»',
     providerEnableToggleHint:
       'Desactívalo para ocultarlo del menú desplegable de todos sin desconectarlo — útil al alcanzar una cuota de uso.',

@@ -239,6 +239,18 @@ export function NimIcon({ className }: IconProps) {
   )
 }
 
+export function DahlIcon({ className }: IconProps) {
+  // A capital D with a diagonal slash — distinctive, simple, and
+  // deliberately different from all other provider marks here.
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M10.5 2.5v11" strokeLinecap="round" />
+      <path d="M4.5 3.5h6a4 4 0 0 1 0 8h-6" />
+      <path d="M4.5 13.5l8-3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function SpotifyIcon({ className }: IconProps) {
   // Three concentric arcs in a circle, suggestive of Spotify's sound-wave mark.
   return (

@@ -182,6 +182,13 @@ const nl: Dict = {
     mistralNotePrefix: 'Nieuw met Mistral? Zie',
     mistralNoteLink: '„Getting an API key" in KB.md',
     mistralNoteSuffix: 'om een gratis API-sleutel te krijgen.',
+    dahlGroup: 'DAHL',
+    dahlIntro:
+      "MiniMax-M2.7 via DAHL's free inference endpoint — no credit card required, first 100M tokens free. " +
+      'Research-only for now; enable manually to test.',
+    dahlNotePrefix: 'New to DAHL? See',
+    dahlNoteLink: '"Getting an API key" in KB.md',
+    dahlNoteSuffix: 'for how to get a free API key.',
     providerEnableToggle: '‘Weergeven in het AI-menu van de speler’',
     providerEnableToggleHint:
       'Zet uit om het voor iedereen uit het dropdownmenu te verbergen zonder te verbreken — handig zodra een gebruikslimiet is bereikt.',
