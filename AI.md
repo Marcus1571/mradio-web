@@ -438,6 +438,53 @@ for Gemini/Wikipedia.
  Wikipedia grounding it had shown the same fabrication risk as other small
  hosted models.
 
+## dahl
+
+**Consumption model:** free API key obtained automatically from
+`https://inference.dahl.global/`. First 100 million tokens free; ~$0.30
+per 10 million tokens after. Not a paid subscription tied to a specific
+person, and the key is admin-supplied rather than shared across users.
+
+**Prompting strategy:** `hardened` — should be added to
+`_CATEGORICAL_PROVIDERS` so it receives `SINCERITY_RULES`,
+`CATEGORICAL_HALLUCINATION_RULES`, and Wikipedia snippet grounding. The
+model emits long internal chain-of-thought, but it still fabricated a
+historical date in raw testing, so hardening is warranted.
+
+**Model:** `MiniMaxAI/MiniMax-M2.7` tested; site also lists
+`deepseek-ai/DeepSeek-V4-Flash-0731`, `THUDM/glm-4.3-flash`, and others.
+
+**Access:** not admin-only by default — free key, no shared daily quota
+visible. Revisit if live usage reveals a per-key cap that makes it behave
+like OpenRouter's shared free tier.
+
+**Reliability:** manual spot-check 2026-09-14: 8/8 successful after
+resolving one transient HTTP 502 and increasing `max_tokens`. No
+`ai_requests` data yet.
+
+**Speed:** manual spot-check median ~8,900 ms (range 4,257–13,753 ms).
+Faster than OpenCode's ~21 s median. The model returns quickly once the
+token budget is large enough for its reasoning chain.
+
+**Accuracy:** manual fact-check battery 2026-09-14: 5/6 correct. One
+clear error: it dated Bessie Smith's "Empty Bed Blues" to 1933 instead of
+the correct 1928. The other five answers, including the obscure Kora
+Jazz Trio cover, were factually sound.
+
+**Known issues / limitations:**
+- `max_tokens=1200` is not enough — MiniMax-M2.7 writes extensive
+  chain-of-thought and hits `finish_reason: "length"` before the final
+  answer. Use at least 4096 tokens; 8192 for headroom.
+- Responses include a `<think>...</think>` reasoning block that must be
+  stripped before storage/display.
+- The 1928-vs-1933 Bessie Smith error is exactly the kind of categorical
+  date hallucination the hardened prompt + Wikipedia grounding was built
+  to suppress; re-test with grounding before promoting out of research.
+
+**Not yet integrated:** not present in `PROVIDERS` or the enricher
+dispatch chain. Integration would reuse `_llm_openai_compatible()` and
+add entries to `providers.py`, `textutil.py`, and `settings.py`.
+
 ## Not yet coded / research-only
 
 Ideas researched in `findings.md` but not implemented — do not assume
@@ -449,6 +496,9 @@ these exist in the app:
   judged secondary: valuable as a confidence *signal* (flag disagreement
   across samples/providers), not a primary fix; a critic pass without
   real retrieved evidence to check against suffers confirmation bias.
+- **DAHL direct API** — tested and documented above; pending code
+  integration and a grounded re-run to confirm the hardened prompt fixes
+  the observed 1928/1933 date error.
 
 ## Template for a new provider section
 
