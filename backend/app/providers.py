@@ -436,32 +436,99 @@ async def llm_mistral(settings: dict, prompt: str) -> str | None:
 
 _DAHL_BASE = "https://inference.dahl.global/v1"
 
+# DAHL hosts several free models behind one key/endpoint; whichever one
+# is "hot" enough to be at concurrency capacity (HTTP 429, code
+# "model_concurrency") varies over time — live testing 2026-09-14 found
+# DeepSeek/GLM/Qwen all 429ing simultaneously for 30+ minutes while
+# MiniMax stayed reachable. DAHL's own 429 error body sometimes names a
+# specific "switch to this model" suggestion, but that suggestion proved
+# unreliable in the same testing session (a model it named as available
+# was itself 429ing seconds later) — so this list is fixed and
+# hand-maintained rather than built from the error body's live claims.
+# The admin's configured dahl_model is always tried first (respects
+# their choice); the rest of this list is the fallback order if that
+# one is at capacity. See AI.md's dahl section / findings.md for the
+# full investigation this came from.
+_DAHL_MODEL_FALLBACK = (
+    "MiniMaxAI/MiniMax-M2.7",
+    "deepseek-ai/DeepSeek-V4-Flash-0731",
+    "THUDM/glm-4.3-flash",
+    "Qwen/Qwen3-235B-A22B-fp8-tp2",
+)
 
-async def llm_dahl(settings: dict, prompt: str) -> str | None:
+
+def _strip_think(text: str) -> str | None:
+    import re
+    cleaned = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+    return cleaned or None
+
+
+async def _dahl_request(model: str, api_key: str, timeout: float,
+                        prompt: str) -> tuple[str | None, bool]:
+    """One DAHL chat/completions call. Returns (content, retryable) —
+    retryable is True only on HTTP 429 (model at concurrency capacity),
+    the one failure mode worth trying a different model for; any other
+    error (auth, network, malformed response) returns (None, False) so
+    the caller doesn't burn three more requests on a problem no model
+    swap will fix."""
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content":
+                "You are a helpful music metadata assistant, covering classical, "
+                "jazz, rock, pop, and every other genre. "
+                "Reply ONLY with the requested JSON, no markdown."},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": 0.1,
+        "max_tokens": 4096,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            r = await client.post(api_endpoint(_DAHL_BASE, "chat/completions"),
+                                  json=payload, headers={"Authorization": f"Bearer {api_key}"})
+            if r.status_code == 429:
+                return None, True
+            r.raise_for_status()
+            data = r.json()
+        content = (data.get("choices") or [{}])[0].get("message", {}).get("content") or ""
+        return _strip_think(content), False
+    except (httpx.HTTPError, ValueError, IndexError):
+        return None, False
+
+
+async def llm_dahl(settings: dict, prompt: str) -> tuple[str, str] | None:
     """DAHL direct API — OpenAI-compatible endpoint at inference.dahl.global.
     Free key (auto-assigned when visiting the site), no card needed.
-    Tested with MiniMax-2.7 (2026-09-14): median ~9s, 8/8 success after
-    token-budget fix, 5/6 accuracy on fact-check battery. The model emits
-    chain-of-thought in <think>...</think> tags that must be stripped — this
-    function handles that before returning. max_tokens=4096 is the minimum
-    safe budget; at 1200 the reasoning chain consumes the whole budget and
-    content comes back empty. See AI.md's dahl section for full details."""
-    if not settings.get("dahl_api_key"):
+    Tested with MiniMax-2.7 (2026-09-14): 4/4 clean completions under the
+    real hardened prompt, 42-58s latency (see dahl_timeout's comment in
+    settings.py). The model emits chain-of-thought in <think>...</think>
+    tags that must be stripped — handled by _strip_think(). max_tokens=4096
+    is sufficient under the hardened prompt. See AI.md's dahl section for
+    full details.
+
+    Tries the admin's configured model first, then falls through
+    _DAHL_MODEL_FALLBACK on a 429 (model at capacity) only — see that
+    list's comment for why the fallback order is fixed rather than
+    following DAHL's own error-body suggestion. Returns (content, model)
+    rather than bare content, unlike every other provider function here —
+    enricher.py's dispatch loop uses the returned model (not the
+    admin-configured one) when logging to ai_requests, so a fallback to a
+    different DAHL model is recorded accurately rather than misattributed
+    to whichever model the admin happened to have configured."""
+    api_key = settings.get("dahl_api_key")
+    if not api_key:
         return None
-    content = await _llm_openai_compatible(
-        _DAHL_BASE,
-        settings.get("dahl_model") or "MiniMaxAI/MiniMax-M2.7",
-        settings["dahl_api_key"],
-        float(settings.get("dahl_timeout", 30)),
-        prompt,
-        max_tokens=4096,
-    )
-    if content is None:
-        return None
-    # Strip chain-of-thought tags the model emits before the final answer
-    import re
-    cleaned = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
-    return cleaned or None
+    timeout = float(settings.get("dahl_timeout", 90))
+    configured = settings.get("dahl_model") or _DAHL_MODEL_FALLBACK[0]
+    order = [configured] + [m for m in _DAHL_MODEL_FALLBACK if m != configured]
+    for model in order:
+        content, retryable = await _dahl_request(model, api_key, timeout, prompt)
+        if content is not None:
+            return content, model
+        if not retryable:
+            return None
+    return None
 
 
 async def llm_grok(settings: dict, prompt: str) -> str | None:
@@ -1006,6 +1073,10 @@ async def _test_dahl(settings: dict) -> tuple[bool, str]:
                     message = ""
                 if r.status_code in (401, 403):
                     return False, "DAHL rejected the API key."
+                if r.status_code == 429:
+                    return False, ("This model is at capacity on DAHL's free tier "
+                                   "right now — not a problem with your key. Try "
+                                   "again shortly, or pick a different model.")
                 return False, (f"DAHL returned an error ({r.status_code}"
                                f"{': ' + message if message else ''}).")
             data = r.json()
@@ -1014,10 +1085,7 @@ async def _test_dahl(settings: dict) -> tuple[bool, str]:
     except ValueError:
         return False, "DAHL returned an unreadable response."
     content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
-    # Strip think-block before checking
-    import re
-    content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
-    if not content:
+    if not _strip_think(content):
         return False, "DAHL returned an empty response."
     return True, "Connected."
 

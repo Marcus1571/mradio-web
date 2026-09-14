@@ -448,11 +448,17 @@ class Enricher:
             elif name == "opencode":
                 out = await _opencode.ask(settings, prompt)
             elif name == "dahl":
-                out = await providers.llm_dahl(settings, prompt)
+                # llm_dahl() may fall back across DAHL's own model roster
+                # on a 429, so it reports back which model actually
+                # answered rather than always the admin-configured one —
+                # see llm_dahl()'s docstring.
+                dahl_result = await providers.llm_dahl(settings, prompt)
+                out, model = dahl_result if dahl_result else (None, "")
             else:
                 out = None
             elapsed_ms = round((time.perf_counter() - started) * 1000)
-            model = settings.get(_MODEL_SETTINGS_KEY.get(name, ""), "")
+            if name != "dahl":
+                model = settings.get(_MODEL_SETTINGS_KEY.get(name, ""), "")
             await _record_ai_request(name, model, elapsed_ms, "success" if out else "no_output")
             if out:
                 if name in providers.AUTO_HIDE_PROVIDERS:

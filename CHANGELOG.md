@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.20.2] - 2026-09-14
+
+DAHL quality investigation (DeepSeek-V4-Flash, GLM-4.3-flash, Qwen3-235B
+attempted per the operator's request) plus two real fixes it surfaced.
+
+- **DeepSeek/GLM/Qwen could not be tested** — all three returned HTTP 429
+  `model_concurrency` continuously for 30+ minutes on this free-tier key;
+  only MiniMax-M2.7 was reachable. No accuracy data collected; re-test
+  once DAHL's capacity allows.
+- **Found and ruled out a MiniMax-M2.7 character-counting reasoning
+  loop**: under a raw prompt with an exact character-count target, the
+  model gets stuck counting its own output character-by-character and
+  never answers. Confirmed via 4/4 clean runs that this does **not**
+  occur under DAHL's real hardened production prompt, which replaces
+  that exact phrasing — no prompt fix needed.
+- **Fixed: `dahl_timeout` raised from 30s to 90s.** The hardened prompt's
+  real latency (42-58s observed, 4/4 runs) exceeded the old default on
+  every run, which would silently fall through to the next provider in
+  the fallback chain and make DAHL look unreliable for reasons unrelated
+  to model quality.
+- **Added: intra-DAHL model fallback.** `llm_dahl()` now tries the
+  admin-configured model first, then falls through a fixed,
+  hand-maintained list of DAHL's other known models
+  (MiniMax-M2.7 → DeepSeek-V4-Flash → GLM-4.3-flash → Qwen3-235B) on an
+  HTTP 429 specifically — DAHL's own error body sometimes suggests a
+  "switch to this model" alternative, but live testing found that
+  suggestion unreliable (a named model itself 429'd seconds later), so
+  the fallback order is fixed rather than following it. `ai_requests`
+  now logs whichever model actually answered, not just the configured
+  one, when a fallback occurs.
+- Full investigation, evidence, and reasoning in `findings.md` and
+  `AI.md`'s dahl section.
+
 ## [1.20.1] - 2026-09-14
 
 Bug fix: DAHL's API key couldn't be saved and Test always failed with

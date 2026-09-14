@@ -23,6 +23,24 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.20.2 tagged, released, and deployed to LT 2026-09-14.** Attempted
+  DeepSeek-V4-Flash/GLM-4.3-flash/Qwen3-235B quality testing per the
+  operator's request — all three were unreachable (HTTP 429
+  `model_concurrency`, DAHL's free-tier capacity gate) across 30+ minutes
+  of testing, so no accuracy data exists for them yet. Along the way,
+  found and then ruled out a MiniMax-M2.7 character-counting reasoning
+  loop (real under a raw test prompt, confirmed absent under DAHL's real
+  hardened production prompt via 4/4 clean live runs) and found a real,
+  fixed issue: `dahl_timeout`'s 30s default was too short for the
+  hardened prompt's actual 42-58s latency, so it's now 90s. Also built
+  the intra-DAHL model-fallback mechanism the operator asked for — a
+  fixed, hand-maintained list of DAHL's 4 known models, tried in order
+  on a 429, deliberately not trusting DAHL's own "switch to this model"
+  error-body suggestion (confirmed unreliable in live testing — a named
+  model itself 429'd seconds later). `ai_requests` now logs whichever
+  DAHL model actually answered when a fallback occurs, not just the
+  configured one. Full writeup in `findings.md` and `AI.md`'s dahl
+  section.
 - **v1.20.1 tagged, released, and deployed to LT 2026-09-14.** Fixes two
   real bugs the v1.20.0 cleanup missed, reported by the operator from the
   live AI providers page: the DAHL API key silently failed to save, and

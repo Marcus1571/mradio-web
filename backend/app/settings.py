@@ -137,9 +137,13 @@ _DEFAULTS = {
     # Free key auto-assigned when visiting the site, no card needed. See
     # providers.py's llm_dahl() for full testing notes. max_tokens=4096 is
     # baked into llm_dahl() itself, not a user-facing setting here.
+    # timeout=90 (not the 30s baseline): live testing 2026-09-14 against
+    # the real hardened prompt found MiniMax-M2.7 consistently taking
+    # 42-58s (reasoning-heavy, same profile as OpenRouter's own raised
+    # timeout) — 30s failed every observed run. See AI.md's dahl section.
     "dahl_api_key": "",
     "dahl_model": "MiniMaxAI/MiniMax-M2.7",
-    "dahl_timeout": 30,
+    "dahl_timeout": 90,
     "dahl_manually_enabled": True,
     # Spotify per-user playlist integration — client credentials are
     # admin-managed here; the OAuth redirect URI is env-only (must match

@@ -452,34 +452,85 @@ model emits long internal chain-of-thought, but it still fabricated a
 historical date in raw testing, so hardening is warranted.
 
 **Model:** `MiniMaxAI/MiniMax-M2.7` tested; site also lists
-`deepseek-ai/DeepSeek-V4-Flash-0731`, `THUDM/glm-4.3-flash`, and others.
+`deepseek-ai/DeepSeek-V4-Flash-0731`, `THUDM/glm-4.3-flash`, and
+`Qwen/Qwen3-235B-A22B-fp8-tp2`. As of 2026-09-14, **only MiniMax-M2.7 was
+reachable on this key** — the other three consistently returned `429
+model_concurrency` ("signed-in and paid accounts are admitted first")
+across 30+ minutes of repeated probing. No accuracy/speed/reliability
+data exists yet for DeepSeek/GLM/Qwen; re-test once capacity opens up.
+See `findings.md`'s 2026-09-14 follow-up entry for the full detail.
 
 **Access:** not admin-only by default — free key, no shared daily quota
 visible. Revisit if live usage reveals a per-key cap that makes it behave
 like OpenRouter's shared free tier.
 
 **Reliability:** manual spot-check 2026-09-14: 8/8 successful after
-resolving one transient HTTP 502 and increasing `max_tokens`. No
-`ai_requests` data yet.
+resolving one transient HTTP 502 and increasing `max_tokens`. A same-day
+follow-up session found a character-counting reasoning loop under a raw
+unhardened test prompt (see `findings.md`), but confirmed via 4/4 clean
+runs against the *real* hardened prompt (built live via
+`apply_provider_rules(prompt, "dahl")`) that this loop does not occur in
+production — DAHL's hardened prompt replaces the exact numeric
+character-count phrasing that triggers it. See "Known issues" below for
+what actually is a live risk: timeout. No `ai_requests` production data
+yet.
 
-**Speed:** manual spot-check median ~8,900 ms (range 4,257–13,753 ms).
-Faster than OpenCode's ~21 s median. The model returns quickly once the
-token budget is large enough for its reasoning chain.
+**Speed:** manual spot-check median ~8,900 ms (range 4,257–13,753 ms) on
+short/simple, unhardened prompts. Under the **real hardened prompt**
+(the one production traffic actually uses), latency is meaningfully
+higher: 4/4 test runs took 42.0–57.7 seconds, driven by the hardened
+prompt's much larger size (~2,300 prompt tokens vs. a few hundred) and
+its mandatory multi-slot answer structure. See Known issues — this
+exceeds the current 30s default timeout on every observed run.
 
-**Accuracy:** manual fact-check battery 2026-09-14: 5/6 correct. One
-clear error: it dated Bessie Smith's "Empty Bed Blues" to 1933 instead of
-the correct 1928. The other five answers, including the obscure Kora
-Jazz Trio cover, were factually sound.
+**Accuracy:** manual fact-check battery 2026-09-14: 5/6 correct on a raw
+unhardened prompt. One clear error: it dated Bessie Smith's "Empty Bed
+Blues" to 1933 instead of the correct 1928. A same-day follow-up ran 4
+tracks (including `muldaur_empty_bed`) against the real hardened prompt:
+all 4 correct, and the Bessie Smith track this time skipped the optional
+"original recording" slot entirely rather than guessing — consistent
+with the hardened prompt's fact-category allowlist doing its job, though
+not yet a controlled re-test of the same original error (grounding was
+not enabled for this run either).
 
 **Known issues / limitations:**
-- `max_tokens=1200` is not enough — MiniMax-M2.7 writes extensive
-  chain-of-thought and hits `finish_reason: "length"` before the final
-  answer. Use at least 4096 tokens; 8192 for headroom.
+- **`dahl_timeout`'s 30s default is too short for the hardened prompt.**
+  All 4 hardened-prompt test runs (2026-09-14 follow-up) took 42-58
+  seconds — every one would fail at the current default and silently
+  fall through to the next provider in the fallback chain, making DAHL
+  look unreliable for reasons unrelated to model quality. **Not yet
+  fixed in code** — recommend raising to at least 75s (Ollama's
+  `gpt-oss` precedent) or 90s (OpenRouter's reasoning-token precedent).
+- A character-counting reasoning loop was found in MiniMax-M2.7 under a
+  **raw, unhardened** test prompt containing an exact numeric
+  character-count target ("750-850 characters, hard max 850") — the
+  model gets stuck manually counting output characters one-by-one inside
+  `<think>` and never emits a final answer, regardless of token budget
+  (reproduced even at 8192). **Confirmed NOT to occur under the real
+  hardened prompt** (4/4 clean runs, see Reliability above) — the
+  hardened path replaces that exact phrasing before it ever reaches the
+  model. No action needed unless a future prompt-template change
+  reintroduces a numeric character target into the hardened path; if so,
+  re-test against this finding before shipping. Full reproduction detail
+  in `findings.md`.
+- `max_tokens=1200` is not enough on ordinary responses — MiniMax-M2.7
+  writes extensive chain-of-thought and hits `finish_reason: "length"`
+  before the final answer. 4096 is sufficient under the hardened prompt
+  (all 4 follow-up runs completed well under budget, 606-842 completion
+  tokens).
 - Responses include a `<think>...</think>` reasoning block that must be
-  stripped before storage/display.
-- The 1928-vs-1933 Bessie Smith error is exactly the kind of categorical
-  date hallucination the hardened prompt + Wikipedia grounding was built
-  to suppress; re-test with grounding before promoting out of research.
+  stripped before storage/display (already handled in `llm_dahl()`).
+- The 1928-vs-1933 Bessie Smith error was found under an unhardened
+  prompt; a hardened re-run on the same track avoided the error by
+  skipping the uncertain slot rather than guessing, but this wasn't a
+  controlled re-test of the identical original prompt/conditions with
+  grounding enabled — still worth a dedicated grounded re-run before
+  treating the original error as resolved.
+- DAHL's 429 error body sometimes names a specific "switch to this
+  model" suggestion, but that suggestion is not reliable in real time —
+  one observed case named a model that itself was 429ing seconds later.
+  Do not build automation that trusts this suggestion; use a fixed,
+  hand-maintained fallback order instead.
 
 **Integration status (2026-09-14):** fully integrated — added to
 `PROVIDERS` tuple, `provider_enabled()` probe, `llm_dahl()` (which
@@ -488,11 +539,31 @@ stripping), `_test_dahl()` in `run_provider_test()`, `textutil.py`
 `_CATEGORICAL_PROVIDERS`, `enricher.py` dispatch and stats key, and
 `settings.py` defaults + secrets. Frontend: provider group in
 `AISettingsPage`, `types.ts`, and all 15 language files (English
-placeholders; translate as needed). KB.md entry added.
+placeholders; translate as needed). KB.md entry added. A follow-up fix
+(v1.20.1) corrected two files the initial integration missed —
+`models.py`'s `AISettingsUpdate` and `routers/settings.py`'s test
+endpoint — that had silently broken saving the API key and running the
+Test button; see `STATUS.md`.
 
-**Re-test before promoting out of research:** the Bessie Smith error
-(1928-vs-1933) needs a grounded run to confirm the hardened prompt +
-Wikipedia grounding fixes it.
+**Re-test before promoting out of research:**
+1. `dahl_timeout` needs raising from 30s before promotion — every
+   observed hardened-prompt run took 42-58s and would fail at the
+   current default. Ship this before generating any `ai_requests`
+   reliability data, or the numbers will reflect the timeout, not the
+   model.
+2. The Bessie Smith error (1928-vs-1933) needs a proper grounded re-run
+   (Wikipedia snippet grounding enabled, same exact track) to confirm
+   the hardened prompt + grounding combination fixes it — the follow-up
+   session's hardened run on this track avoided the error but wasn't a
+   controlled repeat of the original conditions.
+3. DeepSeek-V4-Flash, GLM-4.3-flash, and Qwen3-235B all need their own
+   fact-check battery once DAHL's free-tier capacity allows a request
+   through — none has been tested at all as of 2026-09-14; every attempt
+   this session returned `429 model_concurrency`.
+4. The character-counting reasoning loop found under a raw unhardened
+   test prompt does NOT need further action — confirmed absent under
+   the real hardened prompt (4/4 clean runs). Documented in `findings.md`
+   in case a future prompt-template change reintroduces the trigger.
 
 ## Not yet coded / research-only
 
