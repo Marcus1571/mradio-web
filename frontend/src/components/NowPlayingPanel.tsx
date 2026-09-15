@@ -367,18 +367,6 @@ export function NowPlayingPanel({
                 </span>
               </button>
               <button
-                className={`dropdown-option ${effectiveService === 'deezer' ? 'active' : ''}`}
-                type="button"
-                onClick={() => {
-                  void musicService.setMusicService('deezer')
-                  setServiceOpen(false)
-                }}
-              >
-                <span className="dropdown-option-icon">
-                  <DeezerIcon /> Deezer
-                </span>
-              </button>
-              <button
                 className={`dropdown-option ${effectiveService === 'apple' ? 'active' : ''}`}
                 type="button"
                 onClick={() => {
@@ -388,6 +376,18 @@ export function NowPlayingPanel({
               >
                 <span className="dropdown-option-icon">
                   <AppleMusicIcon /> Apple Music
+                </span>
+              </button>
+              <button
+                className={`dropdown-option ${effectiveService === 'deezer' ? 'active' : ''}`}
+                type="button"
+                onClick={() => {
+                  void musicService.setMusicService('deezer')
+                  setServiceOpen(false)
+                }}
+              >
+                <span className="dropdown-option-icon">
+                  <DeezerIcon /> Deezer
                 </span>
               </button>
             </div>

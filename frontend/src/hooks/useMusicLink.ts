@@ -13,12 +13,27 @@ import type { MusicLinkResponse, MusicService } from '../api/types'
  * service === null (no service picked yet, e.g. a fresh account) skips
  * the request entirely — there's nothing to search against, and the
  * caller (NowPlayingPanel) renders no icon at all in that state rather
- * than an inert greyed-out one, since there's no service to represent. */
+ * than an inert greyed-out one, since there's no service to represent.
+ *
+ * The fetched url is stored tagged with the service it was resolved for.
+ * useEffect's own reset (setResult(... url: null)) only runs AFTER the
+ * render that already picked up a new `service` commits — for one frame,
+ * on every service switch, the newly switched-to service's icon would
+ * otherwise render wrapped around the PREVIOUS service's still-held url,
+ * clickable and indistinguishable from a resolved link. Confirmed live
+ * 2026-09-15: switching to Apple Music opened a stale Spotify link on a
+ * click that landed in that window; a reload masked it by forcing a
+ * clean resync. Fixed by comparing the tagged service against the
+ * current `service` at render time below, so a stale url is discarded
+ * immediately rather than waiting for the effect to catch up. */
 export function useMusicLink(rawTitle: string, service: MusicService | null): string | null {
-  const [url, setUrl] = useState<string | null>(null)
+  const [result, setResult] = useState<{ service: MusicService | null; url: string | null }>({
+    service: null,
+    url: null,
+  })
 
   useEffect(() => {
-    setUrl(null)
+    setResult({ service, url: null })
     if (!rawTitle || !service) return
     let cancelled = false
     // service isn't sent — the backend resolves the active service itself
@@ -28,15 +43,15 @@ export function useMusicLink(rawTitle: string, service: MusicService | null): st
     api
       .get<MusicLinkResponse>(`/api/music-link?raw_title=${encodeURIComponent(rawTitle)}`)
       .then((res) => {
-        if (!cancelled) setUrl(res.url)
+        if (!cancelled) setResult({ service, url: res.url })
       })
       .catch(() => {
-        if (!cancelled) setUrl(null)
+        if (!cancelled) setResult({ service, url: null })
       })
     return () => {
       cancelled = true
     }
   }, [rawTitle, service])
 
-  return url
+  return result.service === service ? result.url : null
 }

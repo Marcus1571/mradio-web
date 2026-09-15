@@ -443,3 +443,24 @@ External research (not independently load-tested this session, to avoid repeatin
 ## Updated recommendation
 
 **This supersedes the SearXNG-based conclusion above.** The iTunes Search API is a better-fitting, already-proven-elsewhere, free, keyless option for Apple Music search-only links — no rate-limit risk shared with other projects' usage (unlike SearXNG's shared upstream-engine problem), structured response fields, and independent confirmation via `cadenza`'s own shipped implementation of the identical idea. Worth planning as a real implementation (extending the existing music-service dropdown/link pattern to a third service) rather than research-only — the open item is building the actual `apple.py`-equivalent module and scoring logic, not further feasibility research.
+
+---
+
+Date: 2026-09-15
+Scope: implemented as `apple_music.py` (v1.22.0). Operator asked directly: would many listeners running the radio in the background, each with a music service active, risk the app's own request volume getting flagged/throttled as "excessive" by Spotify/Deezer/Apple?
+
+## Verdict: not a live risk at this app's scale, by design — worth re-checking only if the listener base or station catalogue grows a lot
+
+The music-link feature was already built to avoid exactly this, for reasons unrelated to this specific question (it predates Apple Music):
+
+- **Requests fire per track-change event, not on a timer and not per-listener.** `useMusicLink.ts`'s effect only runs when `rawTitle` or `service` changes.
+- **`music_link_cache.py` is shared across all users, keyed by `(service, raw_title)`.** If N listeners are on the same station when a track changes, that's one outbound request to the active service, not N — every other listener's lookup hits the cache. Misses are cached too (`{"url": null}`), so a track with no match isn't re-queried by every subsequent listener either.
+- Effective sustained load per service is roughly "distinct new tracks across all currently-playing stations per minute," not "number of listeners."
+
+Given that shape, checked each service's real limit against it:
+
+- **Apple (iTunes Search API):** the tightest of the three — ~20 req/min observed (see this file's earlier entry). Comfortably under load at mradio-web's current scale; would only be a real concern if many *different* stations changed to *never-before-cached* tracks within the same ~60s window (e.g. a large station catalogue's synchronized top-of-hour ID changes).
+- **Spotify:** search goes through `spotify.get_app_token()` (Client Credentials, one app-level token, no per-user token) — same shared-cache protection applies, no per-user rate-limit exposure either.
+- **Deezer:** unauthenticated search, no documented hard cap encountered in this session's testing; same caching applies.
+
+**Not acted on — documented headroom, not a live problem.** Nothing changed in the code as a result of this question. Revisit if the station catalogue or listener count grows enough that "distinct new tracks per minute across the whole deployment" could plausibly approach ~20 for the Apple lookup specifically.

@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.22.1] - 2026-09-15
+
+Fixes a real bug the operator reported in v1.22.0: switching to Apple
+Music sometimes still opened Spotify — until a full page reload, after
+which switching worked correctly. Also reorders the music-service
+dropdown to Spotify → Apple Music → Deezer.
+
+Root cause, confirmed via the live `music_link_cache.json` on
+production (the server-side cache already held the correct
+`apple::...` entry with the right `music.apple.com` URL — ruling out
+the backend and the v1.21.2-style HTTP-caching bug entirely): this was
+a frontend React timing bug in `useMusicLink.ts`. The hook cleared its
+held `url` inside a `useEffect`, which only runs **after** the render
+that already picked up the newly switched `service` commits. That left
+a one-frame window, on every service switch, where the icon for the
+new service (e.g. Apple Music) rendered wrapped in an `<a>` still
+pointing at the *previous* service's URL (e.g. Spotify) — clickable and
+visually indistinguishable from a resolved link. A page reload masked
+it by forcing a full clean resync, which is why it looked
+service-specific and reload-fixable rather than what it actually was: a
+race present since the original music-link feature shipped (v1.21.0),
+just never landed-on before because there were only two services to
+switch between.
+
+- `useMusicLink.ts` now tags the held url with the service it was
+  resolved for, and compares that tag against the current `service` at
+  render time — a stale url from the previous service is discarded the
+  instant `service` changes, synchronously, rather than waiting for the
+  effect to catch up.
+- `NowPlayingPanel.tsx`: dropdown order is now Spotify, Apple Music,
+  Deezer (was Spotify, Deezer, Apple Music).
+
 ## [1.22.0] - 2026-09-15
 
 Adds **Apple Music** as a third music-service link option, alongside

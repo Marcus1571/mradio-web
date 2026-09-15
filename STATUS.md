@@ -23,6 +23,18 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.22.1 tagged, released, and deployed to LT 2026-09-15.** Fixed a
+  real bug reported right after v1.22.0 shipped: switching to Apple
+  Music sometimes still opened Spotify, until a full reload. Confirmed
+  via the live cache file that the backend was already correct — this
+  was a frontend React timing bug in `useMusicLink.ts` (the held url
+  was cleared inside a `useEffect`, one render late relative to the
+  icon picking up the new service), not a repeat of v1.21.2's HTTP
+  caching bug despite the surface symptom looking identical. Fixed by
+  tagging the held url with the service it was resolved for and
+  discarding it synchronously at render time the instant `service`
+  changes. Also reordered the music-service dropdown to Spotify → Apple
+  Music → Deezer (was Spotify → Deezer → Apple Music).
 - **v1.22.0 tagged, released, and deployed to LT 2026-09-15.** Adds
   Apple Music as a third music-service link option (Spotify, Deezer,
   now Apple Music), using Apple's free keyless iTunes Search API
