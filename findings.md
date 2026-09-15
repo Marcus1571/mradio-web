@@ -464,3 +464,25 @@ Given that shape, checked each service's real limit against it:
 - **Deezer:** unauthenticated search, no documented hard cap encountered in this session's testing; same caching applies.
 
 **Not acted on — documented headroom, not a live problem.** Nothing changed in the code as a result of this question. Revisit if the station catalogue or listener count grows enough that "distinct new tracks per minute across the whole deployment" could plausibly approach ~20 for the Apple lookup specifically.
+
+---
+
+Date: 2026-09-15
+Scope: operator asked whether Amazon Music — which markets itself as having the largest music catalog — could be added as a fourth search-only link option, the same way Apple Music was added via the free iTunes Search API. This re-checks Amazon specifically, since the read-only/search-only feature shape (no OAuth, no playlist writes) is different from what the original 2026-09-12 investigation ruled Amazon out for (lack of a public *write* API for third-party playlist creation).
+
+## Verdict: not viable, for a different and harder reason than Spotify's cap — no public signup path exists at all
+
+**Official Amazon Music Web API is real and does have a search endpoint** (`Web API Search V1.0` — searches albums/artists/tracks/podcasts, ranked results, plus a `Tracks` endpoint for per-ID metadata) that would structurally fit this app's existing search-only pattern. But confirmed live via Amazon's own developer docs: **"The APIs are currently in closed Beta status and access is limited to already approved developers,"** with onboarding gated behind "reach out to your Amazon Music point-of-contact" — there is no self-service application, sign-up form, or paid tier to buy into, unlike every other service this app integrates with:
+
+- Spotify: free self-service Client Credentials (app-level, no user OAuth needed for search).
+- Deezer: free self-service app registration.
+- Apple: no signup at all — the iTunes Search API is public and keyless.
+- Amazon: **invite-only, requires an existing relationship with Amazon Music** ("your point-of-contact"). Not obtainable for a personal/self-hosted project with no prior Amazon partnership, at any price.
+
+This is a harder gate than Spotify's 5-user Development Mode cap (that one is at least self-service, just capped) or Apple's old paid-MusicKit-only path (that one could be solved with money). There is no equivalent workaround here — no free tier, no paid tier, no keyless public endpoint.
+
+**Unofficial alternative ruled out, not just skipped**: a GitHub-hosted open-source "Amazon Music API" project exists and does support search + streaming URL extraction, but it works by holding a **real logged-in Amazon account's cryptographic session tokens** (its own README warns "deploy only on private HTTPS servers") and includes DRM key retrieval for actual playback — a completely different risk category from Apple's public keyless catalog lookup. This isn't a public API wrapper, it's an Amazon-account-credential-based tool built for personal streaming/DRM circumvention, structurally similar to a scraper impersonating a logged-in session. Not appropriate for a shared, self-hosted app's read-only "open this track's page" link feature — the ToS and security exposure (storing/using a real Amazon account's session tokens server-side, shared across every listener) isn't worth it for a "nice to have" link.
+
+## Recommendation
+
+**Do not add Amazon Music.** Unlike Apple (paid-but-obtainable) or Spotify (capped-but-self-service), Amazon's official API has no path a small self-hosted project can realistically get onto, and the unofficial alternative trades away exactly the safety properties (no OAuth, no account credentials, no per-service risk) that made the current three-service design worth building this way in the first place. Revisit only if Amazon's Web API ever moves out of closed beta into public self-service — no indication of a timeline for that as of this search.
