@@ -3,52 +3,38 @@ from fastapi import APIRouter, Depends, Query, Response
 from .. import apple_music, deezer, music_link_cache, spotify
 from ..deps import get_active_user
 from ..textutil import split_title
-from ..userdata import load_cfg
 
 router = APIRouter(prefix="/api/music-link", tags=["music-link"])
+
+_VALID_SERVICES = ("spotify", "deezer", "apple")
 
 
 @router.get("")
 async def get_music_link(
     response: Response,
     raw_title: str = Query(...),
+    service: str | None = Query(None),
     user: dict = Depends(get_active_user),
 ) -> dict:
-    """Returns {"url": <track page URL> | None} for the current user's
-    active music service (music_service in their config — resolved here,
-    server-side, NOT trusted from a client query param). This closes a
-    real correctness gap: a stale client-side service value in the brief
-    window after switching services could otherwise return a URL for a
-    service the UI no longer thinks is active. Read-only, no OAuth, no
-    per-user connection state — see AI.md/findings.md's "search-only
-    music-service links" entry for the full design rationale.
+    """Returns {"url": <track page URL> | None} for the requested music
+    service. `service` is session-only on the client (useMusicService.ts
+    never persists it — the operator's explicit call, 2026-09-15: every
+    app launch starts at "no service" rather than remembering a prior
+    pick, to avoid spending search-API quota on listeners who don't use
+    the feature), so it's sent per-request rather than resolved from the
+    user's stored config the way it was before that change. Read-only,
+    no OAuth, no per-user connection state — see AI.md/findings.md's
+    "search-only music-service links" entry for the full design
+    rationale.
 
-    Cache-Control: no-store is mandatory here, not optional — the query
-    string is just raw_title, deliberately excluding the service (see the
-    server-side-resolution reasoning above), so this endpoint returns a
-    DIFFERENT answer for the SAME URL depending on server-side state the
-    browser can't see. Without an explicit no-store, a browser's default
-    heuristic HTTP caching (RFC 7234 — GET responses with no cache
-    directives may still be cached and reused for an identical URL) can
-    silently serve a stale answer from before a service switch, with the
-    server never even seeing the second request. Confirmed as the real
-    cause of a 2026-09-14 production bug report: switching to Deezer and
-    clicking the (correctly Deezer-colored) icon opened a stale Spotify
-    URL for a track that had been looked up under Spotify moments
-    earlier, in the same page session, before the switch."""
+    Cache-Control: no-store is kept even though `service` is now part of
+    the query string (so the URL itself already varies per service,
+    unlike before) — cheap insurance against any intermediate cache that
+    might ignore query params, matching the same defensive posture
+    stream.py already uses."""
     response.headers["Cache-Control"] = "no-store"
     raw_title = (raw_title or "").strip()
-    if not raw_title:
-        return {"url": None}
-
-    cfg = await load_cfg(user["id"])
-    service = cfg.get("music_service")
-    # No silent default to "spotify" here — a user who hasn't picked a
-    # service yet (or explicitly has none set) gets no lookup at all,
-    # matching the frontend's own useMusicLink() behavior of skipping the
-    # request entirely when no service is active. There's nothing to
-    # search against without a chosen service.
-    if service not in ("spotify", "deezer", "apple"):
+    if not raw_title or service not in _VALID_SERVICES:
         return {"url": None}
 
     cached = await music_link_cache.get_cached(service, raw_title)

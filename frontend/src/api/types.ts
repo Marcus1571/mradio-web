@@ -50,7 +50,6 @@ export interface Config {
   last_status?: 'playing' | 'stopped'
   provider?: string
   language?: 'en' | 'es' | 'it' | 'pt' | 'fr' | 'ru' | 'de' | 'el' | 'nl' | 'da' | 'sv' | 'nb' | 'ja' | 'tr' | 'he'
-  music_service?: MusicService | null
 }
 
 export type MusicService = 'spotify' | 'deezer' | 'apple'

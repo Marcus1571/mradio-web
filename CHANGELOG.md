@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.23.0] - 2026-09-15
+
+**Music-service choice is now session-only, never persisted.** Every
+app launch (or reload) starts at "no service"/"Select one" — the
+operator's explicit design decision, made after confirming v1.22.4's
+fix correctly persisted a cleared preference: persisting the choice at
+all meant a listener who picked a service once (out of curiosity, or
+by accident) would keep spending music-service search-API quota
+(particularly Apple's tighter iTunes Search rate limit) on every future
+session, whether they actually used the feature or not. Session-only
+enforces "opt in for this session" at the source, rather than relying
+on remembering to click "Select one" again after every reload.
+
+- `routers/config.py`: `music_service` removed entirely from
+  `ConfigUpdate` and the persisted config schema — it's no longer part
+  of `/api/config` at all.
+- `routers/music_link.py`: `GET /api/music-link` now takes `service` as
+  an explicit query parameter instead of resolving it from the user's
+  stored config (there isn't one to resolve anymore). This does
+  reintroduce client-supplied service selection, which the original
+  v1.21.0 design deliberately avoided for correctness reasons — an
+  unavoidable tradeoff of going session-only, since there's no
+  server-side ground truth left to fall back on. The response is still
+  cached per `(service, raw_title)` and tagged/verified against the
+  current `service` at render time client-side (`useMusicLink.ts`), so
+  a slow in-flight request from before a quick double-switch can't
+  surface against the wrong icon.
+- `useMusicService.ts` rewritten as a plain `useState`, no `/api/config`
+  fetch or PATCH at all.
+- Existing accounts with an old saved `music_service` value in their
+  `config.json` (from before this change) are unaffected in practice —
+  the field is simply no longer read by anything; left in place rather
+  than actively cleaned up, consistent with this project's "no DB
+  migration tooling, additive-only schema" convention.
+
 ## [1.22.4] - 2026-09-15
 
 Fixes a real bug reported right after v1.22.3 shipped: clicking "Select

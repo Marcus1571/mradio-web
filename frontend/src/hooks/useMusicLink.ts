@@ -10,22 +10,21 @@ import type { MusicLinkResponse, MusicService } from '../api/types'
  * so repeated calls for the same pair are cheap and this hook doesn't
  * need to protect against them.
  *
- * service === null (no service picked yet, e.g. a fresh account) skips
- * the request entirely — there's nothing to search against, and the
- * caller (NowPlayingPanel) renders no icon at all in that state rather
- * than an inert greyed-out one, since there's no service to represent.
+ * service === null (no service picked yet, e.g. every fresh app
+ * launch — useMusicService.ts no longer persists a choice, see that
+ * file) skips the request entirely — there's nothing to search against,
+ * and the caller (NowPlayingPanel) renders no icon at all in that state
+ * rather than an inert greyed-out one, since there's no service to
+ * represent.
  *
- * The fetched url is stored tagged with the service it was resolved for.
- * useEffect's own reset (setResult(... url: null)) only runs AFTER the
- * render that already picked up a new `service` commits — for one frame,
- * on every service switch, the newly switched-to service's icon would
- * otherwise render wrapped around the PREVIOUS service's still-held url,
- * clickable and indistinguishable from a resolved link. Confirmed live
- * 2026-09-15: switching to Apple Music opened a stale Spotify link on a
- * click that landed in that window; a reload masked it by forcing a
- * clean resync. Fixed by comparing the tagged service against the
- * current `service` at render time below, so a stale url is discarded
- * immediately rather than waiting for the effect to catch up. */
+ * `service` is sent to the backend explicitly (routers/music_link.py no
+ * longer resolves it from a persisted config, since there isn't one
+ * anymore) — the result is still tagged with the service it was
+ * resolved for and compared against the current `service` at render
+ * time, so a response for a service the listener has since switched
+ * away from (e.g. a slow in-flight request from before a quick
+ * double-switch) is discarded rather than shown against the wrong
+ * icon. */
 export function useMusicLink(rawTitle: string, service: MusicService | null): string | null {
   const [result, setResult] = useState<{ service: MusicService | null; url: string | null }>({
     service: null,
@@ -36,12 +35,9 @@ export function useMusicLink(rawTitle: string, service: MusicService | null): st
     setResult({ service, url: null })
     if (!rawTitle || !service) return
     let cancelled = false
-    // service isn't sent — the backend resolves the active service itself
-    // from the user's config (see routers/music_link.py), so a stale
-    // client-side value can't return a mismatched URL. It's still a
-    // dependency below purely to re-trigger this effect on switch.
+    const params = new URLSearchParams({ raw_title: rawTitle, service })
     api
-      .get<MusicLinkResponse>(`/api/music-link?raw_title=${encodeURIComponent(rawTitle)}`)
+      .get<MusicLinkResponse>(`/api/music-link?${params.toString()}`)
       .then((res) => {
         if (!cancelled) setResult({ service, url: res.url })
       })

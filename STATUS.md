@@ -23,6 +23,22 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.23.0 tagged, released, and deployed to LT 2026-09-15.** Music
+  service is now session-only, never persisted — every app launch
+  starts at "no service"/"Select one" rather than remembering a prior
+  pick. Operator's explicit call, made right after confirming v1.22.4's
+  clear-to-null fix worked correctly: persisting it at all meant a
+  listener who picked a service once would keep spending search-API
+  quota (Apple's iTunes Search limit especially) on every future
+  session regardless of whether they cared about the feature.
+  `music_service` removed entirely from `/api/config`'s schema;
+  `GET /api/music-link` now takes `service` as an explicit query
+  param instead of resolving it from stored config (there's no
+  server-side value left to resolve). `useMusicService.ts` is now a
+  plain `useState`, no fetch/PATCH involved at all. Old accounts with a
+  stale saved `music_service` in their `config.json` are unaffected —
+  the field is simply unread now, left in place per this project's
+  additive-only schema convention.
 - **v1.22.4 tagged, released, and deployed to LT 2026-09-15.** Fixed a
   real bug reported right after v1.22.3 shipped: "Select one" in the
   music-service dropdown didn't stick. Root cause: `userdata.py`'s
