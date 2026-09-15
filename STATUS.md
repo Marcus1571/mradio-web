@@ -23,6 +23,22 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.22.2 tagged, released, and deployed to LT 2026-09-15.** Fixed
+  the actual root cause behind the bug v1.22.1 attempted to fix (the
+  operator reproduced it again immediately after that release, with
+  the icon already showing "resolved"/colored for the newly-switched
+  service): `useMusicService.ts`'s `setMusicService()` was updating its
+  `service` state **optimistically**, before its `PATCH /api/config`
+  call had actually persisted the switch server-side. Since both the
+  icon and `useMusicLink`'s `GET /api/music-link` lookup derive from
+  that same optimistic state, the GET could fire and return before the
+  PATCH landed — reading the server's still-old service, returning the
+  old service's URL, tagged client-side as belonging to the new one.
+  v1.22.1's render-time tag-mismatch guard didn't catch this because
+  the tag itself was wrong at the source, not stale. Fixed by making
+  `service` update only after the PATCH resolves, so the icon and the
+  link lookup can never observe different server-side states. v1.22.1's
+  guard is kept as defense-in-depth for the separate hazard it targets.
 - **v1.22.1 tagged, released, and deployed to LT 2026-09-15.** Fixed a
   real bug reported right after v1.22.0 shipped: switching to Apple
   Music sometimes still opened Spotify, until a full reload. Confirmed

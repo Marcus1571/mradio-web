@@ -1,5 +1,48 @@
 # Changelog
 
+## [1.22.2] - 2026-09-15
+
+Fixes the actual root cause behind the bug v1.22.1 attempted to fix:
+switching services (e.g. Spotify → Apple Music, within the same
+playing track) could still open the *previous* service's link, even
+though the icon had already turned "resolved"/colored for the new
+service. v1.22.1's fix (tagging the held url with its service,
+discarding a mismatched tag at render time) addressed a real but
+secondary hazard and did not fix this reproduction, as reported by the
+operator immediately after v1.22.1 shipped.
+
+**Real root cause**, found by tracing the actual request race rather
+than the rendering layer: `useMusicService.ts`'s `setMusicService()`
+updated its local `config` state **optimistically**, before awaiting
+the `PATCH /api/config` call that persists the switch server-side.
+Since `NowPlayingPanel.tsx`'s `effectiveService` (drives the icon) and
+`useMusicLink`'s effect (fires `GET /api/music-link` on `service`
+change) both derive from that same optimistic state, the GET could —
+and did — fire and return **before** the PATCH had actually landed.
+`routers/music_link.py` resolves the active service from the persisted
+config on disk, not from anything the client sends, so a GET that
+outraces its own PATCH reads the **old** service, returns the old
+service's URL, and the frontend — already showing the new service's
+icon — tags that response (client-side, from its own already-flipped
+`service` value) as belonging to the new service. This is a strictly
+worse bug than v1.21.2's browser-HTTP-caching issue: it's a genuine
+server-side stale read, not a stale cached response, and no
+`Cache-Control` header can fix a request that legitimately asked the
+question too early.
+
+- `useMusicService.ts`: `setMusicService()` no longer updates `config`
+  optimistically. `service` (and everything derived from it — the icon,
+  the music-link lookup) now only changes once the `PATCH` has actually
+  resolved, so the two can never observe different server-side states.
+  Trades a small amount of UI snappiness (the icon/label update waits
+  for one round-trip) for correctness, which matters here because the
+  wrong answer is a link to the wrong service's page, not just a
+  flicker.
+- v1.22.1's render-time service-tag guard in `useMusicLink.ts` is kept
+  as defense-in-depth for the original (different, real) one-frame
+  effect-timing gap it targeted — not reverted, since it protects
+  against a separate hazard than this fix addresses.
+
 ## [1.22.1] - 2026-09-15
 
 Fixes a real bug the operator reported in v1.22.0: switching to Apple
