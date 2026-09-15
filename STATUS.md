@@ -23,6 +23,19 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.22.4 tagged, released, and deployed to LT 2026-09-15.** Fixed a
+  real bug reported right after v1.22.3 shipped: "Select one" in the
+  music-service dropdown didn't stick. Root cause: `userdata.py`'s
+  `_persist_cfg_sync()` silently skipped writing any field set to
+  `None` — a pre-existing filter, harmless until this was the first
+  config field that ever needed an explicit clear-to-null write.
+  v1.22.3's `routers/config.py` fix correctly let `music_service: null`
+  through the validation layer, but `persist_cfg()` then discarded it
+  before it reached disk. Fixed by writing every given field, `None`
+  included; verified via a direct persist/load round-trip. Confirms
+  "Select one" (no service) as the intended standing default — not a
+  stepping stone toward defaulting to one fixed service, which the
+  operator explicitly ruled out in favor of quota-conscious opt-in.
 - **v1.22.3 tagged, released, and deployed to LT 2026-09-15.** Adds a
   "Select one" option at the top of the music-service dropdown so a
   listener can opt back out to no service — requested by the operator

@@ -155,10 +155,15 @@ def _load_cfg_sync(user_id: int) -> dict:
 
 
 def _persist_cfg_sync(user_id: int, **fields) -> bool:
+    # Every caller (routers/config.py's exclude_unset dump, enricher.py's
+    # provider=name) only ever passes fields it genuinely means to write —
+    # None included, e.g. music_service=None to explicitly clear a
+    # previously-picked service back to unset. A prior "skip None" filter
+    # here silently dropped that clear-to-null write, so "Select one"
+    # never actually persisted; confirmed live 2026-09-15.
     d = _load_cfg_sync(user_id)
     for k, v in fields.items():
-        if v is not None:
-            d[k] = v
+        d[k] = v
     return atomic_write_json(_config_file(user_id), d)
 
 

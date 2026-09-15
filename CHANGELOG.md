@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.22.4] - 2026-09-15
+
+Fixes a real bug reported right after v1.22.3 shipped: clicking "Select
+one" in the music-service dropdown didn't stick — the preference
+reverted to whatever service was previously chosen.
+
+**Root cause**: `userdata.py`'s `_persist_cfg_sync()` silently skipped
+writing any field whose value was `None` (`if v is not None: d[k] = v`).
+This predates the music-service feature entirely and was harmless until
+now, because no config field had ever needed an explicit "clear this
+back to unset" write — every prior caller only ever set fields to real
+values. v1.22.3's fix to `routers/config.py` correctly let
+`music_service: null` reach `persist_cfg()`, but `persist_cfg()` itself
+then threw the `None` away before it ever reached disk, so the config
+file's old `music_service` value was untouched and `load_cfg()` kept
+returning it.
+
+- `userdata.py`: `_persist_cfg_sync()` now writes every field it's
+  given, `None` included — confirmed via a direct persist/load
+  round-trip that clearing `music_service` to `None` now actually
+  survives a reload.
+- Reconfirms the "Select one" default (no music service picked) is the
+  intended standing behavior for new/unset accounts, not a stepping
+  stone toward a fixed default service — the operator explicitly ruled
+  out defaulting to any one service in favor of quota-conscious opt-in.
+
 ## [1.22.3] - 2026-09-15
 
 Adds a **"Select one"** option to the top of the music-service dropdown,
