@@ -131,6 +131,37 @@ export function MoonIcon({ className }: IconProps) {
   )
 }
 
+export function DropletIcon({ className }: IconProps) {
+  // Sapphire theme mark — same monoline language as Sun/Moon above.
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M8 1.5c2.2 2.8 3.5 5 3.5 7a3.5 3.5 0 1 1-7 0c0-2 1.3-4.2 3.5-7Z" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export function LeafIcon({ className }: IconProps) {
+  // Jade theme mark.
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M8 2c3 2 5 5 3.5 9-1 2.6-3.5 3-3.5 3s-2.5-.4-3.5-3C3 7 5 4 8 2Z" strokeLinejoin="round" />
+      <path d="M8 5v9" />
+    </svg>
+  )
+}
+
+export function AnchorIcon({ className }: IconProps) {
+  // Harbor theme mark.
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <circle cx="8" cy="3.2" r="1.2" />
+      <path d="M8 4.4v8.5" />
+      <path d="M4 9a4 4 0 0 0 8 0" />
+      <path d="M5.5 6.5h5" />
+    </svg>
+  )
+}
+
 export function ChevronDownIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">

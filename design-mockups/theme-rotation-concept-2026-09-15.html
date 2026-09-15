@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="./theme_tokens.css">
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,500&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap");
+  body { background: #16171b; font-family: 'Hanken Grotesk', sans-serif; padding: 28px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  h1 { color: #f0ede6; font-family: 'Newsreader', serif; grid-column: 1 / -1; margin: 0 0 4px; font-size: 1.9rem; }
+  .subtitle { color: #9a9a9a; grid-column: 1 / -1; margin: 0 0 20px; font-size: 0.9rem; font-family: 'IBM Plex Mono', monospace; }
+  .cycle-row { grid-column: 1 / -1; background: #1f2024; padding: 24px 28px; border-radius: 14px; display: flex; align-items: center; gap: 18px; margin-bottom: 4px; }
+  .cycle-label { color: #ccc; font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; margin-right: 8px; }
+  .cycle-step { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #ddd; font-family: 'Hanken Grotesk', sans-serif; font-size: 12.5px; }
+  .cycle-step .btn-demo { width: 34px; height: 34px; border-radius: 50%; background: #2a2b30; border: 1px solid #3a3b40; display: flex; align-items: center; justify-content: center; }
+  .cycle-step svg { width: 18px; height: 18px; }
+  .cycle-arrow { color: #666; font-size: 18px; }
+  .panel h2 svg { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+<h1>mradio-web — theme rotation concept</h1>
+<p class="subtitle">MOCKUP ONLY — not wired into the app. Click cycles Day → Dusk → Night → Dawn → Day. Day/Night still auto-follow OS preference for unset accounts; Dusk/Dawn are explicit-pick only.</p>
+
+<div class="cycle-row">
+  <span class="cycle-label">TOPBAR TOGGLE CYCLE:</span>
+  <div class="cycle-step">
+    <div class="btn-demo"><svg viewBox="0 0 16 16" fill="none" stroke="#e8e0d0" stroke-width="1.4"><circle cx="8" cy="8" r="3" /><path d="M8 1v1.5M8 13.5V15M15 8h-1.5M2.5 8H1M12.7 3.3l-1 1M4.3 11.7l-1 1M12.7 12.7l-1-1M4.3 4.3l-1-1" /></svg></div>
+    Day
+  </div>
+  <span class="cycle-arrow">→</span>
+  <div class="cycle-step">
+    <div class="btn-demo"><svg viewBox="0 0 16 16" fill="none" stroke="#e8e0d0" stroke-width="1.4"><path d="M1.5 10.5h13" stroke-linecap="round" /><path d="M4.5 10.5a3.5 3.5 0 0 1 7 0" /><path d="M8 2.5v4M6.2 5l1.8 1.5 1.8-1.5" stroke-linecap="round" stroke-linejoin="round" /></svg></div>
+    Dusk
+  </div>
+  <span class="cycle-arrow">→</span>
+  <div class="cycle-step">
+    <div class="btn-demo"><svg viewBox="0 0 16 16" fill="none" stroke="#e8e0d0" stroke-width="1.4"><path d="M13.5 9.5A5.8 5.8 0 0 1 6.5 2.5a5.8 5.8 0 1 0 7 7Z" /></svg></div>
+    Night
+  </div>
+  <span class="cycle-arrow">→</span>
+  <div class="cycle-step">
+    <div class="btn-demo"><svg viewBox="0 0 16 16" fill="none" stroke="#e8e0d0" stroke-width="1.4"><path d="M1.5 12h13" stroke-linecap="round" /><path d="M4.5 12a3.5 3.5 0 0 1 7 0" /><path d="M8 13.5v-4M6.2 11l1.8-1.5 1.8 1.5" stroke-linecap="round" stroke-linejoin="round" /></svg></div>
+    Dawn
+  </div>
+  <span class="cycle-arrow">→</span>
+  <span style="color:#666; font-family:'IBM Plex Mono',monospace; font-size:12px;">(back to Day)</span>
+</div>
+
+<div class="panel" data-theme="day">
+  <h2>
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="3" /><path d="M8 1v1.5M8 13.5V15M15 8h-1.5M2.5 8H1M12.7 3.3l-1 1M4.3 11.7l-1 1M12.7 12.7l-1-1M4.3 4.3l-1-1" /></svg>
+    Day <span style="font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--ink-3); font-weight:400;">— existing, unchanged</span>
+  </h2>
+  <div class="swatch-row">
+    <div class="swatch" style="background:var(--paper)"></div>
+    <div class="swatch" style="background:var(--paper-2)"></div>
+    <div class="swatch" style="background:var(--paper-3)"></div>
+    <div class="swatch" style="background:var(--accent)"></div>
+    <div class="swatch" style="background:var(--gold)"></div>
+    <div class="swatch" style="background:var(--danger)"></div>
+  </div>
+  <div class="card">
+    <div class="title">Jazz24</div>
+    <div class="sub"><span class="live-dot"></span> Robert Palmer — Every Kinda People</div>
+    <span class="accent-pill">AI provider · DAHL</span>
+  </div>
+  <div class="row">
+    <div class="btn">▶</div>
+    <span class="chip">21%</span>
+    <span class="chip">Music service · none</span>
+  </div>
+</div>
+
+<div class="panel" data-theme="dusk">
+  <h2>
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.5 10.5h13" stroke-linecap="round" /><path d="M4.5 10.5a3.5 3.5 0 0 1 7 0" /><path d="M8 2.5v4M6.2 5l1.8 1.5 1.8-1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+    Dusk <span style="font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--ink-3); font-weight:400;">— new</span>
+  </h2>
+  <div class="swatch-row">
+    <div class="swatch" style="background:var(--paper)"></div>
+    <div class="swatch" style="background:var(--paper-2)"></div>
+    <div class="swatch" style="background:var(--paper-3)"></div>
+    <div class="swatch" style="background:var(--accent)"></div>
+    <div class="swatch" style="background:var(--gold)"></div>
+    <div class="swatch" style="background:var(--danger)"></div>
+  </div>
+  <div class="card">
+    <div class="title">Jazz24</div>
+    <div class="sub"><span class="live-dot"></span> Robert Palmer — Every Kinda People</div>
+    <span class="accent-pill">AI provider · DAHL</span>
+  </div>
+  <div class="row">
+    <div class="btn">▶</div>
+    <span class="chip">21%</span>
+    <span class="chip">Music service · none</span>
+  </div>
+</div>
+
+<div class="panel" data-theme="night">
+  <h2>
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13.5 9.5A5.8 5.8 0 0 1 6.5 2.5a5.8 5.8 0 1 0 7 7Z" /></svg>
+    Night <span style="font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--ink-3); font-weight:400;">— existing, unchanged</span>
+  </h2>
+  <div class="swatch-row">
+    <div class="swatch" style="background:var(--paper)"></div>
+    <div class="swatch" style="background:var(--paper-2)"></div>
+    <div class="swatch" style="background:var(--paper-3)"></div>
+    <div class="swatch" style="background:var(--accent)"></div>
+    <div class="swatch" style="background:var(--gold)"></div>
+    <div class="swatch" style="background:var(--danger)"></div>
+  </div>
+  <div class="card">
+    <div class="title">Jazz24</div>
+    <div class="sub"><span class="live-dot"></span> Robert Palmer — Every Kinda People</div>
+    <span class="accent-pill">AI provider · DAHL</span>
+  </div>
+  <div class="row">
+    <div class="btn">▶</div>
+    <span class="chip">21%</span>
+    <span class="chip">Music service · none</span>
+  </div>
+</div>
+
+<div class="panel" data-theme="dawn">
+  <h2>
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.5 12h13" stroke-linecap="round" /><path d="M4.5 12a3.5 3.5 0 0 1 7 0" /><path d="M8 13.5v-4M6.2 11l1.8-1.5 1.8 1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+    Dawn <span style="font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--ink-3); font-weight:400;">— new</span>
+  </h2>
+  <div class="swatch-row">
+    <div class="swatch" style="background:var(--paper)"></div>
+    <div class="swatch" style="background:var(--paper-2)"></div>
+    <div class="swatch" style="background:var(--paper-3)"></div>
+    <div class="swatch" style="background:var(--accent)"></div>
+    <div class="swatch" style="background:var(--gold)"></div>
+    <div class="swatch" style="background:var(--danger)"></div>
+  </div>
+  <div class="card">
+    <div class="title">Jazz24</div>
+    <div class="sub"><span class="live-dot"></span> Robert Palmer — Every Kinda People</div>
+    <span class="accent-pill">AI provider · DAHL</span>
+  </div>
+  <div class="row">
+    <div class="btn">▶</div>
+    <span class="chip">21%</span>
+    <span class="chip">Music service · none</span>
+  </div>
+</div>
+
+</body>
+</html>

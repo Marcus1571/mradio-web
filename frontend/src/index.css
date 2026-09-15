@@ -101,6 +101,80 @@
   --danger-soft: oklch(30% 0.06 25);
 }
 
+/* ---------- SAPPHIRE — deep saturated navy ("dark jewel tone") ----------
+ * Explicit-pick only, never auto-selected by prefers-color-scheme (that
+ * media query is inherently binary and stays reserved for Day/Night).
+ * Anchored to Petrol/Deep-Navy references (see design-mockups/ in repo
+ * root for the full design rationale and iteration history).
+ */
+:root[data-theme="sapphire"] {
+  --paper: oklch(31% 0.075 240);
+  --paper-2: oklch(35% 0.08 239);
+  --paper-3: oklch(39% 0.085 238);
+  --line: oklch(46% 0.09 236);
+  --ink: oklch(94% 0.015 220);
+  --ink-2: oklch(80% 0.025 225);
+  --ink-3: oklch(64% 0.03 228);
+
+  --accent: oklch(72% 0.13 230);
+  --accent-ink: oklch(18% 0.03 230);
+  --accent-soft: oklch(38% 0.08 232);
+  --accent-line: oklch(56% 0.11 231);
+
+  --gold: oklch(78% 0.11 68);
+  --gold-soft: oklch(38% 0.06 68);
+  --live: oklch(72% 0.14 165);
+  --danger: oklch(66% 0.17 20);
+  --danger-soft: oklch(38% 0.09 20);
+}
+
+/* ---------- JADE — deep saturated emerald ("dark jewel tone") ---------- */
+:root[data-theme="jade"] {
+  --paper: oklch(32% 0.08 155);
+  --paper-2: oklch(36% 0.085 154);
+  --paper-3: oklch(40% 0.09 153);
+  --line: oklch(47% 0.095 151);
+  --ink: oklch(94% 0.015 150);
+  --ink-2: oklch(80% 0.025 148);
+  --ink-3: oklch(64% 0.03 146);
+
+  --accent: oklch(70% 0.15 155);
+  --accent-ink: oklch(16% 0.03 150);
+  --accent-soft: oklch(39% 0.08 152);
+  --accent-line: oklch(56% 0.12 153);
+
+  --gold: oklch(80% 0.11 78);
+  --gold-soft: oklch(40% 0.06 78);
+  --live: oklch(74% 0.15 145);
+  --danger: oklch(66% 0.18 22);
+  --danger-soft: oklch(38% 0.09 22);
+}
+
+/* ---------- HARBOR — flat sage/khaki "vintage LCD" ----------
+ * Deliberately low-contrast/flat, unlike every other theme here — see
+ * design-mockups/ for the reference this was sampled from.
+ */
+:root[data-theme="harbor"] {
+  --paper: oklch(85% 0.035 100);
+  --paper-2: oklch(81% 0.04 98);
+  --paper-3: oklch(76% 0.045 96);
+  --line: oklch(68% 0.05 95);
+  --ink: oklch(30% 0.03 100);
+  --ink-2: oklch(42% 0.035 100);
+  --ink-3: oklch(52% 0.035 98);
+
+  --accent: oklch(52% 0.06 220);
+  --accent-ink: oklch(95% 0.015 220);
+  --accent-soft: oklch(78% 0.03 220);
+  --accent-line: oklch(60% 0.05 220);
+
+  --gold: oklch(64% 0.09 45);
+  --gold-soft: oklch(80% 0.04 48);
+  --live: oklch(55% 0.06 140);
+  --danger: oklch(54% 0.08 20);
+  --danger-soft: oklch(78% 0.04 20);
+}
+
 * {
   box-sizing: border-box;
 }

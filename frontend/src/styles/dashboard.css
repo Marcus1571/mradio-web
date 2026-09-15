@@ -418,8 +418,14 @@
    logo to near-black and makes it unreadable. Confirmed both
    behaviours by rendering real logos in both themes. Follows the same
    light/dark selector pattern as index.css, so the manual theme
-   toggle is honoured as well as the OS preference. */
-:root[data-theme="light"] .station-logo {
+   toggle is honoured as well as the OS preference.
+
+   Harbor is light-like (dark ink on a light panel, same as Day) so it
+   gets the same treatment here. Sapphire/Jade are dark-like (light ink
+   on dark panel, same as Night) and correctly fall through to no
+   treatment via the default (no explicit rule needed for them). */
+:root[data-theme="light"] .station-logo,
+:root[data-theme="harbor"] .station-logo {
   mix-blend-mode: multiply;
   filter: brightness(1.06);
 }

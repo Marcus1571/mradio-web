@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="./theme_tokens_v2.css">
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,500&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap");
+  body { background: #16171b; font-family: 'Hanken Grotesk', sans-serif; padding: 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  h1 { color: #f0ede6; font-family: 'Newsreader', serif; grid-column: 1 / -1; margin: 0 0 4px; font-size: 1.9rem; }
+  .subtitle { color: #9a9a9a; grid-column: 1 / -1; margin: 0 0 20px; font-size: 0.9rem; font-family: 'IBM Plex Mono', monospace; }
+  .panel h2 svg { width: 18px; height: 18px; }
+  .panel h2 .tag { font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:var(--ink-3); font-weight:400; margin-left: 4px; }
+</style>
+</head>
+<body>
+<h1>mradio-web — named vibe themes (v2, radical direction)</h1>
+<p class="subtitle">MOCKUP ONLY. Built from real pixel-sampled colors off the operator's Omarchy reference screenshots (Sapphire, Jade, Harbor), not analytical OKLCH guessing. Day/Night stay as the calm default pair; these three join as explicit-pick "vibe" themes.</p>
+
+<div class="panel" data-theme="sapphire">
+  <h2>
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 6h10l-5 8-5-8Z" stroke-linejoin="round"/><path d="M3 6 5.5 2h5L13 6M6 6l2 8M10 6l-2 8" stroke-linejoin="round"/></svg>
+    Sapphire <span class="tag">deep-space terminal</span>
+  </h2>
+  <div class="swatch-row">
+    <div class="swatch" style="background:var(--paper)"></div>
+    <div class="swatch" style="background:var(--paper-2)"></div>
+    <div class="swatch" style="background:var(--paper-3)"></div>
+    <div class="swatch" style="background:var(--accent)"></div>
+    <div class="swatch" style="background:var(--gold)"></div>
+    <div class="swatch" style="background:var(--danger)"></div>
+  </div>
+  <div class="card">
+    <div class="title">Jazz24</div>
+    <div class="sub"><span class="live-dot"></span> Robert Palmer — Every Kinda People</div>
+    <span class="accent-pill">AI provider · DAHL</span>
+  </div>
+  <div class="row">
+    <div class="btn">▶</div>
+    <span class="chip">21%</span>
+    <span class="chip">Music service · none</span>
+  </div>
+</div>
+
+<div class="panel" data-theme="jade">
+  <h2>
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2c3 2 5 5 3.5 9-1 2.6-3.5 3-3.5 3s-2.5-.4-3.5-3C3 7 5 4 8 2Z" stroke-linejoin="round"/><path d="M8 5v9" /></svg>
+    Jade <span class="tag">forest hacker-green</span>
+  </h2>
+  <div class="swatch-row">
+    <div class="swatch" style="background:var(--paper)"></div>
+    <div class="swatch" style="background:var(--paper-2)"></div>
+    <div class="swatch" style="background:var(--paper-3)"></div>
+    <div class="swatch" style="background:var(--accent)"></div>
+    <div class="swatch" style="background:var(--gold)"></div>
+    <div class="swatch" style="background:var(--danger)"></div>
+  </div>
+  <div class="card">
+    <div class="title">Jazz24</div>
+    <div class="sub"><span class="live-dot"></span> Robert Palmer — Every Kinda People</div>
+    <span class="accent-pill">AI provider · DAHL</span>
+  </div>
+  <div class="row">
+    <div class="btn">▶</div>
+    <span class="chip">21%</span>
+    <span class="chip">Music service · none</span>
+  </div>
+</div>
+
+<div class="panel" data-theme="harbor">
+  <h2>
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="3.2" r="1.2"/><path d="M8 4.4v8.5"/><path d="M4 9a4 4 0 0 0 8 0" /><path d="M5.5 6.5h5" /></svg>
+    Harbor <span class="tag">flat vintage-LCD</span>
+  </h2>
+  <div class="swatch-row">
+    <div class="swatch" style="background:var(--paper)"></div>
+    <div class="swatch" style="background:var(--paper-2)"></div>
+    <div class="swatch" style="background:var(--paper-3)"></div>
+    <div class="swatch" style="background:var(--accent)"></div>
+    <div class="swatch" style="background:var(--gold)"></div>
+    <div class="swatch" style="background:var(--danger)"></div>
+  </div>
+  <div class="card">
+    <div class="title">Jazz24</div>
+    <div class="sub"><span class="live-dot"></span> Robert Palmer — Every Kinda People</div>
+    <span class="accent-pill">AI provider · DAHL</span>
+  </div>
+  <div class="row">
+    <div class="btn">▶</div>
+    <span class="chip">21%</span>
+    <span class="chip">Music service · none</span>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,5 +1,56 @@
 # Changelog
 
+## [1.24.0] - 2026-09-15
+
+Adds three new named themes — **Sapphire** (deep saturated navy),
+**Jade** (deep saturated emerald), and **Harbor** (flat sage/khaki
+"vintage LCD") — alongside the existing Day/Night pair, and replaces
+the old click-to-cycle theme toggle button with a proper dropdown
+listing all five.
+
+This shipped after an extensive, multi-round design process (see
+`design-mockups/` in the repo root for the full iteration history):
+an initial "Dawn/Dusk" day-cycle concept was designed, tested, and
+explicitly rejected by the operator; a second "Omarchy-inspired" vibe-
+theme direction went through several rounds of real color research
+(pixel-sampling actual reference screenshots, then researching named
+real-world color references — Rosé Pine Dawn, Petrol Blue, Deep Moss
+Green, Deep Navy, Dark Emerald — to correct two different failure
+modes: colors that were too pale/washed-out, then colors that were too
+vivid/artificial, before landing on genuinely dark-but-saturated
+"jewel tone" palettes that avoid both the "everything is basically
+black" problem of typical dark themes and the desaturated/muddy look
+of themes like Dracula or Nord).
+
+- `index.css`: three new `[data-theme="X"]` token blocks (`sapphire`,
+  `jade`, `harbor`), same 15-token shape as the existing Day/Night
+  blocks. OS `prefers-color-scheme` auto-detection remains Day/Night
+  only — the three new themes are explicit-pick only, since a binary
+  media query can't represent a 5-way choice.
+- `dashboard.css`: the station-logo blend-mode fix (for light-on-dark
+  logo artwork) now also applies under Harbor, which is light-like the
+  same way Day is.
+- `Icons.tsx`: three new monoline icons matching the existing Sun/Moon
+  visual language — a droplet (Sapphire), a leaf (Jade), an anchor
+  (Harbor).
+- `TopBar.tsx`: the old single icon-button toggle (binary flip between
+  Day/Night) is replaced with a `dropdown-picker` — the same UI pattern
+  already used for the language switcher and the music-service picker
+  — listing all five themes with icon + label, current selection
+  highlighted.
+- `api/types.ts`: new exported `Theme` type (mirroring the existing
+  `MusicService` pattern) used everywhere `theme` was previously typed
+  inline as `'dark' | 'light'`.
+- i18n: new `topbar.theme` / `topbar.themeDay` / `topbar.themeNight` /
+  `topbar.themeSapphire` / `topbar.themeJade` / `topbar.themeHarbor`
+  keys added to all 16 language files; the now-unused
+  `switchToLight`/`switchToDark` keys (no longer referenced anywhere)
+  were removed rather than left as dead entries.
+- Verified: `npm run build`/`lint` clean; per `AGENTS.md`'s
+  verification-discipline rule, actually rendered the dropdown and all
+  five themes' real token values via static HTML fixtures + Playwright
+  screenshots (not just a passing build) before shipping.
+
 ## [1.23.0] - 2026-09-15
 
 **Music-service choice is now session-only, never persisted.** Every

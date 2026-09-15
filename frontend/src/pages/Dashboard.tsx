@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api/client'
-import type { Station } from '../api/types'
+import type { Station, Theme } from '../api/types'
 import { NowPlayingPanel } from '../components/NowPlayingPanel'
 import { StationBrowserPanel } from '../components/StationBrowserPanel'
 import { TopBar } from '../components/TopBar'
@@ -24,7 +24,7 @@ export function Dashboard() {
   const config = useInitialConfig()
   const player = usePlayer(config?.volume)
   const { user } = useAuth()
-  const [theme, setTheme] = useState<'dark' | 'light'>('light')
+  const [theme, setTheme] = useState<Theme>('light')
   const [language, setLanguageState] = useState<Language>('en')
   const [page, setPage] = useState<Page>('dashboard')
   const resumedRef = useRef(false)
@@ -51,10 +51,11 @@ export function Dashboard() {
   useEffect(() => {
     if (!config) return
     // Light is now the default for anyone with no saved preference yet
-    // (a fresh config.json, or one that predates the theme key) —
-    // 'dark' only wins when explicitly saved, the inverse of the old
-    // fallback direction.
-    const nextTheme = config.theme === 'dark' ? 'dark' : 'light'
+    // (a fresh config.json, or one that predates the theme key) — any
+    // other value only wins when explicitly saved, the inverse of the
+    // old fallback direction.
+    const validThemes: Theme[] = ['dark', 'light', 'sapphire', 'jade', 'harbor']
+    const nextTheme: Theme = validThemes.includes(config.theme as Theme) ? (config.theme as Theme) : 'light'
     setTheme(nextTheme)
     document.documentElement.setAttribute('data-theme', nextTheme)
     const nextLanguage: Language = LANGUAGES.some((l) => l.code === config.language)
@@ -85,8 +86,7 @@ export function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config])
 
-  function toggleTheme() {
-    const next = theme === 'dark' ? 'light' : 'dark'
+  function changeTheme(next: Theme) {
     setTheme(next)
     document.documentElement.setAttribute('data-theme', next)
     void api.patch('/api/config', { theme: next })
@@ -112,7 +112,7 @@ export function Dashboard() {
     <div>
       <TopBar
         theme={theme}
-        onToggleTheme={toggleTheme}
+        onChangeTheme={changeTheme}
         page={page}
         onNavigate={setPage}
         language={language}

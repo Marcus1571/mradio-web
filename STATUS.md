@@ -23,6 +23,23 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.24.0 tagged, released, and deployed to LT 2026-09-15.** Adds
+  three new named themes — Sapphire (deep saturated navy), Jade (deep
+  saturated emerald), Harbor (flat sage/khaki "vintage LCD") —
+  alongside Day/Night, and replaces the old click-to-cycle theme
+  toggle with a proper dropdown (same pattern as the language and
+  music-service pickers). Shipped after an extensive design process:
+  an initial Dawn/Dusk day-cycle concept was rejected outright by the
+  operator; the replacement direction went through several rounds of
+  real color research (pixel-sampling the operator's own Omarchy
+  reference screenshots, then correcting two opposite failure modes —
+  too pale/washed-out, then too vivid/artificial — using real named
+  color references: Rosé Pine Dawn, Petrol Blue, Deep Moss Green, Deep
+  Navy, Dark Emerald) before landing on genuinely dark-but-saturated
+  "jewel tone" palettes. Full iteration history and every intermediate
+  mockup preserved in `design-mockups/` at the repo root. OS
+  `prefers-color-scheme` auto-detection stays Day/Night-only; the three
+  new themes are explicit-pick only.
 - **v1.23.0 tagged, released, and deployed to LT 2026-09-15.** Music
   service is now session-only, never persisted — every app launch
   starts at "no service"/"Select one" rather than remembering a prior

@@ -2,8 +2,29 @@ import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { LANGUAGES } from '../i18n'
 import type { Language, TFunction } from '../i18n'
+import type { Theme } from '../api/types'
 import { displayName } from '../utils/format'
-import { ChevronDownIcon, MoonIcon, RefreshIcon, SunIcon } from './Icons'
+import { AnchorIcon, ChevronDownIcon, DropletIcon, LeafIcon, MoonIcon, RefreshIcon, SunIcon } from './Icons'
+import type { ComponentType } from 'react'
+import type { IconProps } from './Icons'
+
+const THEME_ORDER: Theme[] = ['light', 'dark', 'sapphire', 'jade', 'harbor']
+
+const THEME_ICON: Record<Theme, ComponentType<IconProps>> = {
+  light: SunIcon,
+  dark: MoonIcon,
+  sapphire: DropletIcon,
+  jade: LeafIcon,
+  harbor: AnchorIcon,
+}
+
+const THEME_LABEL_KEY: Record<Theme, string> = {
+  light: 'topbar.themeDay',
+  dark: 'topbar.themeNight',
+  sapphire: 'topbar.themeSapphire',
+  jade: 'topbar.themeJade',
+  harbor: 'topbar.themeHarbor',
+}
 
 export type Page =
   | 'dashboard'
@@ -18,15 +39,15 @@ export type Page =
 
 export function TopBar({
   theme,
-  onToggleTheme,
+  onChangeTheme,
   page,
   onNavigate,
   language,
   onChangeLanguage,
   t,
 }: {
-  theme: 'dark' | 'light'
-  onToggleTheme: () => void
+  theme: Theme
+  onChangeTheme: (theme: Theme) => void
   page: Page
   onNavigate: (page: Page) => void
   language: Language
@@ -38,6 +59,8 @@ export function TopBar({
   const menuRef = useRef<HTMLDivElement | null>(null)
   const [langOpen, setLangOpen] = useState(false)
   const langRef = useRef<HTMLDivElement | null>(null)
+  const [themeOpen, setThemeOpen] = useState(false)
+  const themeRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!menuOpen) return
@@ -56,6 +79,15 @@ export function TopBar({
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
   }, [langOpen])
+
+  useEffect(() => {
+    if (!themeOpen) return
+    function onClick(e: MouseEvent) {
+      if (themeRef.current && !themeRef.current.contains(e.target as Node)) setThemeOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [themeOpen])
 
   const name = user ? displayName(user) : '?'
   const initials = name.slice(0, 2).toUpperCase()
@@ -98,15 +130,42 @@ export function TopBar({
             {t('topbar.backToPlayer')}
           </button>
         )}
-        <button
-          className="icon-btn"
-          type="button"
-          onClick={onToggleTheme}
-          aria-label={theme === 'dark' ? t('topbar.switchToLight') : t('topbar.switchToDark')}
-          title={theme === 'dark' ? t('topbar.switchToLight') : t('topbar.switchToDark')}
-        >
-          {theme === 'dark' ? <MoonIcon /> : <SunIcon />}
-        </button>
+        <div className="dropdown-picker" ref={themeRef}>
+          <button
+            className="icon-btn"
+            type="button"
+            onClick={() => setThemeOpen((v) => !v)}
+            aria-label={t('topbar.theme')}
+            title={t('topbar.theme')}
+          >
+            {(() => {
+              const CurrentThemeIcon = THEME_ICON[theme]
+              return <CurrentThemeIcon />
+            })()}
+          </button>
+          {themeOpen && (
+            <div className="dropdown-menu">
+              {THEME_ORDER.map((themeOption) => {
+                const OptionIcon = THEME_ICON[themeOption]
+                return (
+                  <button
+                    key={themeOption}
+                    className={`dropdown-option ${themeOption === theme ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => {
+                      onChangeTheme(themeOption)
+                      setThemeOpen(false)
+                    }}
+                  >
+                    <span className="dropdown-option-icon">
+                      <OptionIcon /> {t(THEME_LABEL_KEY[themeOption])}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
         <button
           className="icon-btn"
           type="button"

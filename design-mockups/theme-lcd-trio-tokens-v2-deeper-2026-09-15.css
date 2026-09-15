@@ -1,0 +1,258 @@
+/* Sketch v2 — abandoning the Dawn/Dusk day-cycle concept entirely.
+   Three bold, named "vibe" themes, built from real pixel-sampled colors
+   off the operator's own Omarchy reference screenshots (not analytical
+   OKLCH guessing) — see design-mockups/ for the source crops/values. */
+
+:root {
+  --font-display: "Newsreader", ui-serif, Georgia, serif;
+  --font-body: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+}
+
+/* ---------- DAY / NIGHT (existing, unchanged, for reference) ---------- */
+[data-theme="day"] {
+  --paper: oklch(96% 0.006 85);
+  --paper-2: oklch(93% 0.007 85);
+  --paper-3: oklch(89% 0.009 85);
+  --line: oklch(84% 0.01 85);
+  --ink: oklch(23% 0.018 260);
+  --ink-2: oklch(42% 0.015 260);
+  --ink-3: oklch(58% 0.012 260);
+  --accent: oklch(58% 0.10 200);
+  --accent-ink: oklch(20% 0.03 200);
+  --accent-soft: oklch(93% 0.03 200);
+  --accent-line: oklch(72% 0.08 200);
+  --gold: oklch(72% 0.11 75);
+  --gold-soft: oklch(94% 0.03 75);
+  --live: oklch(62% 0.15 148);
+  --danger: oklch(58% 0.19 25);
+  --danger-soft: oklch(94% 0.05 25);
+}
+[data-theme="night"] {
+  --paper: oklch(19% 0.012 260);
+  --paper-2: oklch(23% 0.014 260);
+  --paper-3: oklch(28% 0.016 260);
+  --line: oklch(34% 0.018 260);
+  --ink: oklch(94% 0.006 85);
+  --ink-2: oklch(80% 0.008 85);
+  --ink-3: oklch(62% 0.01 85);
+  --accent: oklch(72% 0.11 200);
+  --accent-ink: oklch(95% 0.02 200);
+  --accent-soft: oklch(28% 0.05 200);
+  --accent-line: oklch(50% 0.09 200);
+  --gold: oklch(78% 0.11 80);
+  --gold-soft: oklch(30% 0.05 80);
+  --live: oklch(70% 0.16 148);
+  --danger: oklch(68% 0.18 25);
+  --danger-soft: oklch(30% 0.06 25);
+}
+
+/* ---------- SAPPHIRE (v3, deepened) — sober petrol-blue LCD ----------
+   v2 read "tweety"/washed-out per operator feedback — too pale, too
+   close to baby blue. Rebuilt around a real, well-known sophisticated
+   reference: Petrol Blue (#216477, H≈193 S≈57% L≈30% — industrial,
+   deep, cited descriptively as "profound depth... sophisticated...
+   without appearing somber"). Not copied at petrol blue's own dark
+   L≈30% (that's a near-ink shade, would force a Night-like dark-base
+   theme, contradicting the flat-LCD-panel structure being kept); panel
+   lightness pulled up into a mid-tone LCD-panel range (~58-68%) while
+   keeping petrol's higher chroma and its exact hue — a saturated,
+   intriguing blue "screen," not a pale tint of blue. */
+[data-theme="sapphire"] {
+  --paper: oklch(66% 0.09 220);
+  --paper-2: oklch(60% 0.095 219);
+  --paper-3: oklch(54% 0.10 218);
+  --line: oklch(44% 0.10 216);
+  --ink: oklch(18% 0.03 220);
+  --ink-2: oklch(28% 0.035 219);
+  --ink-3: oklch(38% 0.04 217);
+  --accent: oklch(34% 0.10 235);
+  --accent-ink: oklch(96% 0.015 235);
+  --accent-soft: oklch(74% 0.045 232);
+  --accent-line: oklch(46% 0.10 233);
+  --gold: oklch(70% 0.12 65);
+  --gold-soft: oklch(80% 0.05 65);
+  --live: oklch(42% 0.09 165);
+  --danger: oklch(46% 0.13 18);
+  --danger-soft: oklch(72% 0.06 18);
+}
+
+/* ---------- JADE (v3, deepened) — sober moss-green LCD ----------
+   Same rebuild rationale as Sapphire above. v2 read as pale mint,
+   too close to Harbor's own lightness with just a green tint — not
+   the "intriguing, more saturated" hue asked for. Rebuilt around Deep
+   Moss Green (#355e3b, H≈129 S≈28% L≈29% — sophisticated, muted-but-
+   present forest tone). Same treatment: kept the hue and pushed the
+   chroma up from Harbor's baseline, pulled lightness up from moss
+   green's own near-black L≈29% into a mid-tone LCD-panel range so it
+   stays a legible flat panel, not a dark-base theme. */
+[data-theme="jade"] {
+  --paper: oklch(64% 0.075 148);
+  --paper-2: oklch(58% 0.08 147);
+  --paper-3: oklch(52% 0.085 146);
+  --line: oklch(43% 0.085 144);
+  --ink: oklch(17% 0.03 148);
+  --ink-2: oklch(27% 0.035 147);
+  --ink-3: oklch(37% 0.04 145);
+  --accent: oklch(32% 0.09 150);
+  --accent-ink: oklch(95% 0.015 150);
+  --accent-soft: oklch(72% 0.04 148);
+  --accent-line: oklch(44% 0.09 148);
+  --gold: oklch(72% 0.12 78);
+  --gold-soft: oklch(82% 0.05 78);
+  --live: oklch(40% 0.08 150);
+  --danger: oklch(46% 0.14 22);
+  --danger-soft: oklch(72% 0.06 22);
+}
+
+/* ---------- HARBOR (new) — flat vintage-LCD sage ----------
+   Sampled from the operator's Omarchy "Harbor" reference, explicitly
+   flagged as breaking normal contrast rules: flat khaki/sage panel
+   #d7dab9/#cfd6b6 (H≈65, low saturation), muted desaturated accents
+   (dusty rose #af5f65, sage #5a7157, terracotta #c3806d, steel blue
+   #5d7da1, mauve #aa86a0, teal #4a8794) — no dark base at all, low
+   overall contrast throughout, deliberately flat/monochrome-adjacent
+   like an old LCD/Game Boy screen rather than a normal "light theme." */
+[data-theme="harbor"] {
+  --paper: oklch(85% 0.035 100);
+  --paper-2: oklch(81% 0.04 98);
+  --paper-3: oklch(76% 0.045 96);
+  --line: oklch(68% 0.05 95);
+  --ink: oklch(30% 0.03 100);
+  --ink-2: oklch(42% 0.035 100);
+  --ink-3: oklch(52% 0.035 98);
+  --accent: oklch(52% 0.06 220);
+  --accent-ink: oklch(95% 0.015 220);
+  --accent-soft: oklch(78% 0.03 220);
+  --accent-line: oklch(60% 0.05 220);
+  --gold: oklch(64% 0.09 45);
+  --gold-soft: oklch(80% 0.04 48);
+  --live: oklch(55% 0.06 140);
+  --danger: oklch(54% 0.08 20);
+  --danger-soft: oklch(78% 0.04 20);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: #1a1a1a;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.panel {
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  border: 1px solid var(--line);
+  font-family: var(--font-body);
+}
+
+.panel h2 {
+  font-family: var(--font-display);
+  margin: 0 0 var(--space-xs);
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.panel .swatch-row {
+  display: flex;
+  gap: 6px;
+  margin: var(--space-sm) 0;
+}
+
+.swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+
+.card {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.card .title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+
+.card .sub {
+  color: var(--ink-2);
+  font-size: 0.85rem;
+  margin-bottom: var(--space-2xs);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--paper-3);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.accent-pill {
+  display: inline-block;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  border: 1px solid var(--accent-line);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--live);
+  display: inline-block;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-sm);
+}

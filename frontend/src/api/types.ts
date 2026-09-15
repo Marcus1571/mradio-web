@@ -40,8 +40,10 @@ export interface GenreInfo {
   count: number
 }
 
+export type Theme = 'dark' | 'light' | 'sapphire' | 'jade' | 'harbor'
+
 export interface Config {
-  theme?: 'dark' | 'light'
+  theme?: Theme
   volume?: number
   mute?: boolean
   last_url?: string
