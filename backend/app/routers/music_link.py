@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, Response
 
-from .. import deezer, music_link_cache, spotify
+from .. import apple_music, deezer, music_link_cache, spotify
 from ..deps import get_active_user
 from ..textutil import split_title
 from ..userdata import load_cfg
@@ -48,7 +48,7 @@ async def get_music_link(
     # matching the frontend's own useMusicLink() behavior of skipping the
     # request entirely when no service is active. There's nothing to
     # search against without a chosen service.
-    if service not in ("spotify", "deezer"):
+    if service not in ("spotify", "deezer", "apple"):
         return {"url": None}
 
     cached = await music_link_cache.get_cached(service, raw_title)
@@ -75,4 +75,9 @@ async def _lookup(service: str, artist: str, title: str, performer: str) -> str 
         if not match:
             return None
         return f"https://www.deezer.com/track/{match.track_id}"
+    if service == "apple":
+        match = await apple_music.find_best_track(artist, title, performer)
+        if not match:
+            return None
+        return match.url
     return None

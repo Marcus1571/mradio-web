@@ -267,6 +267,28 @@ export function SpotifyIcon({ className }: IconProps) {
   )
 }
 
+export function AppleMusicIcon({ className }: IconProps) {
+  // Real Apple Music mark (rounded-square gradient with the musical-note
+  // glyph) — path data isolated from the official app icon via Wikimedia
+  // Commons (File:Apple_Music_icon.svg). Not currentColor, same reasoning
+  // as SpotifyIcon/DeezerIcon above.
+  return (
+    <svg className={className} viewBox="0 0 1024 1024" fill="none">
+      <defs>
+        <linearGradient id="apple-music-gradient" x1="512" y1="0" x2="512" y2="1024" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#FA57C1" />
+          <stop offset="1" stopColor="#FC3C44" />
+        </linearGradient>
+      </defs>
+      <rect width="1024" height="1024" rx="228" fill="url(#apple-music-gradient)" />
+      <path
+        fill="#fff"
+        d="M675.4 224.4c-8.6 1-90.5 16.6-99.6 18.6l-217.3 43.9-.3.1c-2.4.6-4.5 1.5-6.4 2.7a24.7 24.7 0 0 0-10.8 15.9c-.6 2.8-.6 2.1-.6 148.1v143.1l-.4.1c-11.2-2.1-24.4-1.3-35.6 2-27.5 8.2-46.5 30.3-49.2 57.2-.4 3.8-.4 12.1 0 15.8 3.5 33.4 33.5 58.5 68.6 57.5 5.5-.2 9.2-.6 14.4-1.7 26.7-5.6 47.9-25 54.3-49.7 2.4-9.4 2.2-3.6 2.2-113.9V464l1.3-.3c.7-.2 45.7-9.3 100-20.3l98.7-19.9 1.3-.3v157.7l-.5-.1c-6.4-1.2-16.7-1.6-23.9-.9-33.9 3.3-60.5 26.5-65.9 57.4-.9 5.3-.9 15.8 0 21.1 3.8 21.8 18.3 39.9 39.4 49.4 8.9 4 17.6 6.1 28.1 6.7 33.9 2 63.7-17.5 71.9-46.8 2.1-7.6 1.9-1.6 1.9-125.4V405.3c0-97.4-.1-114.2-.4-115.6a17 17 0 0 0-13-13.4c-2.1-.5-4.2-.6-6.2-.4z"
+      />
+    </svg>
+  )
+}
+
 export function DeezerIcon({ className }: IconProps) {
   // Real Deezer mark (2023 rebrand: a purple heart formed from vertical
   // waveform ovals) — path data isolated from the official wordmark SVG

@@ -25,7 +25,7 @@ export function useMusicService() {
   }, [])
 
   const service: MusicService | null =
-    config?.music_service === 'spotify' || config?.music_service === 'deezer'
+    config?.music_service === 'spotify' || config?.music_service === 'deezer' || config?.music_service === 'apple'
       ? config.music_service
       : null
 

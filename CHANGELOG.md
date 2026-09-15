@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.22.0] - 2026-09-15
+
+Adds **Apple Music** as a third music-service link option, alongside
+Spotify and Deezer — same read-only, search-only pattern (no OAuth, no
+playlist write, no per-user connection state). Uses Apple's free,
+keyless iTunes Search API (`itunes.apple.com/search`), not MusicKit, so
+no $99/year Apple Developer Program membership is required. See
+`findings.md`'s 2026-09-14 iTunes Search API entry for the investigation
+this implements.
+
+- New `backend/app/apple_music.py`: searches the iTunes catalog and makes
+  the same executive-decision title/artist match as `spotify.py`'s and
+  `deezer.py`'s `find_best_track()`, adapted for this API's field names
+  (`trackName`/`artistName`/`trackViewUrl`) and its one real gap — no
+  ISRC field, so dedup falls back to `trackId`.
+- `routers/music_link.py` and `routers/config.py` now accept `"apple"` as
+  a third valid `music_service` value, resolved the same server-side way
+  as the existing two.
+- Frontend: `MusicService` widened to include `'apple'`; a new
+  `AppleMusicIcon` (real brand mark, gradient rounded square) added
+  alongside `SpotifyIcon`/`DeezerIcon`; the music-service dropdown and
+  now-playing link both support the third option.
+- **Fixed a real, pre-existing bug found while verifying this change**:
+  `.dropdown-option-icon` had no `svg` sizing rule, so the Spotify/Deezer
+  marks in the music-service dropdown rendered at the browser's oversized
+  default intrinsic size and were clipped by the menu — invisible in the
+  dropdown even though the same icons render correctly elsewhere (e.g.
+  the now-playing link, which has its own explicit sizing). This affected
+  the existing two services already in production, not just the new
+  third option; fixed with one shared `.dropdown-option-icon svg` rule
+  rather than per-option overrides.
+- Verified live: `apple_music.find_best_track()` returns a real
+  `music.apple.com` URL for a known track against the live iTunes API.
+  Verified visually via a static fixture screenshot (playwright), per
+  `AGENTS.md`'s verification-discipline rule — confirmed all three
+  service icons now render at consistent size in the dropdown.
+
 ## [1.21.3] - 2026-09-14
 
 The music-service dropdown now defaults to **None**, not Spotify.

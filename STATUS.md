@@ -23,6 +23,20 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.22.0 tagged, released, and deployed to LT 2026-09-15.** Adds
+  Apple Music as a third music-service link option (Spotify, Deezer,
+  now Apple Music), using Apple's free keyless iTunes Search API
+  (`itunes.apple.com/search`) rather than the paid MusicKit path — no
+  Apple Developer Program membership needed. New `apple_music.py`
+  mirrors `spotify.py`/`deezer.py`'s search-only `find_best_track()`
+  matching logic, minus OAuth/playlist state (this service never had
+  any). See `findings.md`'s 2026-09-14 entry for the investigation.
+  **Also fixed a real pre-existing bug found during visual
+  verification**: the music-service dropdown's `.dropdown-option-icon`
+  had no `svg` sizing rule, so all three service icons (including the
+  existing Spotify/Deezer ones, not just the new Apple Music one)
+  rendered oversized and invisible/clipped in the dropdown menu — fixed
+  with one shared CSS rule.
 - **v1.21.3 tagged, released, and deployed to LT 2026-09-14.** The
   music-service dropdown now defaults to **None**, not Spotify — a
   fresh account (or one that's never touched the dropdown) previously

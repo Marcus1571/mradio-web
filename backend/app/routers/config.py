@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/config", tags=["config"])
 _VALID_LANGUAGES = ("en", "es", "it", "pt", "fr", "ru", "de", "el", "nl", "da", "sv", "nb", "ja", "tr", "he")
 
 
-_VALID_MUSIC_SERVICES = {"spotify", "deezer"}
+_VALID_MUSIC_SERVICES = {"spotify", "deezer", "apple"}
 
 
 class ConfigUpdate(BaseModel):

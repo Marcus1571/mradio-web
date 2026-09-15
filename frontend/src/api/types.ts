@@ -53,7 +53,7 @@ export interface Config {
   music_service?: MusicService | null
 }
 
-export type MusicService = 'spotify' | 'deezer'
+export type MusicService = 'spotify' | 'deezer' | 'apple'
 
 export interface MusicLinkResponse {
   url: string | null

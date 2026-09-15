@@ -11,6 +11,7 @@ import { formatCache, formatElapsed, formatKHz, formatKbps } from '../utils/form
 import type { ComponentType } from 'react'
 import type { IconProps } from './Icons'
 import {
+  AppleMusicIcon,
   ChevronDownIcon,
   DeezerIcon,
   ExternalLinkIcon,
@@ -40,6 +41,7 @@ const _PROVIDER_LABEL: Record<string, string> = {
 const SERVICE_ICON: Record<MusicService, ComponentType<IconProps>> = {
   spotify: SpotifyIcon,
   deezer: DeezerIcon,
+  apple: AppleMusicIcon,
 }
 
 function TriviaHistoryStrip({ version, t }: { version: number; t: TFunction }) {
@@ -152,7 +154,14 @@ export function NowPlayingPanel({
 
   const effectiveService: MusicService | null = musicService.service
   const ServiceIcon = effectiveService ? SERVICE_ICON[effectiveService] : null
-  const serviceLabel = effectiveService === 'spotify' ? 'Spotify' : effectiveService === 'deezer' ? 'Deezer' : t('nowPlaying.none')
+  const serviceLabel =
+    effectiveService === 'spotify'
+      ? 'Spotify'
+      : effectiveService === 'deezer'
+        ? 'Deezer'
+        : effectiveService === 'apple'
+          ? 'Apple Music'
+          : t('nowPlaying.none')
 
   const hasStation = state.station !== null
   const hasTrack = state.rawTitle !== ''
@@ -367,6 +376,18 @@ export function NowPlayingPanel({
               >
                 <span className="dropdown-option-icon">
                   <DeezerIcon /> Deezer
+                </span>
+              </button>
+              <button
+                className={`dropdown-option ${effectiveService === 'apple' ? 'active' : ''}`}
+                type="button"
+                onClick={() => {
+                  void musicService.setMusicService('apple')
+                  setServiceOpen(false)
+                }}
+              >
+                <span className="dropdown-option-icon">
+                  <AppleMusicIcon /> Apple Music
                 </span>
               </button>
             </div>
