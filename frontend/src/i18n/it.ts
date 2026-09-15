@@ -282,6 +282,7 @@ const it: Dict = {
     historyTitle: 'Recently played',
     openOnService: 'Open on {service}',
     none: 'nessuno',
+    selectOne: 'Seleziona uno',
   },
   analytics: {
     title: 'Analitica',

@@ -280,6 +280,7 @@ const es: Dict = {
     historyTitle: 'Recently played',
     openOnService: 'Open on {service}',
     none: 'ninguno',
+    selectOne: 'Selecciona uno',
   },
   analytics: {
     title: 'Analítica',

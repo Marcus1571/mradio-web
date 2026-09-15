@@ -282,6 +282,7 @@ const el: Dict = {
     historyTitle: 'Recently played',
     openOnService: 'Open on {service}',
     none: 'κανένας',
+    selectOne: 'Επιλέξτε ένα',
   },
   analytics: {
     title: 'Αναλυτικά στοιχεία',

@@ -277,6 +277,7 @@ const ja: Dict = {
     historyTitle: 'Recently played',
     openOnService: 'Open on {service}',
     none: 'なし',
+    selectOne: '選択してください',
   },
   analytics: {
     title: '統計',

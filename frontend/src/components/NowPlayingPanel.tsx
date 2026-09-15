@@ -355,6 +355,16 @@ export function NowPlayingPanel({
           {serviceOpen && (
             <div className="dropdown-menu dropdown-menu--up">
               <button
+                className={`dropdown-option ${effectiveService === null ? 'active' : ''}`}
+                type="button"
+                onClick={() => {
+                  void musicService.setMusicService(null)
+                  setServiceOpen(false)
+                }}
+              >
+                <span className="dropdown-option-icon">{t('nowPlaying.selectOne')}</span>
+              </button>
+              <button
                 className={`dropdown-option ${effectiveService === 'spotify' ? 'active' : ''}`}
                 type="button"
                 onClick={() => {

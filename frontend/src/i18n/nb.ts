@@ -282,6 +282,7 @@ const nb: Dict = {
     historyTitle: 'Recently played',
     openOnService: 'Open on {service}',
     none: 'ingen',
+    selectOne: 'Velg en',
   },
   analytics: {
     title: 'Statistikk',

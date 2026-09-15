@@ -29,7 +29,7 @@ export function useMusicService() {
       ? config.music_service
       : null
 
-  const setMusicService = useCallback(async (next: MusicService) => {
+  const setMusicService = useCallback(async (next: MusicService | null) => {
     // Deliberately NOT optimistic: `service` here also drives useMusicLink's
     // effect (see NowPlayingPanel.tsx), which fires a GET /api/music-link the
     // instant `service` changes. That endpoint resolves the active service

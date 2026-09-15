@@ -23,6 +23,14 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.22.3 tagged, released, and deployed to LT 2026-09-15.** Adds a
+  "Select one" option at the top of the music-service dropdown so a
+  listener can opt back out to no service — requested by the operator
+  specifically to avoid spending API quota (particularly Apple's
+  tighter iTunes Search limit) on listeners who don't use the feature.
+  Dropdown order: Select one, Spotify, Apple Music, Deezer.
+  `PATCH /api/config` now accepts an explicit `music_service: null` to
+  clear the preference (previously rejected with a 400).
 - **v1.22.2 tagged, released, and deployed to LT 2026-09-15.** Fixed
   the actual root cause behind the bug v1.22.1 attempted to fix (the
   operator reproduced it again immediately after that release, with

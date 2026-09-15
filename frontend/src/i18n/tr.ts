@@ -282,6 +282,7 @@ const tr: Dict = {
     historyTitle: 'Recently played',
     openOnService: 'Open on {service}',
     none: 'yok',
+    selectOne: 'Birini seç',
   },
   analytics: {
     title: 'Analitik',

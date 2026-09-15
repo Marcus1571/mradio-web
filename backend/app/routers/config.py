@@ -33,7 +33,11 @@ async def get_config(user: dict = Depends(get_active_user)):
 @router.patch("")
 async def update_config(body: ConfigUpdate, user: dict = Depends(get_active_user)):
     fields = body.model_dump(exclude_unset=True)
-    if "music_service" in fields and fields["music_service"] not in _VALID_MUSIC_SERVICES:
+    if (
+        "music_service" in fields
+        and fields["music_service"] is not None
+        and fields["music_service"] not in _VALID_MUSIC_SERVICES
+    ):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "invalid music_service")
     await persist_cfg(user["id"], **fields)
     # The Enricher caches language in memory (set once at start(), like

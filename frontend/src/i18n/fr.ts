@@ -282,6 +282,7 @@ const fr: Dict = {
     historyTitle: 'Recently played',
     openOnService: 'Open on {service}',
     none: 'aucun',
+    selectOne: 'Choisir',
   },
   analytics: {
     title: 'Analyses',

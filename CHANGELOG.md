@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.22.3] - 2026-09-15
+
+Adds a **"Select one"** option to the top of the music-service dropdown,
+letting a listener explicitly opt back out to no service once they've
+picked one — previously the dropdown was a one-way ratchet into
+Spotify/Apple Music/Deezer with no way back to the unset state short of
+never touching it in the first place. Requested by the operator
+specifically to avoid spending Apple's tighter iTunes Search API quota
+(and Spotify's/Deezer's) on listeners who don't care about the feature
+and accidentally (or curiously) picked a service.
+
+- `routers/config.py`: `PATCH /api/config` now accepts an explicit
+  `music_service: null` to clear the saved preference — previously any
+  non-`None` check rejected `null` with a 400, since the valid-service
+  set didn't special-case it.
+- `useMusicService.ts`: `setMusicService()` widened to accept `null`.
+- Dropdown order is now **Select one, Spotify, Apple Music, Deezer**.
+- New `nowPlaying.selectOne` i18n key added to all 16 language files.
+
 ## [1.22.2] - 2026-09-15
 
 Fixes the actual root cause behind the bug v1.22.1 attempted to fix:

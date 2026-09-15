@@ -282,6 +282,7 @@ const ru: Dict = {
     historyTitle: 'Recently played',
     openOnService: 'Open on {service}',
     none: 'нет',
+    selectOne: 'Выбрать',
   },
   analytics: {
     title: 'Аналитика',

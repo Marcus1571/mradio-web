@@ -278,6 +278,7 @@ const he: Dict = {
     historyTitle: 'Recently played',
     openOnService: 'Open on {service}',
     none: 'ללא',
+    selectOne: 'בחר אחד',
   },
   analytics: {
     title: 'אנליטיקה',

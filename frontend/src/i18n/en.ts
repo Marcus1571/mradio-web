@@ -277,6 +277,7 @@ const en = {
     aiProvider: 'AI provider',
     musicService: 'Music service',
     none: 'none',
+    selectOne: 'Select one',
     historyTitle: 'Recently played',
     openOnService: 'Open on {service}',
   },
