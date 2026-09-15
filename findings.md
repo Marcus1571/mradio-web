@@ -486,3 +486,18 @@ This is a harder gate than Spotify's 5-user Development Mode cap (that one is at
 ## Recommendation
 
 **Do not add Amazon Music.** Unlike Apple (paid-but-obtainable) or Spotify (capped-but-self-service), Amazon's official API has no path a small self-hosted project can realistically get onto, and the unofficial alternative trades away exactly the safety properties (no OAuth, no account credentials, no per-service risk) that made the current three-service design worth building this way in the first place. Revisit only if Amazon's Web API ever moves out of closed beta into public self-service — no indication of a timeline for that as of this search.
+
+---
+
+Date: 2026-09-15
+Scope: operator asked whether a single cross-platform aggregator ("an IMDB for songs") could replace the per-service integration pattern — one lookup returning matched links across every platform at once, instead of separate `spotify.py`/`deezer.py`/`apple_music.py` modules.
+
+## Verdict: the right kind of service exists (Odesli/Songlink) but it is currently unusable — keyless access is dead, blocked pending an email reply
+
+**Odesli/Songlink** (`api.song.link`, powers song.link/album.link) is exactly this pattern: one call, given a track URL on any platform or an ISRC, returns matched links across Spotify, Apple Music, YouTube, Deezer, Tidal, Amazon Music, SoundCloud, Yandex, and more. Would structurally replace all three current per-service modules with one. Songwhip, the other major player in this space, shut down in 2024 (acquired by Sony/The Orchard, no migration path) — Odesli is the only serious option left.
+
+**Live-tested 2026-09-15**: `curl "https://api.song.link/v1-alpha.1/links?url=spotify:track:0Jcij1eWd5bDMU5iPbxe2i&userCountry=US"` (no key) returned `HTTP 401 {"statusCode":401,"code":"PUBLIC_API_ACCESS_DEPRECATED"}`. This is ahead of the API's own documented retirement date (July 31, 2026, per third-party docs mirrors) — the keyless door is already shut, not just rate-limited. `help.song.link` (the docs subdomain third-party sources cite) is also now DNS-unreachable, consistent with an active wind-down rather than a future-dated one.
+
+**Action taken**: drafted (not sent by me — left in the operator's Gmail as a draft for review/send) an email to `developers@song.link`, the address consistently cited across multiple independent third-party client-library docs (Go package, Node.js client) as the official API-key request channel. States the 401 finding directly, asks whether keys are still being issued at all, gives a realistic usage estimate (one lookup per unique track per station, cached and shared across all listeners — same pattern as the existing `music_link_cache.py`), and asks for a pointer to a successor service if Songlink is fully retired.
+
+**Current status: blocked, pending a reply.** No further action possible until either a real API key arrives or Odesli responds (decline, pointer elsewhere, or no reply — treat silence after a reasonable wait as an effective no). Do not attempt to build against this without a key; the keyless surface is confirmed dead, not merely deprecated-but-working.
