@@ -737,15 +737,27 @@ Play history and stats have no such limitation — they work regardless of
 where a listener connects from.
 
 **Public stats endpoint** — `GET /api/public/stats` returns
-`{"live_listeners": <int>, "unique_listeners_today": <int>}` with **no
-authentication required**. This is the one deliberately public data
-endpoint in the app, scoped to two harmless aggregate counts only — no
-usernames, IPs, or locations, unlike every other analytics route above,
-which stays admin-only. It exists to feed an external dashboard widget
-(e.g. a [gethomepage.dev](https://gethomepage.dev) `customapi` tile)
-without needing a login flow or an API key. `unique_listeners_today`
-counts distinct listeners by UTC calendar day, matching every other
-date comparison in this app.
+`{"live_listeners": <int>, "unique_listeners_today": <int>,
+"ai_requests_today": <int>, "music_link_requests_this_hour": <int>}`
+with **no authentication required**. This is the one deliberately
+public data endpoint in the app, scoped to harmless aggregate counts
+only — no usernames, IPs, or locations, unlike every other analytics
+route above, which stays admin-only. It exists to feed an external
+dashboard widget (e.g. a [gethomepage.dev](https://gethomepage.dev)
+`customapi` tile) without needing a login flow or an API key.
+`unique_listeners_today` and `ai_requests_today` count by UTC calendar
+day; `music_link_requests_this_hour` counts within the current UTC
+clock hour (a snapshot of the current hour-bucket, not a trailing
+60-minute window) — all matching this app's existing UTC-everywhere
+date convention. `ai_requests_today` reads the same `ai_requests` table
+enricher.py's `_record_ai_request` already writes for AI.md's
+speed/reliability numbers (§ai_stats.py); `music_link_requests_this_hour`
+reads a new `music_link_requests` table logged by
+`routers/music_link.py` on every `GET /api/music-link` call (hits and
+misses alike — it measures listener demand for the feature, not
+lookup cost), separate from `music_link_cache.py`'s title→URL cache,
+which only stores resolved results and can't answer "how many
+requests."
 
 ## 12. Spotify and Deezer playlist integration (optional)
 

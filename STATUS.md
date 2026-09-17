@@ -23,6 +23,12 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.26.0 tagged, released, and deployed to LT 2026-09-17.** Extends
+  `GET /api/public/stats` with two more counts — `ai_requests_today`
+  (reuses the existing `ai_requests` table) and
+  `music_link_requests_this_hour` (new `music_link_requests` table,
+  logged on every `GET /api/music-link` call) — for the homepage.dev
+  widget's expansion from 2 to 4 tile fields.
 - **v1.25.0 tagged, released, and deployed to LT 2026-09-17.** Adds a
   new public, unauthenticated `GET /api/public/stats` endpoint
   (`live_listeners`, `unique_listeners_today`) — the first deliberately

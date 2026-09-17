@@ -54,6 +54,33 @@ async def unique_listeners_today() -> int:
     return row["n"] if row else 0
 
 
+async def ai_requests_today() -> int:
+    """Count of ai_requests rows (see enricher.py's _record_ai_request)
+    started today, UTC calendar day — same convention as
+    unique_listeners_today()."""
+    db = get_db()
+    cur = await db.execute(
+        "SELECT COUNT(*) AS n FROM ai_requests WHERE date(started_at) = date('now')"
+    )
+    row = await cur.fetchone()
+    return row["n"] if row else 0
+
+
+async def music_link_requests_this_hour() -> int:
+    """Count of music_link_requests rows (see routers/music_link.py's
+    _record_request) started in the current UTC clock hour — a rolling
+    "requests/hour" snapshot rather than a trailing 60-minute window, to
+    match the tile's other fields (LIVE/TODAY are both snapshot-style
+    counts, not sliding windows)."""
+    db = get_db()
+    cur = await db.execute(
+        "SELECT COUNT(*) AS n FROM music_link_requests "
+        "WHERE strftime('%Y-%m-%d %H', started_at) = strftime('%Y-%m-%d %H', 'now')"
+    )
+    row = await cur.fetchone()
+    return row["n"] if row else 0
+
+
 async def recent_history(limit: int = 50, offset: int = 0) -> list[dict]:
     db = get_db()
     cur = await db.execute(

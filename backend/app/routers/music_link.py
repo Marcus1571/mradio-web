@@ -1,8 +1,13 @@
+import logging
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, Query, Response
 
-from .. import apple_music, deezer, music_link_cache, spotify
+from .. import apple_music, deezer, db, music_link_cache, spotify
 from ..deps import get_active_user
 from ..textutil import split_title
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/music-link", tags=["music-link"])
 
@@ -37,6 +42,8 @@ async def get_music_link(
     if not raw_title or service not in _VALID_SERVICES:
         return {"url": None}
 
+    await _record_request(service)
+
     cached = await music_link_cache.get_cached(service, raw_title)
     if cached is not None:
         return {"url": cached.get("url")}
@@ -45,6 +52,24 @@ async def get_music_link(
     url = await _lookup(service, artist, title, performer)
     await music_link_cache.store(service, raw_title, url)
     return {"url": url}
+
+
+async def _record_request(service: str) -> None:
+    """Best-effort request-volume logging for the public stats widget (see
+    routers/public.py) — mirrors enricher.py's _record_ai_request. Counts
+    every request including cache hits (unlike music_link_cache.py, which
+    only stores resolved URLs), since the metric being tracked is listener
+    demand for the feature, not backend lookup cost. Never allowed to
+    break the actual link lookup."""
+    try:
+        async with db.tx() as conn:
+            await conn.execute(
+                "INSERT INTO music_link_requests (service, started_at) VALUES (?, ?)",
+                (service, datetime.now(timezone.utc).isoformat()),
+            )
+    except Exception:
+        logger.warning("failed to record music_link_requests row for service=%s",
+                       service, exc_info=True)
 
 
 async def _lookup(service: str, artist: str, title: str, performer: str) -> str | None:

@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.26.0] - 2026-09-17
+
+Extends `GET /api/public/stats` (added in 1.25.0) with two more counts:
+`ai_requests_today` and `music_link_requests_this_hour` — for the
+homepage.dev widget's expansion from 2 to 4 tile fields.
+
+- `history.py`: new `ai_requests_today()` — `COUNT(*)` against the
+  existing `ai_requests` table (already populated by
+  `enricher.py`'s `_record_ai_request` for AI.md's numbers) for the
+  current UTC calendar day.
+- `db.py`: new `music_link_requests` table (`service`, `started_at`) —
+  nothing previously logged individual `/api/music-link` calls;
+  `music_link_cache.py`'s cache stores resolved title→URL pairs, not a
+  request log, so it can't answer "how many requests."
+- `routers/music_link.py`: logs a best-effort row to the new table on
+  every `GET /api/music-link` call (hits and misses both — tracks
+  listener demand, not backend lookup cost), mirroring
+  `_record_ai_request`'s never-break-the-real-feature pattern.
+- `history.py`: new `music_link_requests_this_hour()` — `COUNT(*)`
+  against the new table for the current UTC clock hour (a snapshot of
+  "this hour so far," not a trailing 60-minute window).
+
 ## [1.25.0] - 2026-09-17
 
 Adds a new public, unauthenticated stats endpoint — `GET

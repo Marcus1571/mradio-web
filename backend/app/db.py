@@ -77,6 +77,12 @@ CREATE TABLE IF NOT EXISTS ai_requests (
     error_detail TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_ai_requests_provider ON ai_requests(provider, started_at);
+CREATE TABLE IF NOT EXISTS music_link_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    service TEXT NOT NULL,
+    started_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_music_link_requests_started ON music_link_requests(started_at);
 CREATE TABLE IF NOT EXISTS spotify_tokens (
     user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     access_token TEXT NOT NULL,

@@ -15,6 +15,8 @@ router = APIRouter(prefix="/api/public", tags=["public"])
 class PublicStats(BaseModel):
     live_listeners: int
     unique_listeners_today: int
+    ai_requests_today: int
+    music_link_requests_this_hour: int
 
 
 @router.get("/stats", response_model=PublicStats)
@@ -26,4 +28,6 @@ async def public_stats(response: Response):
     return {
         "live_listeners": len(nowplaying.live_snapshot()),
         "unique_listeners_today": await history.unique_listeners_today(),
+        "ai_requests_today": await history.ai_requests_today(),
+        "music_link_requests_this_hour": await history.music_link_requests_this_hour(),
     }
