@@ -736,6 +736,17 @@ not an error:
 Play history and stats have no such limitation — they work regardless of
 where a listener connects from.
 
+**Public stats endpoint** — `GET /api/public/stats` returns
+`{"live_listeners": <int>, "unique_listeners_today": <int>}` with **no
+authentication required**. This is the one deliberately public data
+endpoint in the app, scoped to two harmless aggregate counts only — no
+usernames, IPs, or locations, unlike every other analytics route above,
+which stays admin-only. It exists to feed an external dashboard widget
+(e.g. a [gethomepage.dev](https://gethomepage.dev) `customapi` tile)
+without needing a login flow or an API key. `unique_listeners_today`
+counts distinct listeners by UTC calendar day, matching every other
+date comparison in this app.
+
 ## 12. Spotify and Deezer playlist integration (optional)
 
 Each listener can connect their own Spotify or Deezer account and save tracks

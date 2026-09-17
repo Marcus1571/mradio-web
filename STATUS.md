@@ -23,6 +23,14 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.25.0 tagged, released, and deployed to LT 2026-09-17.** Adds a
+  new public, unauthenticated `GET /api/public/stats` endpoint
+  (`live_listeners`, `unique_listeners_today`) — the first deliberately
+  unauthenticated data route in the app, scoped to two harmless
+  aggregate counts (no PII), built to feed an external homepage.dev
+  dashboard widget via its `customapi` type. `unique_listeners_today`
+  is a genuinely new query (`history.unique_listeners_today()`) —
+  nothing computed a distinct-listener count before this.
 - **v1.24.0 tagged, released, and deployed to LT 2026-09-15.** Adds
   three new named themes — Sapphire (deep saturated navy), Jade (deep
   saturated emerald), Harbor (flat sage/khaki "vintage LCD") —

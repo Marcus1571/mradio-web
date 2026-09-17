@@ -31,6 +31,7 @@ from .routers import enrich as enrich_router
 from .routers import favorites as favorites_router
 from .routers import grok as grok_router
 from .routers import music_link as music_link_router
+from .routers import public as public_router
 from .routers import settings as settings_router
 from .routers import smtp as smtp_router
 from .routers import deezer as deezer_router
@@ -71,6 +72,7 @@ app.include_router(analytics_router.router)
 app.include_router(spotify_router.router)
 app.include_router(music_link_router.router)
 app.include_router(deezer_router.router)
+app.include_router(public_router.router)
 
 
 _SERVICE_CALLBACK_HTML = """<!DOCTYPE html>

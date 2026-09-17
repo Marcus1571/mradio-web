@@ -40,6 +40,20 @@ async def end_session(row_id: int) -> None:
         )
 
 
+async def unique_listeners_today() -> int:
+    """Distinct users with a play_history row starting today (UTC calendar
+    day, matching every other date comparison in this file — started_at
+    is always a UTC ISO string, so date('now') here is the same UTC day,
+    not the server's local day)."""
+    db = get_db()
+    cur = await db.execute(
+        "SELECT COUNT(DISTINCT user_id) AS n FROM play_history "
+        "WHERE date(started_at) = date('now')"
+    )
+    row = await cur.fetchone()
+    return row["n"] if row else 0
+
+
 async def recent_history(limit: int = 50, offset: int = 0) -> list[dict]:
     db = get_db()
     cur = await db.execute(

@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.25.0] - 2026-09-17
+
+Adds a new public, unauthenticated stats endpoint — `GET
+/api/public/stats` — returning `{"live_listeners": <int>,
+"unique_listeners_today": <int>}`. This is the first and only
+deliberately unauthenticated data endpoint in the app; every other
+route (including the existing `/api/analytics/*` admin routes it sits
+alongside conceptually) requires a session cookie. Scoped to two
+harmless aggregate counts only — no usernames, IPs, or location data —
+specifically so an external dashboard (e.g. a self-hosted
+[gethomepage.dev](https://gethomepage.dev) instance, via its
+`customapi` widget) can show live listener counts without a login flow
+or a new API-key mechanism.
+
+- `routers/public.py` (new): the endpoint, `Cache-Control: no-store`
+  (matching `stream.py`/`music_link.py`'s existing precedent for
+  answers that shouldn't be proxy-cached).
+- `history.py`: new `unique_listeners_today()` — `COUNT(DISTINCT
+  user_id)` against `play_history` for the current UTC calendar day.
+  Nothing computed this before; `by_day` in the existing `/analytics/stats`
+  admin route counts play-session rows, not distinct listeners.
+- `live_listeners` reuses the existing in-memory `nowplaying.live_snapshot()`
+  — no new state, no DB round-trip.
+- `KB.md` §11 documents the new endpoint and its deliberately-public
+  scope explicitly, so it doesn't read as an oversight next to every
+  other admin-gated route in the same section.
+
 ## [1.24.0] - 2026-09-15
 
 Adds three new named themes — **Sapphire** (deep saturated navy),
