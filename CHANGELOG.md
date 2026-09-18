@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.26.1] - 2026-09-18
+
+No code change — a deployment/infra fix on LT. `data/settings.json` (the
+file this app's own settings UI writes real AI-provider API keys to) was
+found at OS permission `644` (world-readable) during an unrelated
+secrets-exposure audit of LT. Tightened to `600` directly on the
+production instance; the app's own process runs as `root` inside its
+container and already owned the file, so this doesn't affect the app's
+ability to read or rewrite its settings. See `findings.md`'s 2026-09-18
+entry for the check performed before applying this.
+
 ## [1.26.0] - 2026-09-17
 
 Extends `GET /api/public/stats` (added in 1.25.0) with two more counts:

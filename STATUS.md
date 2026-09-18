@@ -23,8 +23,8 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
-- **`data/settings.json`'s file permissions tightened on LT, 2026-09-18**
-  (no version bump — a deployment/infra fix, not a code change). Found
+- **v1.26.1 — `data/settings.json`'s file permissions tightened on LT,
+  2026-09-18** (a deployment/infra fix, no actual code change). Found
   during an unrelated general secrets-exposure audit of LT
   (`legbatower` repo, not this project): the settings file — where this
   app's own settings UI stores real AI-provider API keys — was
