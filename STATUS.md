@@ -23,6 +23,16 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **`data/settings.json`'s file permissions tightened on LT, 2026-09-18**
+  (no version bump — a deployment/infra fix, not a code change). Found
+  during an unrelated general secrets-exposure audit of LT
+  (`legbatower` repo, not this project): the settings file — where this
+  app's own settings UI stores real AI-provider API keys — was
+  world-readable (`644`) at the OS level. Tightened to `600`; the app's
+  process runs as `root` inside its container and already owned the
+  file, so this doesn't affect the app's own read/write access. See
+  `findings.md`'s 2026-09-18 entry for the full check performed before
+  applying this.
 - **v1.26.0 tagged, released, and deployed to LT 2026-09-17.** Extends
   `GET /api/public/stats` with two more counts — `ai_requests_today`
   (reuses the existing `ai_requests` table) and

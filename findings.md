@@ -501,3 +501,147 @@ Scope: operator asked whether a single cross-platform aggregator ("an IMDB for s
 **Action taken**: drafted (not sent by me — left in the operator's Gmail as a draft for review/send) an email to `developers@song.link`, the address consistently cited across multiple independent third-party client-library docs (Go package, Node.js client) as the official API-key request channel. States the 401 finding directly, asks whether keys are still being issued at all, gives a realistic usage estimate (one lookup per unique track per station, cached and shared across all listeners — same pattern as the existing `music_link_cache.py`), and asks for a pointer to a successor service if Songlink is fully retired.
 
 **Current status: blocked, pending a reply.** No further action possible until either a real API key arrives or Odesli responds (decline, pointer elsewhere, or no reply — treat silence after a reasonable wait as an effective no). Do not attempt to build against this without a key; the keyless surface is confirmed dead, not merely deprecated-but-working.
+
+---
+
+Date: 2026-09-17
+Scope: operator asked whether Ollama could be sped up by re-ordering the pipeline (search Wikipedia first, use it as a fast-path, fall back to the current LLM flow only if nothing found) and whether a "much bigger and faster" cache would help. Live-benchmarked every stage against the real LT Ollama instance (`100.73.176.63:11434`) and the real `enricher.py`/`wiki.py`/`cache.py` code paths — not simulated.
+
+## Verdict: the premise doesn't match the architecture — Wikipedia grounding is already a pre-step, not a fallback, and it isn't the bottleneck. Ollama generation itself is. The cache's real problem isn't read speed, it's write cost scaling with size.
+
+### 1. Wikipedia grounding is already wired in, and it isn't slow
+
+`enricher.py::_ask()` already calls `wiki.ground()` **before** every categorical-provider LLM call (including Ollama) and injects the result as "GROUNDING CONTEXT" in the prompt (see AI.md's Cross-cutting section, shipped 2026-09-11). It is not "only search Wikipedia if the LLM comes up empty" — it always runs first. So the proposed reordering already exists, just in the opposite direction from what was described (grounds the LLM, doesn't replace it).
+
+Live timings (5 real artist/title pairs, `wiki.ground()` direct call):
+
+| Call | Cold (uncached) | Warm (in-memory cache hit) |
+|---|---|---|
+| The Beatles / Let It Be | 1.608s | 0.000006s |
+| Beethoven / Symphony No. 5 | 0.991s | 0.000004s |
+| Fleetwood Mac / Dreams | 1.022s | 0.000003s |
+| Mozart / Eine kleine Nachtmusik | 1.245s | 0.000003s |
+| Daft Punk / Get Lucky | 0.766s | 0.000002s |
+
+Cold lookups cost under 1.6s; the existing 1-hour in-memory cache (`wiki.py`, `_CACHE_TTL = 3600`, `_CACHE_MAX_SIZE = 200`) makes repeats free. This is not where the time goes.
+
+### 2. Ollama generation dominates total latency by 1-2 orders of magnitude
+
+Same prompt template (`_PROMPT_TEMPLATE` from `enricher.py`, byte-for-byte), same track (The Beatles - Let It Be), run against every model currently pulled on the LT Ollama instance (note: `gemma3:4b`, the hardcoded default in `providers.py::llm_ollama()`, is **no longer pulled** on LT — the roster has drifted to `gpt-oss:20b`, `qwen3:14b`, `qwen3.5:9b`, `gemma4:e4b-it-qat`, `phi4-reasoning:plus`, `phi4-mini:latest`, `translategemma:12b`):
+
+| Model | No grounding | With grounding | tok/s | Notes |
+|---|---|---|---|---|
+| `phi4-mini:latest` | 6.95s (170 tok) | 3.41s (152 tok) | ~58 | Fastest; grounding made it *faster*, not slower — shorter, more anchored output |
+| `gemma4:e4b-it-qat` | 19.62s (641 tok) | 22.98s (1151 tok) | ~52 | Grounding made this one slower — wrote a longer answer using the extra context |
+| `gpt-oss:20b` | 24.58s (1022 tok, num_predict=2200) | not re-tested | — | Currently-configured special-case model (anti-loop prompt rules, see AI.md); completed successfully within its budget in this run |
+| `qwen3.5:9b` | 49.48s, **empty response** (hit 1200-token cap) | 39.28s, **empty response** (same) | ~32 | Burned its entire `num_predict` budget with no final answer — the exact `gpt-oss` anti-loop failure mode already documented in AI.md, but on a *different* model family, and un-mitigated (anti-loop rules only trigger for `provider == "ollama" and model.startswith("gpt-oss")`) |
+| `phi4-reasoning:plus` | timed out at 120s (test harness cap; app's real `ollama_timeout` default is 75s) | not tested | — | A reasoning-tuned model; consistent with the same class of problem as `gpt-oss`/`qwen3.5:9b` but worse — never returned in the window tested |
+
+**Takeaway: total latency is 100% dominated by token-generation time on the local GPU, not by any surrounding lookup.** Wikipedia grounding is 1-2 seconds cold, near-zero warm; Ollama generation is 3-50+ seconds depending on model and whether it gets stuck reasoning instead of answering. No reordering of Wikipedia vs. LLM changes this, because the LLM call is never skipped — grounding is a quality input to it, not an alternative to it.
+
+**Real lever for speed: model choice and `num_predict` budget, not pipeline order.** `phi4-mini:latest` at ~3-7s is roughly 3-7x faster than `gemma4:e4b-it-qat` and ~10x faster than the reasoning-prone models on this exact prompt, while still returning grounded, correctly-shaped JSON. This wasn't a full accuracy battery (out of scope for a speed investigation) but is a concrete starting point for a follow-up accuracy check before considering it as a new default.
+
+### 3. Cache reads were never the bottleneck; cache **writes** are the one write-cost hazard that actually scales badly
+
+Benchmarked `cache.py`'s real `get_cached()`/`store()` against a temp cache file (not production data):
+
+| Cache size | Populate (800 sequential `store()` calls) | 50 sequential `get_cached()` calls | Per-read cost |
+|---|---|---|---|
+| 800 entries (current `MAX_ENTRIES`) | 4.59s | 0.059s | ~1.18ms |
+| 5000 entries (simulated "much bigger" cache) | 74.45s | 0.378s | ~7.57ms |
+
+Both read costs (1-8ms) are noise next to a 3-50 **second** Ollama call — a bigger cache's read cost would never be user-visible. But `store()` cost is real and did scale linearly with cache size (74s to populate 5000 entries vs. 4.6s for 800) — each `store()` call does a full synchronous read-modify-write of the entire `cache.json` file (`_load_sync()`/`_save_sync()` in `cache.py`), so **every single new trivia result written pays a cost proportional to total cache size**, not proportional to one entry. At 800 entries (current `MAX_ENTRIES`) this is ~93ms/write — invisible next to Ollama's multi-second calls today. If `MAX_ENTRIES` were raised substantially (the "much bigger cache" ask) without changing the storage strategy, per-write cost would grow with it and could eventually become non-trivial, though still small compared to generation time at any size tested here.
+
+Cache file sizes observed: 800 entries ≈ 715 KB, 5000 entries ≈ 4.5 MB (avg ~900 bytes/entry, consistent with the 750-850 character trivia field plus JSON overhead).
+
+## Recommendation
+
+Do not build a "Wikipedia-first fast path" — it's not a coherent optimization given how the pipeline actually works (grounding already runs first, unconditionally, and is not the slow part). Two things are worth doing instead, neither implemented this session (benchmarking only, per the ask):
+
+1. **If Ollama speed matters enough to act on:** consider `phi4-mini:latest` as a faster default over whatever's currently configured, subject to its own accuracy fact-check battery (not run here) before promoting it — AI.md's existing per-provider accuracy process applies. Separately, the `qwen3.5:9b`-family empty-response failure (burns full token budget on reasoning, same shape as the already-documented `gpt-oss` issue) suggests the anti-loop prompt-hardening condition in `textutil.py` (`provider == "ollama" and model.startswith("gpt-oss")`) is too narrow now that the LT model roster includes other reasoning-prone models; worth broadening if any of them get adopted.
+2. **If `MAX_ENTRIES` gets raised meaningfully (10x+) for "a much bigger cache":** the full-file read-modify-write in `cache.py::store()` is the part that would start to cost something — not `get_cached()`. A real fix (not attempted here, out of scope for benchmarking) would replace the whole-file JSON store with something that supports single-key writes (e.g. SQLite, already used elsewhere in this codebase per `db.py`) so write cost stays flat regardless of total cache size. At the current 800-entry ceiling this isn't worth doing yet — the numbers above show it's still cheap in absolute terms.
+
+**Benchmark scripts** (not committed — ad hoc, run from `/tmp`): `/tmp/ai_benchmark.py` (wiki + Ollama latency across models, with/without grounding), `/tmp/ai_cache_benchmark.py` (cache read/write cost at 800 vs 5000 entries), `/tmp/ai_gptoss_bench.py` (gpt-oss:20b and phi4-reasoning:plus spot-check). Re-run against the live LT instance to reproduce; results will drift as the model roster and hardware load change.
+
+---
+
+Date: 2026-09-17 (same day follow-up)
+Scope: operator asked to switch the Ollama default to `phi4-mini:latest` per the earlier speed benchmark, in parallel with a broader model-catalog investigation. Ran the standard 5-track accuracy battery (`beethoven9`, `kindofblue`, `muldaur_empty_bed`, `chanchan`, `obscure_trap`) against `phi4-mini:latest` using the real production code path (`_PROMPT_TEMPLATE`, `apply_provider_rules("ollama", "phi4-mini:latest")`, live Wikipedia grounding via `wiki.ground()`) before accepting the switch as final — this project's established discipline per AI.md's own three-axis (reliability/speed/accuracy) tracking model.
+
+## Verdict: phi4-mini:latest FAILS the accuracy battery — reverted same day, do not re-adopt without a passing re-test
+
+This confirms and sharpens an existing finding already on record (`STATUS.md`, 2026-09-09 P5000 comparison): "`phi4-mini` (14.9s, fast but fabricated a fake dedicatee)". That entry was missed before the speed-only benchmark two days ago; should have been checked first.
+
+Live results (5-track battery, grounded, hardened prompt, `100.73.176.63:11434`):
+
+| Track | Grounded | Result |
+|---|---|---|
+| `beethoven9` (Beethoven, Symphony No. 9) | Yes (article: "Symphony No. 9") | **Empty trivia** — `done_reason: stop`, 26 tokens, no failure/timeout, just an empty `"trivia": ""` on one of the most extensively documented works in the classical canon |
+| `kindofblue` (Miles Davis, Kind of Blue) | Yes | Correct — 1959, personnel (Coltrane, Adderley, Evans, Chambers, Cobb) all accurate |
+| `muldaur_empty_bed` (Maria Muldaur, Empty Bed Blues) | Yes (article: "Empty Bed Blues") | **Empty trivia** — same pattern as beethoven9, `done_reason: stop`, no answer despite a resolved grounding article |
+| `chanchan` (Compay Segundo, Chan Chan) | Yes (article: "Chan Chan") | **Fabricated wrong death date** — claimed Compay Segundo "passed away in 1995"; he actually died in **2003**. Grounding was available and resolved but did not prevent the fabrication. |
+| `obscure_trap` (Kora Jazz Trio, Round Midnight) | Yes (article: "Round Midnight") | **Invented band lineup** — claimed the trio consists of "Mamadou Diabate, Ibrahima Sylla, and Ali Farka Touré"; none of these are Kora Jazz Trio's actual members (Djeli Moussa Diawara, Abdoulaye Diabaté, Moussa Sissokho), and Ali Farka Touré is a real, well-known, but entirely unrelated deceased musician — the model wove a plausible real name into a fabricated lineup. Also invented a "formed in 2001 in Paris" claim with no support in the grounding excerpt. |
+
+**3 of 5 tracks compromised** (2 silent empty answers + 2 outright fabrications, one of which invents a real person's name into a false context) — this is not a marginal or borderline result. Notably, this happened **with Wikipedia grounding active on every track** (all 5 resolved a real article) — grounding did not prevent the chanchan/obscure_trap fabrications, meaning `phi4-mini` will not reliably use the grounding context it's given, unlike the pattern seen with NIM's `llama-3.2-11b-vision-instruct` (AI.md: "an explicit, grounded Kind of Blue answer that named the 1959 release and the correct key sidemen").
+
+The empty-trivia cases (`beethoven9`, `muldaur_empty_bed`) are a different, arguably worse failure mode than either the `gpt-oss` reasoning-loop problem or straightforward fabrication — the model returns cleanly (`done_reason: stop`, not `length`) with a syntactically valid but content-empty response, so nothing in the current pipeline flags it as a failure; it would silently show users a track with no trivia at all rather than retrying or falling back.
+
+## Action taken
+
+Reverted the same-day default-model change in `providers.py` (`llm_ollama()` and `_test_ollama()` fallbacks) and `settings.py` (`_DEFAULTS["ollama_model"]`) from `phi4-mini:latest` back to `gpt-oss:20b` — not back to the original `gemma3:4b`, since that model is confirmed no longer pulled on LT (see the earlier same-day entry) and `gpt-oss:20b` already has a real passing accuracy record on this exact battery (AI.md's ollama section: "grounded re-run 2026-09-11: gpt-oss:20b 4/4, all grounded").
+
+**Confirmed separately: this code-level default was never going to reach the live LT install anyway.** A live SSH check of `/mnt/cache/appdata/mradio-web/data/settings.json` (host path; `/data/settings.json` in the `mradio-web` container) found `"ollama_model": "gpt-oss:20b"` already explicitly saved on disk, last modified 2026-09-14 — well before this session. Per `settings.load()`'s `merged = dict(_DEFAULTS); merged.update(data)` merge order (the same hazard already documented for `dahl_timeout` in AI.md), an on-disk value always wins over the code default regardless of what the code default says. So the erroneous `phi4-mini:latest` default change, while live in this session, would never have taken effect on the real production install without a separate manual settings-admin change — no user-facing exposure occurred. Also confirmed the real `ollama_url` on LT is `http://192.168.88.8:11434` (LAN), not the `100.73.176.63` tailscale address used for this session's benchmarking — both reach the same physical Ollama instance, the LAN address just isn't reachable from wherever this session's shell runs.
+
+## Recommendation
+
+Do not adopt `phi4-mini:latest` as a default without a passing accuracy battery — this one failed decisively. If speed is still worth pursuing, the "which other Ollama-catalog model might be faster AND accurate" question is now a live, separate investigation (see the same-day parallel task below) rather than something this speed-only benchmark can answer on its own; a model needs to clear a real accuracy bar before its speed number is meaningful, same as every other provider in AI.md.
+
+---
+
+Date: 2026-09-17 (same-day follow-up #2)
+Scope: with `phi4-mini:latest` ruled out (previous entry), a background research task was run in parallel to find genuinely untried Ollama-catalog candidates for the P5000 (16GB VRAM, Pascal, no tensor cores) rather than re-testing models already tried. Research shortlisted `phi4:14b` (plain Phi-4, non-reasoning, ~9.1GB, never tried — distinct from both the already-failed `phi4-mini` and the already-timing-out `phi4-reasoning:plus`) and `qwen2.5:14b` (previous Qwen generation, ~9.0GB, never tried — an independent benchmark cited in the research found Qwen3's dense models sometimes underperform Qwen2.5 at the same size despite being newer). Both pulled on LT and run through the identical standard 5-track grounded accuracy battery used throughout this file, with every specific factual claim verified against live web search rather than eyeballed.
+
+## Verdict: both candidates fabricated on the same track (`chanchan`) — neither is a clean win, but `phi4:14b` is closer to usable
+
+### `phi4:14b` — 4/5 correct, 1 confirmed fabrication
+
+| Track | Elapsed | Verdict |
+|---|---|---|
+| `beethoven9` | 26.3s | ✅ Correct — 1822-24 composition, Vienna 1824 premiere, Schiller's "Ode to Joy," real conductors (Bernstein, Karajan) as generic performer examples, not fabricated specifics |
+| `kindofblue` | 14.0s | ✅ Correct — 1959, NYC, modal jazz, Coltrane/Evans named accurately |
+| `muldaur_empty_bed` | 14.9s | ✅ Correct — verified live: Bessie Smith's 1928 recording **was** inducted into the Grammy Hall of Fame in 1983, confirmed via web search, not a fabrication |
+| `chanchan` | 14.3s | ❌ **Fabricated** — claimed "Chan Chan" was "featured in the film 'Waking Life' in 2001." Verified live: false. *Waking Life*'s soundtrack is entirely Tosca Tango Orchestra/Glover Gill tango pieces plus one Chopin nocturne — no Compay Segundo, no "Chan Chan," at all. The 1997 release-year claim in the same answer is correct (Buena Vista Social Club single, released 16 September 1997); only the film credit is invented. This is exactly the category `CATEGORICAL_HALLUCINATION_RULES` forbids outright ("no unverified film/TV/commercial claims") — the operator likely confused this with Compay Segundo's real, separate appearance in the *Buena Vista Social Club* (1999) documentary. |
+| `obscure_trap` | 13.6s | ✅ Correct, and notably honest — attributed "Round Midnight" to Thelonious Monk (1944) and did not attempt to name Kora Jazz Trio's actual lineup at all, avoiding the exact invented-band-member failure `phi4-mini` committed on this same track |
+
+Non-reasoning by construction (confirmed via Ollama's own model page and independent guides) — no budget-burning empty-response risk observed across any of the 5 runs; every response used `done_reason: stop` with real content. Slower than `gpt-oss:20b`'s ~25s median only on `beethoven9` (26.3s); the other 4 tracks ran 13.6-14.9s, meaningfully faster than the current `gpt-oss:20b` default.
+
+### `qwen2.5:14b` — 3/5 correct, 1 confirmed fabrication, 1 honest decline
+
+| Track | Elapsed | Verdict |
+|---|---|---|
+| `beethoven9` | 24.2s | ✅ Correct — same core facts as phi4:14b, more compressed |
+| `kindofblue` | 13.5s | ✅ Correct, though noticeably repeats itself ("harmonically fluid, scale-based approach" appears twice almost verbatim) — a quality/polish issue, not a factual one |
+| `muldaur_empty_bed` | 12.7s | ✅ Correct but thin (241 chars, well under the 750-850 target) — no fabrication, but doesn't hit the prompt's own length requirement |
+| `chanchan` | 13.1s | ❌ **Fabricated** — claimed "Chan Chan was composed in the 1960s in Havana." Verified live: both details are wrong. It was written in 1987 (Compay Segundo's own account, corroborated by Eliades Ochoa's recollection of first recording it in 1987 at EGREM Santiago studios), and no source ties its composition to Havana — the lyrics reference Holguín-province towns (Alto Cedro, Marcané, Cueto, Mayarí) and it was popularized out of Santiago de Cuba, not Havana. **Notably, the real Wikipedia grounding excerpt this exact run received says "Written in the 1980s"** (per this file's own earlier `chanchan` entry) — this is not a case of missing information, the model had the correct decade in its own context window and still asserted a different, wrong one. |
+| `obscure_trap` | 11.6s | ✅ **Honest decline** — "No confident details are available about this specific track," rather than inventing a lineup. This is the correct behavior the hardened prompt asks for and neither `phi4-mini` nor `phi4:14b` achieved as cleanly on this track (phi4:14b answered about Monk generically instead of declining; still factually correct, but qwen2.5's explicit decline is arguably the more disciplined response). |
+
+Also non-reasoning, zero empty responses, consistently the fastest of the two candidates (11.6-24.2s vs phi4:14b's 13.6-26.3s) but with noticeably shorter, thinner trivia — several responses fall well short of the prompt's 750-850 character target, unlike `phi4:14b`'s answers which land closer to that range.
+
+## Recommendation
+
+**Neither candidate is a clean pass — do not switch the default off `gpt-oss:20b` based on this round.** Both fabricated on the identical track (`chanchan`), suggesting this specific song (a well-known song with a somewhat confusing multi-stage history — written 1987, first recorded 1987, internationally famous 1997 Buena Vista Social Club version) is a genuine trap for models this size, not a fluke of one model. `gpt-oss:20b` (the current default) already has a real passing 4/4 grounded battery on record (AI.md) and remains the better-evidenced choice.
+
+Of the two, **`phi4:14b` is the stronger candidate for future consideration** if this line of investigation continues: 4/5 clean, non-reasoning, comfortably fits the P5000's VRAM, and consistently 1.5-2x faster than `gpt-oss:20b` on 4 of 5 tracks. It is not being promoted to default on the strength of a single 5-track battery with one fabrication — AI.md's own standard (see gpt-oss:20b's "4/4 grounded" bar) implies a clean run, and this wasn't one. Worth a second, larger battery (more than 5 tracks, ideally including a repeat of `chanchan` specifically to see if the fabrication is consistent or a one-off) before considering a default change. `qwen2.5:14b` is not recommended for further testing — same fabrication risk as phi4:14b, no offsetting speed advantage worth the risk (both are in the same ~12-26s range), and thinner trivia output relative to the prompt's own length target.
+
+**Both models pulled and left on LT** (`phi4:14b`, `qwen2.5:14b`) for any future re-test — no cleanup performed, per the research task's scope (live-testing, not a one-shot disposable check).
+
+---
+
+Date: 2026-09-18
+Scope: found during a separate, general secrets-exposure audit of LT's `/mnt/user/appdata/` (see the `legbatower` repo — a cross-service security audit project, not this project's own scope). `mradio-web/data/settings.json` (the file this app's own settings UI writes real AI-provider API keys to — NVIDIA, Grok, Gemini, OpenRouter, Mistral, and a custom "dahl" provider) was found sitting at OS permission `644` (world-readable by any Unraid-level account/process), not `600`.
+
+**Fix applied directly on LT, not via a code change in this repo:** `chmod 600 /mnt/user/appdata/mradio-web/data/settings.json`. Confirmed safe before applying — `docker top mradio-web` shows the app's own process runs as `root` inside its container, and the file was already `root:root`-owned, so tightening to owner-only access doesn't affect the app's own ability to read or rewrite its settings. Confirmed mradio-web still returns `200` on its live URL after the change.
+
+**Not yet independently re-confirmed**: that a settings *save* from the app's own UI still works correctly post-fix. Should be unaffected by construction (same UID doing the write, same file, just narrower permissions), but this hasn't been manually re-verified through the actual UI flow yet — worth a quick check next time the operator is in mradio-web's settings page.
+
+**This is a live-server/deployment fix, not a code fix** — nothing in this repo's own source needed to change, since the exposure was purely an OS-level file permission on the deployed instance, not how the app itself handles secrets. Full audit context (including a second, unrelated finding — an orphaned NPM install's exposed key file) lives in the `legbatower` repo's `findings.md`/`STATUS.md`, 2026-09-18 "secrets-in-config audit" entries.
