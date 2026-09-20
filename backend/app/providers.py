@@ -230,7 +230,7 @@ def api_endpoint(base: str, suffix: str) -> str:
 
 async def llm_ollama(settings: dict, prompt: str) -> str | None:
     url = api_endpoint(settings.get("ollama_url", ""), "api/generate")
-    model = settings.get("ollama_model") or "gemma3:4b"
+    model = settings.get("ollama_model") or "gpt-oss:20b"
     # gpt-oss:20b is a reasoning/"thinking" model (confirmed via its own
     # /api/tags capabilities list) that can burn its whole num_predict
     # budget on internal deliberation before emitting any "response" text
@@ -880,7 +880,7 @@ async def _test_ollama(settings: dict) -> tuple[bool, str]:
     url = settings.get("ollama_url")
     if not url:
         return False, "No server URL configured."
-    model = settings.get("ollama_model") or "gemma3:4b"
+    model = settings.get("ollama_model") or "gpt-oss:20b"
     try:
         async with httpx.AsyncClient(timeout=_TEST_TIMEOUT) as client:
             r = await client.get(api_endpoint(url, "api/tags"))

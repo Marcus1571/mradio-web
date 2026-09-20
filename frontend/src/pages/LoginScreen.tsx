@@ -40,7 +40,7 @@ export function LoginScreen() {
         </div>
         <h1 className="auth-title">Sign in</h1>
         <label className="field">
-          <span>Username</span>
+          <span>Username or email</span>
           <input
             value={username}
             onChange={(e) => setUsername(e.target.value)}

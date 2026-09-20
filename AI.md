@@ -109,6 +109,17 @@ those exist.
   and music-specific articles (+200) while penalizing disambiguation
   pages (-300). Implemented 2026-09-11; see `findings.md` for the
   grounded battery results.
+- **Trivia cache write cost scales with cache size (benchmarked, not yet
+  a live problem)** — `cache.py`'s `store()` does a full synchronous
+  read-modify-write of the whole `cache.json` file on every write (no
+  per-key storage). Benchmarked 2026-09-17: read cost is negligible at
+  any size tested (~1-8ms, dwarfed by multi-second LLM calls either way),
+  but write cost is linear in total entries — ~4.6s to populate 800
+  entries (today's `MAX_ENTRIES`) vs. ~74s for 5000. Not worth fixing at
+  today's 800-entry ceiling; would need a real per-key store (e.g.
+  SQLite, already used elsewhere via `db.py`) before raising
+  `MAX_ENTRIES` by an order of magnitude or more. See `findings.md`
+  2026-09-17.
 - **Known bug, fixed 2026-09-11:** `_llm_openai_compatible()` in
   `backend/app/providers.py` used to crash with `AttributeError` when a
   provider returned `"content": null` (observed with OpenRouter reasoning
@@ -298,6 +309,22 @@ yet (self-hosted, lower traffic).
 (`ollama_timeout` 75s); `qwen3:14b` median ~58s. Pre-instrumentation
 manual spot-checks: `qwen3:14b` — 47.5s; `gpt-oss:20b` — 32.6s.
 
+Live speed benchmark 2026-09-17 (see `findings.md` for full methodology
+and per-model table): confirms generation time, not Wikipedia grounding,
+is the dominant cost — cold Wikipedia lookups are ~0.8-1.6s (near-zero
+once the 1-hour in-memory cache is warm), while Ollama generation itself
+ranged 3.4s (`phi4-mini:latest`) to 49s (`qwen3.5:9b`, and that run
+returned **empty** — burned its full `num_predict` budget on internal
+reasoning without emitting an answer, the same failure shape already
+documented below for `gpt-oss` but on a different, currently
+un-mitigated model family). **The LT model roster has drifted since
+2026-09-11**: `gemma3:4b` (this file's hardcoded default in
+`providers.py::llm_ollama()`) is no longer pulled; current roster is
+`gpt-oss:20b`, `qwen3:14b`, `qwen3.5:9b`, `gemma4:e4b-it-qat`,
+`phi4-reasoning:plus`, `phi4-mini:latest`, `translategemma:12b`.
+`phi4-reasoning:plus` timed out entirely (>120s) on the same prompt —
+worth avoiding as a default without further testing.
+
 **Accuracy:** fact-check battery 2026-09-11: `gpt-oss:20b` gave a
 correct, clean decline on the obscure track and acceptable facts on the
 well-known tracks. `qwen3:14b` was slow and hallucinated on "Empty Bed
@@ -308,6 +335,90 @@ Grounded re-run 2026-09-11: `gpt-oss:20b` 4/4, all grounded, obscure track
 now factually anchored rather than declined; `qwen3:14b` 3/4, still timed
 out on "Empty Bed Blues" but got the obscure track right when it did
 return. The preference toward `gpt-oss:20b` is now stronger.
+
+**`phi4-mini:latest` tried and reverted same day, 2026-09-17:** briefly
+promoted to the default given its speed (see below) without first
+checking this file's own accuracy history — an earlier P5000 comparison
+(`STATUS.md`, 2026-09-09) had already flagged it as "fast but fabricated
+a fake dedicatee." A same-day 5-track accuracy battery (identical to the
+standard `beethoven9`/`kindofblue`/`muldaur_empty_bed`/`chanchan`/
+`obscure_trap` set used throughout this file), run with live Wikipedia
+grounding active on every track, confirmed the prior finding and found
+worse: **empty trivia** on `beethoven9` and `muldaur_empty_bed` (clean
+`done_reason: stop`, not a timeout or budget failure — just nothing
+returned, a failure mode invisible to the current pipeline since nothing
+flags an empty-but-valid response), a fabricated Compay Segundo death
+date on `chanchan` (said 1995, actually 2003), and an invented Kora Jazz
+Trio lineup on `obscure_trap` that wove in a real but unrelated musician
+(Ali Farka Touré) alongside two names not associated with that trio at
+all. 3 of 5 tracks compromised, despite grounding resolving a real
+article on every single track — `phi4-mini` does not reliably use
+grounding context the way NIM's `llama-3.2-11b-vision-instruct` does.
+Reverted the same day; `ollama_model` default is `gpt-oss:20b` again
+(not the original `gemma3:4b` — confirmed no longer pulled on the LT
+Ollama instance). Full battery results in `findings.md` 2026-09-17.
+**Do not re-adopt `phi4-mini` as a default without a passing re-test.**
+
+**Two new untried candidates researched and live-tested, 2026-09-17:**
+in parallel with the phi4-mini failure above, a research pass over
+Ollama's model catalog (targeting the P5000's 16GB/Pascal/no-tensor-core
+constraints, ruling out anything already tried) shortlisted `phi4:14b`
+(plain Phi-4 — a different, non-reasoning model from both `phi4-mini`
+and `phi4-reasoning:plus`, ~9.1GB) and `qwen2.5:14b` (previous Qwen
+generation, ~9.0GB; a cited independent benchmark found Qwen3 dense
+models sometimes underperform Qwen2.5 at the same size). Both pulled on
+LT and run through the same 5-track grounded battery, with every factual
+claim in the output verified against live web search rather than
+eyeballed:
+- **`phi4:14b`: 4/5 correct, 1 confirmed fabrication** — invented a film
+  credit on `chanchan` ("featured in the film 'Waking Life' in 2001,"
+  verified false — that film's soundtrack is entirely Tosca Tango
+  Orchestra/Chopin, no Compay Segundo connection at all). The other 4
+  tracks were clean, including a correctly-verified Grammy Hall of Fame
+  claim on `muldaur_empty_bed` (1983 induction, confirmed live). 13.6-
+  26.3s per track — faster than `gpt-oss:20b`'s ~25s median on 4 of 5
+  tracks. Non-reasoning by construction; zero empty responses.
+- **`qwen2.5:14b`: 3/5 correct, 1 confirmed fabrication, 1 honest
+  decline** — invented both the decade AND city for `chanchan`'s
+  composition ("1960s in Havana"; actually written 1987, tied to
+  Holguín-province towns and Santiago de Cuba, not Havana) — notably,
+  **the real grounding excerpt this run received said "Written in the
+  1980s"**, so this wasn't a missing-information gap, the model had the
+  right decade in context and asserted a different one anyway. Did
+  correctly decline to invent a lineup on `obscure_trap` rather than
+  fabricate one. Faster than `phi4:14b` (11.6-24.2s) but noticeably
+  thinner trivia, several responses well under the prompt's 750-850
+  character target.
+- **Both candidates fabricated on the identical track** (`chanchan`) —
+  a genuine trap given the song's confusing multi-date history (written
+  1987, first recorded 1987, internationally famous via the 1997 Buena
+  Vista Social Club version), not a fluke of one model.
+- **Verdict: neither promoted to default.** `gpt-oss:20b` keeps its
+  position — it already has a real passing 4/4 grounded battery on
+  record (above), and neither new candidate matched that. `phi4:14b` is
+  the more promising of the two (4/5, faster, non-reasoning, comfortable
+  VRAM fit) and worth a larger/repeat battery before reconsidering, but
+  one fabrication in a 5-track run doesn't clear this file's own bar for
+  a clean pass. `qwen2.5:14b` is not recommended for further testing —
+  same fabrication risk with no compensating advantage. Both models left
+  pulled on LT for any future re-test. Full battery tables and every
+  verification source in `findings.md` 2026-09-17 (second same-day
+  entry).
+
+**Not acted on, 2026-09-17:** a "Wikipedia-first fast path" was
+considered (search Wikipedia before the LLM, skip the LLM if a match is
+found) and rejected — it doesn't fit the existing architecture. Wikipedia
+grounding (see Cross-cutting section) already runs unconditionally
+*before* every categorical-provider LLM call, including Ollama's; it
+augments the prompt, it never replaces the LLM call. Since grounding
+costs ~1s and generation costs 3-50s, reordering them cannot change total
+latency — the LLM call never gets skipped either way. Model choice /
+`num_predict` budget remains a real speed lever in principle
+(`phi4-mini:latest` was ~3-7x faster than `gemma4:e4b-it-qat` on an
+identical prompt) — but speed alone isn't sufficient, per the
+`phi4-mini` accuracy failure directly above; any future speed-motivated
+default change needs a passing accuracy battery before shipping, not
+after.
 
 ## openai (generic OpenAI-compatible slot)
 

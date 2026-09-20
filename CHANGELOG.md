@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.27.0] - 2026-09-20
+
+Login accepts either the username or the email address in the same
+field, with the password unchanged — `/api/auth/login` tries username
+first, falls back to email if no match. `LoginScreen.tsx`'s field label
+now reads "Username or email" to match. Also reverts the Ollama default
+model from `gemma3:4b` (no longer pulled on the LT instance) to
+`gpt-oss:20b` after `phi4-mini:latest` failed its accuracy battery
+(empty trivia on 2/5 tracks, a fabricated wrong death date, an invented
+band lineup) — see `AI.md`'s Ollama section.
+
 ## [1.26.1] - 2026-09-18
 
 No code change — a deployment/infra fix on LT. `data/settings.json` (the

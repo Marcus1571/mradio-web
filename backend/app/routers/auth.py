@@ -18,7 +18,14 @@ def _user_out(user: dict) -> UserOut:
 
 @router.post("/login", response_model=UserOut)
 async def login(body: LoginRequest, response: Response):
+    # Accepts either username or email in the same field — plenty of
+    # users type their email at the "Username" prompt regardless of the
+    # label (confirmed live, "sugar" 2026-09-17). Username tried first
+    # since it's still the more common case and is the unique identity
+    # the rest of the app keys off of.
     user = await users.get_by_username(body.username)
+    if user is None:
+        user = await users.get_by_email(body.username)
     if user is None or not auth.verify_password(body.password, user["password_hash"]):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "invalid username or password")
     if user["disabled"]:

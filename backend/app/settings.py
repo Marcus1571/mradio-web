@@ -16,7 +16,21 @@ SETTINGS_FILE = DATA_DIR / "settings.json"
 
 _DEFAULTS = {
     "ollama_url": "",
-    "ollama_model": "gemma3:4b",
+    # gemma3:4b (the old default) is no longer pulled on the LT Ollama
+    # instance — confirmed live via /api/tags, 2026-09-17. phi4-mini:latest
+    # was tried as a faster replacement (~3-7x faster than the
+    # next-fastest currently-pulled model) but FAILED its accuracy battery
+    # the same day: empty trivia on 2/5 standard tracks (including
+    # Beethoven's 9th, one of the best-documented pieces in the entire
+    # canon), a fabricated wrong death date for Compay Segundo (said 1995,
+    # actually 2003), and an invented Kora Jazz Trio lineup that wove in a
+    # real but unrelated musician's name (Ali Farka Touré) — 3 of 5 tracks
+    # compromised even WITH Wikipedia grounding active. Reverted same day;
+    # do not re-adopt phi4-mini as the default without a passing accuracy
+    # battery first. gpt-oss:20b kept as the fallback default instead —
+    # it's both LT's actual currently-saved value and the model with a
+    # real passing accuracy record (see AI.md's ollama section).
+    "ollama_model": "gpt-oss:20b",
     "ollama_timeout": 75,
     "ollama_gpu": -1,
     "api_base": "https://integrate.api.nvidia.com/v1",
