@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.28.2] - 2026-09-20
+
+Fixed the tap-to-reveal labels (v1.28.1) overflowing past the Users
+table's right edge instead of wrapping — `.row-actions` was a
+non-wrapping flex row, so a row with a long name/email and all six
+labels revealed (e.g. "Resend invite", "Reset password") got clipped
+mid-word at the panel boundary. Now wraps onto a second line when the
+revealed labels don't fit on one.
+
 ## [1.28.1] - 2026-09-20
 
 Fixed two problems with v1.28.0's icon-button toolbar: the hover-only
