@@ -71,6 +71,10 @@
   color: var(--ink-3);
 }
 
+.admin-table-scroll {
+  overflow-x: auto;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
@@ -123,6 +127,15 @@
   border-bottom: none;
 }
 
+.admin-table-users tbody tr {
+  cursor: pointer;
+}
+
+.admin-table-users tbody tr:hover,
+.admin-table-users tbody tr.row-labels-open {
+  background: var(--paper);
+}
+
 .admin-table-users td:first-child {
   min-width: 12rem;
 }
@@ -162,11 +175,14 @@
 }
 
 .row-actions button {
-  width: 1.8rem;
+  min-width: 1.8rem;
   height: 1.8rem;
+  padding: 0 var(--space-2xs);
   border-radius: var(--radius-sm);
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3xs);
   color: var(--ink-3);
   transition: color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
 }
@@ -174,6 +190,12 @@
 .row-actions button svg {
   width: 15px;
   height: 15px;
+  flex-shrink: 0;
+}
+
+.row-action-label {
+  font-size: var(--text-xs);
+  white-space: nowrap;
 }
 
 .row-actions button:hover:not(:disabled) {

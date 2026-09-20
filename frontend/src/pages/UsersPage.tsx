@@ -34,6 +34,7 @@ export function UsersPage({ onBack, t }: { onBack?: () => void; t: TFunction }) 
   const [loading, setLoading] = useState(true)
   const [sortKey, setSortKey] = useState<SortKey>('created')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [labeledRow, setLabeledRow] = useState<number | null>(null)
 
   const [createOpen, setCreateOpen] = useState(false)
   const [createForm, setCreateForm] = useState<CreateForm>(EMPTY_CREATE_FORM)
@@ -178,6 +179,7 @@ export function UsersPage({ onBack, t }: { onBack?: () => void; t: TFunction }) 
 
       <div className="admin-panel">
         {!loading && (
+          <div className="admin-table-scroll">
           <table className="admin-table admin-table-users">
             <thead>
               <tr>
@@ -209,63 +211,88 @@ export function UsersPage({ onBack, t }: { onBack?: () => void; t: TFunction }) 
               </tr>
             </thead>
             <tbody>
-              {sortedUsers.map((u) => (
-                <tr key={u.id}>
-                  <td>
-                    {displayName(u)}
-                    {u.full_name && <span className="user-name-sub">{u.username}</span>}
-                    {u.email && <span className="user-name-sub">{u.email}</span>}
-                  </td>
-                  <td>
-                    {u.is_admin && <span className="pill admin">{t('users.pillAdmin')}</span>}{' '}
-                    {u.disabled && <span className="pill disabled">{t('users.pillDisabled')}</span>}
-                    {u.must_change_password && <span className="pill">{t('users.pillPasswordPending')}</span>}
-                  </td>
-                  <td>{new Date(u.created_at).toLocaleDateString()}</td>
-                  <td>
-                    <div className="row-actions">
-                      <button
-                        type="button"
-                        title={u.is_admin ? t('users.removeAdmin') : t('users.makeAdmin')}
-                        onClick={() => void toggleAdmin(u)}
-                        disabled={u.id === me?.id}
-                      >
-                        <ShieldIcon />
-                      </button>
-                      <button
-                        type="button"
-                        title={u.disabled ? t('users.enable') : t('users.disable')}
-                        onClick={() => void toggleDisabled(u)}
-                        disabled={u.id === me?.id}
-                      >
-                        <PowerIcon />
-                      </button>
-                      <button type="button" title={t('users.editProfile')} onClick={() => openEdit(u)}>
-                        <PencilIcon />
-                      </button>
-                      {u.email && (
-                        <button type="button" title={t('users.resendInvite')} onClick={() => void resendInvite(u)}>
-                          <MailIcon />
+              {sortedUsers.map((u) => {
+                const showLabels = labeledRow === u.id
+                return (
+                  <tr
+                    key={u.id}
+                    className={showLabels ? 'row-labels-open' : ''}
+                    onClick={(e) => {
+                      if ((e.target as HTMLElement).closest('.row-actions')) return
+                      setLabeledRow((cur) => (cur === u.id ? null : u.id))
+                    }}
+                  >
+                    <td>
+                      {displayName(u)}
+                      {u.full_name && <span className="user-name-sub">{u.username}</span>}
+                      {u.email && <span className="user-name-sub">{u.email}</span>}
+                    </td>
+                    <td>
+                      {u.is_admin && <span className="pill admin">{t('users.pillAdmin')}</span>}{' '}
+                      {u.disabled && <span className="pill disabled">{t('users.pillDisabled')}</span>}
+                      {u.must_change_password && <span className="pill">{t('users.pillPasswordPending')}</span>}
+                    </td>
+                    <td>{new Date(u.created_at).toLocaleDateString()}</td>
+                    <td>
+                      <div className="row-actions">
+                        <button
+                          type="button"
+                          title={u.is_admin ? t('users.removeAdmin') : t('users.makeAdmin')}
+                          onClick={() => void toggleAdmin(u)}
+                          disabled={u.id === me?.id}
+                        >
+                          <ShieldIcon />
+                          {showLabels && (
+                            <span className="row-action-label">
+                              {u.is_admin ? t('users.removeAdmin') : t('users.makeAdmin')}
+                            </span>
+                          )}
                         </button>
-                      )}
-                      <button type="button" title={t('users.resetPassword')} onClick={() => void resetPassword(u)}>
-                        <KeyIcon />
-                      </button>
-                      <button
-                        className="danger row-actions-divider"
-                        type="button"
-                        title={t('users.delete')}
-                        onClick={() => void deleteUser(u)}
-                        disabled={u.id === me?.id}
-                      >
-                        <TrashIcon />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        <button
+                          type="button"
+                          title={u.disabled ? t('users.enable') : t('users.disable')}
+                          onClick={() => void toggleDisabled(u)}
+                          disabled={u.id === me?.id}
+                        >
+                          <PowerIcon />
+                          {showLabels && (
+                            <span className="row-action-label">
+                              {u.disabled ? t('users.enable') : t('users.disable')}
+                            </span>
+                          )}
+                        </button>
+                        <button type="button" title={t('users.editProfile')} onClick={() => openEdit(u)}>
+                          <PencilIcon />
+                          {showLabels && <span className="row-action-label">{t('users.editProfile')}</span>}
+                        </button>
+                        {u.email && (
+                          <button type="button" title={t('users.resendInvite')} onClick={() => void resendInvite(u)}>
+                            <MailIcon />
+                            {showLabels && <span className="row-action-label">{t('users.resendInvite')}</span>}
+                          </button>
+                        )}
+                        <button type="button" title={t('users.resetPassword')} onClick={() => void resetPassword(u)}>
+                          <KeyIcon />
+                          {showLabels && <span className="row-action-label">{t('users.resetPassword')}</span>}
+                        </button>
+                        <button
+                          className="danger row-actions-divider"
+                          type="button"
+                          title={t('users.delete')}
+                          onClick={() => void deleteUser(u)}
+                          disabled={u.id === me?.id}
+                        >
+                          <TrashIcon />
+                          {showLabels && <span className="row-action-label">{t('users.delete')}</span>}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
+          </div>
         )}
 
         <div style={{ padding: 'var(--space-md)' }}>

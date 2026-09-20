@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.28.1] - 2026-09-20
+
+Fixed two problems with v1.28.0's icon-button toolbar: the hover-only
+`title` tooltip had no touch equivalent, so a phone user tapping an icon
+had no way to know what it did before acting on it. Tapping anywhere on
+a Users row (outside the icon buttons themselves) now reveals a text
+label next to each icon in that row; tapping again, or tapping a
+different row, hides it. Also fixed a pre-existing responsive bug found
+while testing this on a narrow viewport: the Users table's Created and
+action columns were silently clipped off-screen below ~700px width
+(`.admin-panel`'s `overflow: hidden` was cutting the table rather than
+scrolling it) — the table now scrolls horizontally on narrow screens
+instead of hiding content with no visual indication anything was cut
+off.
+
 ## [1.28.0] - 2026-09-20
 
 Redesigned the admin Users page: the six per-row actions (make/remove
