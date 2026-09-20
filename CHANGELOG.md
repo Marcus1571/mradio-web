@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.28.0] - 2026-09-20
+
+Redesigned the admin Users page: the six per-row actions (make/remove
+admin, enable/disable, edit profile, resend invite, reset password,
+delete) are now monoline SVG icon buttons with hover tooltips instead of
+six stacked text labels — reusing the app's existing `Icons.tsx` system
+(new `ShieldIcon`, `PowerIcon`, `MailIcon`, `KeyIcon`, alongside the
+already-existing `PencilIcon`/`TrashIcon`), not emoji, which render
+inconsistently across platforms. The three columns (Username, Status,
+Created) are now sortable by clicking the header, with a chevron
+indicating the active sort and direction — default sort is newest-first
+by creation date, same as before. The email address is now shown under
+the username/full name in the first column when the account has one.
+
 ## [1.27.0] - 2026-09-20
 
 Login accepts either the username or the email address in the same

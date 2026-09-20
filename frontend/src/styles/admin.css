@@ -88,6 +88,31 @@
   border-bottom: 1px solid var(--line);
 }
 
+.sort-header {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.sort-header:hover {
+  color: var(--ink);
+}
+
+.sort-chevron {
+  width: 10px;
+  height: 10px;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.sort-chevron-up {
+  transform: rotate(180deg);
+}
+
 .admin-table td {
   padding: var(--space-xs) var(--space-md);
   border-bottom: 1px solid var(--line);
@@ -132,22 +157,48 @@
 
 .row-actions {
   display: flex;
-  gap: var(--space-xs);
-  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3xs);
 }
 
 .row-actions button {
-  font-size: var(--text-xs);
-  color: var(--ink-2);
-  transition: color var(--dur-fast) var(--ease-out);
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: var(--radius-sm);
+  display: grid;
+  place-items: center;
+  color: var(--ink-3);
+  transition: color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+}
+
+.row-actions button svg {
+  width: 15px;
+  height: 15px;
 }
 
 .row-actions button:hover:not(:disabled) {
   color: var(--ink);
+  background: var(--paper);
+}
+
+.row-actions button:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .row-actions button.danger {
   color: var(--danger);
+}
+
+.row-actions button.danger:hover:not(:disabled) {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.row-actions-divider {
+  margin-left: var(--space-2xs);
+  border-left: 1px solid var(--line);
+  padding-left: calc(var(--space-2xs) + var(--space-3xs));
 }
 
 .admin-form {

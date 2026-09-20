@@ -162,6 +162,41 @@ export function AnchorIcon({ className }: IconProps) {
   )
 }
 
+export function ShieldIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M8 1.5 13 3.3v4c0 3.6-2.3 6.1-5 7.2-2.7-1.1-5-3.6-5-7.2v-4Z" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export function PowerIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M8 2v5.5" strokeLinecap="round" />
+      <path d="M11.3 4a5 5 0 1 1-6.6 0" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+export function MailIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <rect x="2" y="3.5" width="12" height="9" rx="1.2" />
+      <path d="M2.5 4.2 8 8.5l5.5-4.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export function KeyIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <circle cx="5" cy="5" r="3" />
+      <path d="M7.1 6.9 13.5 13.3M11.3 11 13 9.3M9.3 9 11 7.3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function ChevronDownIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
