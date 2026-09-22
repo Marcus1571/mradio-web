@@ -79,6 +79,20 @@ those exist.
 
 ## Cross-cutting mechanisms
 
+- **`DEFAULT_PROVIDER`** (`backend/app/providers.py`, `"openai"` = NIM) —
+  the provider a non-admin user with no saved `provider` preference gets
+  seeded with, set in `enricher.py`'s `Enricher.start()` (called from
+  `enrichers.py`'s `get_enricher()`, which already has `is_admin` at
+  construction time). Changed 2026-09-22 from the previous implicit
+  behavior (first entry of `PROVIDERS` that was enabled) to an explicit
+  constant, at the user's request — admins are unaffected and still fall
+  through to `PROVIDERS`' own order when they have no saved choice. This
+  is deliberately a separate concern from `PROVIDERS`' tuple order, which
+  still drives the automatic-fallback chain when a chosen provider fails
+  (`active_provider()`) — changing the default didn't move fallback
+  priority. All existing non-admin users' saved `provider` was also
+  bulk-migrated to NIM directly on production data the same day (see
+  `findings.md`), not just newly-created accounts going forward.
 - **`ADMIN_ONLY_PROVIDERS`** (`backend/app/providers.py`) — providers
   hidden from regular users, visible to admins only. Three distinct
   reasons feed this set, not one policy: `codex`/`grok` because picking

@@ -43,6 +43,17 @@ PROVIDERS = ("codex", "grok", "mistral", "opencode", "ollama", "openai", "gemini
 # see settings.py) — no shared-quota concern there.
 ADMIN_ONLY_PROVIDERS = frozenset({"codex", "grok", "openrouter", "mistral"})
 
+# Default provider for a user with no explicit choice yet (config.json's
+# "provider" key unset/empty) — "openai" is this app's internal name for
+# NVIDIA NIM (an OpenAI-compatible endpoint, see api_endpoint()/settings.py's
+# api_base default). Changed 2026-09-22 (user's explicit request) from the
+# implicit PROVIDERS-tuple-order fallback that existed before this constant.
+# Deliberately a separate constant from PROVIDERS[0] — that tuple's order
+# also drives the automatic-fallback chain in enricher.py's active_provider(),
+# a different concern (what to try next on failure) that shouldn't move just
+# because the *default* for a brand-new user changed.
+DEFAULT_PROVIDER = "openai"
+
 _OC_ONPATH: bool | None = None
 
 # Global "all providers just failed" cooldown, shared across every user's

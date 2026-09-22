@@ -206,18 +206,25 @@ class Enricher:
         self._task: asyncio.Task | None = None
         self.on_result: Callable[[str, dict], Awaitable[None] | None] | None = None
 
-    async def start(self) -> None:
+    async def start(self, is_admin: bool = False) -> None:
         cfg = await load_cfg(self.user_id)
         p = cfg.get("provider", "")
         # A non-admin's persisted `provider` choice could be one of
         # ADMIN_ONLY_PROVIDERS from before this restriction existed (or
-        # from being demoted after picking it) — is_admin isn't known
-        # yet at this point (set right after get_enricher() constructs
-        # this instance), so this can't filter admin-only providers out
-        # yet. _usable_provider_order() below is what actually enforces
-        # the restriction on every real use; this just seeds a sane
-        # starting value.
-        self.provider = p if p in PROVIDERS else ""
+        # from being demoted after picking it) — _usable_provider_order()
+        # below is what actually enforces the restriction on every real
+        # use; this just seeds a sane starting value. `is_admin` is
+        # passed in by get_enricher() (it already has the freshly-loaded
+        # user dict at construction time) purely so a non-admin with no
+        # persisted choice yet seeds DEFAULT_PROVIDER instead of "" —
+        # self.is_admin itself is still refreshed on every get_enricher()
+        # call afterward, same as before.
+        if p in PROVIDERS:
+            self.provider = p
+        elif not is_admin:
+            self.provider = providers.DEFAULT_PROVIDER
+        else:
+            self.provider = ""
         lang = cfg.get("language", "en")
         self.language = lang if lang in _LANGUAGE_INSTRUCTIONS else "en"
         self._task = asyncio.create_task(self._worker())

@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.29.0] - 2026-09-22
+
+Changed the default AI provider for a normal (non-admin) user with no
+saved preference from the implicit first-enabled-provider fallback to
+NIM (NVIDIA NIM, the app's `"openai"` provider key) — a new
+`providers.DEFAULT_PROVIDER` constant, seeded when a user's `Enricher`
+is first constructed. Admins are unaffected; the automatic-fallback
+order used when a chosen provider fails is unaffected too (that's
+still driven by `PROVIDERS`' tuple order, a separate concern). All
+existing non-admin users' saved provider preference was also migrated
+to NIM directly on the production data, at the user's explicit request
+— see `findings.md` for the one-time migration record.
+
 ## [1.28.2] - 2026-09-20
 
 Fixed the tap-to-reveal labels (v1.28.1) overflowing past the Users

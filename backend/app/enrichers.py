@@ -13,7 +13,7 @@ async def get_enricher(user: dict) -> Enricher:
     e = _enrichers.get(user["id"])
     if e is None:
         e = Enricher(user["id"])
-        await e.start()
+        await e.start(is_admin=bool(user["is_admin"]))
         _enrichers[user["id"]] = e
     # Refresh on every call (not just at creation) so a mid-session
     # admin promotion/demotion takes effect immediately — every caller
