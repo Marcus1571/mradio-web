@@ -23,6 +23,12 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.30.0 tagged, released, and deployed to LT 2026-09-22.** Adds
+  `GET /api/public/now-playing` — a public, unauthenticated list of
+  currently-listening sessions (`display_name`, `station`, `artist`,
+  `title`, `logo`) for the dashboard's mradio-web tile. Logo is
+  cache-only (never triggers a SearXNG lookup from this route).
+  `GET /api/public/stats` is unchanged.
 - **v1.26.1 — `data/settings.json`'s file permissions tightened on LT,
   2026-09-18** (a deployment/infra fix, no actual code change). Found
   during an unrelated general secrets-exposure audit of LT

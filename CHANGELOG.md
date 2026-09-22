@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.30.0] - 2026-09-22
+
+Public now-playing list for the dashboard widget: `GET
+/api/public/now-playing` returns currently-listening sessions as
+`display_name` (full_name, else username), station, live artist/track
+from ICY, and a cached station logo URL. No authentication, no IPs or
+locations, and the logo is cache-only — this route never kicks off a
+SearXNG/Radio-Browser lookup. `GET /api/public/stats` is unchanged.
+
 ## [1.29.0] - 2026-09-22
 
 Changed the default AI provider for a normal (non-admin) user with no

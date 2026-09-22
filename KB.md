@@ -739,8 +739,8 @@ where a listener connects from.
 **Public stats endpoint** — `GET /api/public/stats` returns
 `{"live_listeners": <int>, "unique_listeners_today": <int>,
 "ai_requests_today": <int>, "music_link_requests_this_hour": <int>}`
-with **no authentication required**. This is the one deliberately
-public data endpoint in the app, scoped to harmless aggregate counts
+with **no authentication required**. This is one of two deliberately
+public data endpoints in the app, scoped to harmless aggregate counts
 only — no usernames, IPs, or locations, unlike every other analytics
 route above, which stays admin-only. It exists to feed an external
 dashboard widget (e.g. a [gethomepage.dev](https://gethomepage.dev)
@@ -758,6 +758,18 @@ misses alike — it measures listener demand for the feature, not
 lookup cost), separate from `music_link_cache.py`'s title→URL cache,
 which only stores resolved results and can't answer "how many
 requests."
+
+**Public now-playing endpoint** — `GET /api/public/now-playing` returns
+a list of currently-listening sessions as
+`{"display_name", "station", "artist", "title", "logo"}` with **no
+authentication required**. `display_name` is the account's `full_name`
+when set, otherwise the username. `artist`/`title` are parsed from the
+station's live ICY StreamTitle (empty if the station doesn't send
+one). `logo` is the cached station-logo URL if one has already been
+resolved for that stream, otherwise `null` — this route never triggers
+a SearXNG/Radio-Browser lookup. No login-as-username when a display
+name exists, no IPs, no locations. Same no-store Cache-Control as
+`/stats`.
 
 ## 12. Spotify and Deezer playlist integration (optional)
 

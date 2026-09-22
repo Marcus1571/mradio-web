@@ -59,12 +59,14 @@ _live_sessions: dict[str, dict] = {}
 def session_started(sid: str, user_id: int, username: str, station: str,
                     genre: str, city: str | None, country: str | None,
                     lat: float | None = None, lon: float | None = None,
-                    full_name: str | None = None) -> None:
+                    full_name: str | None = None,
+                    station_url: str | None = None) -> None:
     _live_sessions[sid] = {
         "user_id": user_id,
         "username": username,
         "full_name": full_name,
         "station": station,
+        "station_url": station_url,
         "genre": genre,
         "city": city,
         "country": country,
@@ -84,6 +86,28 @@ def live_snapshot() -> list[dict]:
         {**s, "elapsed_seconds": int(now - s["connected_at"])}
         for s in _live_sessions.values()
     ]
+
+
+def live_now_playing() -> list[dict]:
+    """Public-safe view of who's listening right now: display name
+    (full_name, falling back to username), station, and the latest ICY
+    title split into artist/track. station_url is included so the
+    caller can resolve a cached logo; it is not itself a public field.
+    No user_id, username-as-login, IP, or location."""
+    from .textutil import split_title
+    out = []
+    for sid, s in _live_sessions.items():
+        raw = (_last_title.get(sid) or {}).get("title") or ""
+        artist, title, _performer = split_title(raw) if raw else ("", "", "")
+        display = (s.get("full_name") or "").strip() or s["username"]
+        out.append({
+            "display_name": display,
+            "station": s["station"],
+            "station_url": s.get("station_url"),
+            "artist": artist or None,
+            "title": title or None,
+        })
+    return out
 
 
 def begin_generation(sid: str) -> str:
