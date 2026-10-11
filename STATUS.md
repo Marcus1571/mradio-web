@@ -23,6 +23,16 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.31.0 — admin-only track recording, built and verified locally
+  2026-10-11; not yet committed or deployed.** Record button in the player
+  controls, per-track MP3 files with ID3 tags, Recordings list with
+  download/delete (see `KB.md` §14). MP3-only by design: Apple Music (the
+  intended destination) can't import OGG, and an AAC/`.m4a` remux via ffmpeg
+  was deliberately left out of v1 — a probe of the 144 curated stations found
+  117 MP3, 18 AAC, 2 HLS, 7 dead, 0 OGG, so MP3-only covers ~81%. Verified
+  with a real ~3.5-minute recording off a live public MP3 station (valid
+  file, correct tags, clean decode), the download/delete/403/409 paths, and
+  Playwright screenshots of the armed, idle and saved states.
 - **v1.30.0 tagged, released, and deployed to LT 2026-09-22.** Adds
   `GET /api/public/now-playing` — a public, unauthenticated list of
   currently-listening sessions (`display_name`, `station`, `artist`,

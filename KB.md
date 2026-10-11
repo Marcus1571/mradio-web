@@ -918,3 +918,29 @@ Adding a station or a new genre is a data-only change — a new entry in
 genre-guessing for a user's own stream URLs, via `genre_of()`). Per
 `AGENTS.md`'s curated-data rule, station and genre changes are never added on
 the assistant's own initiative — the operator approves every one.
+
+## 14. Recording tracks (admin only)
+
+An admin can record the stream they are listening to as one MP3 per track,
+for importing into a music library. Start a station, then press the round
+record button next to Play and Reconnect. The button is greyed out until a
+station is playing, and for streams that are not MP3 or send no track titles
+(`audio/aac`, Ogg, HLS) — only MP3 is supported, and the audio is saved
+exactly as the station sent it, with no re-encoding and no ffmpeg.
+
+How it cuts: a new file starts at every change of the station's ICY track
+title, and the finished file is tagged (ID3 title and artist from the title,
+the station name as album). The first track after you press record (you joined
+mid-song) and the last one when you stop or switch station are discarded, so
+every saved file is a whole song; anything shorter than 30 seconds (a jingle
+or station ID that changed the title) is dropped too. Because stations send
+the title slightly out of step with the audio, a cut can be off by a second or
+so.
+
+Recording turns itself off when you stop, switch station, or the connection
+reconnects. Finished tracks appear in the Recordings list under the player,
+with download and delete buttons; the track being recorded is shown at the top
+with a pulsing dot. Files live in `/data/users/<id>/recordings/` and are
+private to that admin (see §9 for backups). Disk use is about 56 MB per hour
+at 128 kbps — there is no quota, so delete what you have imported. Only record
+what you are entitled to keep; the feature is admin-only for that reason.

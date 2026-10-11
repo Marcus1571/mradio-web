@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api/client'
-import type { MusicService, Station, TriviaHistoryEntry } from '../api/types'
+import type { MusicService, Recording, Station, TriviaHistoryEntry } from '../api/types'
 import type { TFunction } from '../i18n'
 import type { PlayerState } from '../hooks/usePlayer'
 import { useMusicLink } from '../hooks/useMusicLink'
@@ -14,13 +14,16 @@ import {
   AppleMusicIcon,
   ChevronDownIcon,
   DeezerIcon,
+  DownloadIcon,
   ExternalLinkIcon,
   MuteIcon,
   PlayIcon,
+  RecordIcon,
   RefreshIcon,
   SparkleIcon,
   SpotifyIcon,
   StopIcon,
+  TrashIcon,
   VolumeIcon,
 } from './Icons'
 
@@ -106,6 +109,71 @@ function TriviaHistoryStrip({ version, t }: { version: number; t: TFunction }) {
   )
 }
 
+function RecordingsList({ recording, t }: { recording: PlayerState['recording']; t: TFunction }) {
+  const [items, setItems] = useState<Recording[]>([])
+
+  useEffect(() => {
+    // `saved` bumps each time the server finishes a track; `on` flipping
+    // covers the first load and the end of a session.
+    api.get<Recording[]>('/api/recordings').then(setItems)
+  }, [recording.saved, recording.on])
+
+  if (items.length === 0 && !recording.on) return null
+
+  return (
+    <div className="recordings">
+      <div className="trivia-label">
+        <RecordIcon />
+        {t('nowPlaying.recordingsTitle')}
+        {recording.on && <span className="rec-count">· {t('nowPlaying.recordedCount', { count: recording.saved })}</span>}
+      </div>
+      <ul className="recordings-list">
+        {recording.on && (
+          <li className="recording-row recording-row--live">
+            <span className="rec-live-dot" aria-hidden="true" />
+            <span className="recording-main">
+              <span className="recording-title">{recording.current || t('nowPlaying.recordingWaiting')}</span>
+              <span className="recording-meta">{t('nowPlaying.recordingNow')}</span>
+            </span>
+          </li>
+        )}
+        {items.map((r) => (
+          <li key={r.name} className="recording-row">
+            <span className="recording-main">
+              <span className="recording-title">{r.artist ? `${r.artist} – ${r.title}` : r.title}</span>
+              <span className="recording-meta">
+                {r.station} · {formatElapsed(r.seconds)} · {(r.size / 1048576).toFixed(1)} MB
+              </span>
+            </span>
+            <a
+              className="icon-btn"
+              href={`/api/recordings/${encodeURIComponent(r.name)}`}
+              download={r.name}
+              aria-label={t('nowPlaying.download')}
+              title={t('nowPlaying.download')}
+            >
+              <DownloadIcon />
+            </a>
+            <button
+              className="icon-btn"
+              type="button"
+              aria-label={t('nowPlaying.deleteRecording')}
+              title={t('nowPlaying.deleteRecording')}
+              onClick={() =>
+                void api.del(`/api/recordings/${encodeURIComponent(r.name)}`).then(() =>
+                  setItems((cur) => cur.filter((x) => x.name !== r.name)),
+                )
+              }
+            >
+              <TrashIcon />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 export function NowPlayingPanel({
   state,
   play,
@@ -114,6 +182,8 @@ export function NowPlayingPanel({
   setVolume,
   toggleMute,
   reenrich,
+  setRecording,
+  isAdmin,
   t,
 }: {
   state: PlayerState
@@ -123,6 +193,8 @@ export function NowPlayingPanel({
   setVolume: (v: number) => void
   toggleMute: () => void
   reenrich: (force?: boolean) => void
+  setRecording: (on: boolean) => Promise<string | null>
+  isAdmin: boolean
   t: TFunction
 }) {
   const { providers, active, activate } = useProviders()
@@ -164,6 +236,10 @@ export function NowPlayingPanel({
           : t('nowPlaying.none')
 
   const hasStation = state.station !== null
+  const [recError, setRecError] = useState<string | null>(null)
+  // The server is the real gate (409 for non-MP3 / no ICY); this just greys
+  // the button early when the stream's format is already known.
+  const notMp3 = !!state.format && !state.format.toLowerCase().includes('mpeg')
   const hasTrack = state.rawTitle !== ''
   const logo = useStationLogo(state.station)
   const [logoFailed, setLogoFailed] = useState(false)
@@ -302,6 +378,26 @@ export function NowPlayingPanel({
           <RefreshIcon />
         </button>
 
+        {isAdmin && (
+          <>
+            <button
+              className={`icon-btn record-btn ${state.recording.on ? 'active' : ''}`}
+              type="button"
+              onClick={async () => {
+                setRecError(null)
+                setRecError(await setRecording(!state.recording.on))
+              }}
+              disabled={state.status !== 'playing' || notMp3}
+              aria-pressed={state.recording.on}
+              aria-label={state.recording.on ? t('nowPlaying.stopRecording') : t('nowPlaying.record')}
+              title={notMp3 ? t('nowPlaying.recordNeedsMp3') : state.recording.on ? t('nowPlaying.stopRecording') : t('nowPlaying.record')}
+            >
+              <RecordIcon />
+            </button>
+            {recError && <span className="rec-error" role="alert">{recError}</span>}
+          </>
+        )}
+
         <div className="vol-group">
           <button
             className={`mute-btn ${state.muted ? 'active' : ''}`}
@@ -406,6 +502,7 @@ export function NowPlayingPanel({
       </div>
 
       <TriviaHistoryStrip version={state.triviaHistoryVersion} t={t} />
+      {isAdmin && <RecordingsList recording={state.recording} t={t} />}
     </section>
   )
 }

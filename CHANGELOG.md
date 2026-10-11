@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.31.0] - 2026-10-11
+
+Admin-only track recording. A round record button next to Play/Reconnect
+(greyed out until a station is playing, and for non-MP3 streams) saves the
+proxied stream as one MP3 per track, cut at each ICY title change and tagged
+with ID3 title/artist/station. Raw MP3 bytes are written as-is (no
+re-encoding, no ffmpeg); only MP3 streams that send track titles are
+supported. The first track after arming and the last one at stop are
+discarded so every file is a whole song, and anything under 30 s (jingles)
+is dropped. Files land in `/data/users/<id>/recordings/`; a new Recordings
+list under the trivia strip offers download and delete. New backend:
+`recorder.py`, `routers/recordings.py` (`POST /api/record`,
+`GET`/`DELETE /api/recordings[/<name>]`, all admin-only), a `recording`
+WebSocket event, and the `mutagen` dependency. New strings translated in
+all language files.
+
 ## [1.30.0] - 2026-09-22
 
 Public now-playing list for the dashboard widget: `GET

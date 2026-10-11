@@ -97,6 +97,8 @@ async def now_playing_ws(websocket: WebSocket, sid: str = Query(...)):
                     await enricher.submit(raw, artist, title, performer)
             elif event["type"] == "no_title":
                 await send({"type": "no_title"})
+            elif event["type"] == "recording":
+                await send(event)
 
     async def pump_client() -> None:
         while True:
