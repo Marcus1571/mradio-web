@@ -23,8 +23,8 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
-- **v1.31.0 — admin-only track recording, built and verified locally
-  2026-10-11; not yet committed or deployed.** Record button in the player
+- **v1.31.0 — admin-only track recording, tagged, released, and deployed
+  to LT 2026-10-11.** Record button in the player
   controls, per-track MP3 files with ID3 tags, Recordings list with
   download/delete (see `KB.md` §14). MP3-only by design: Apple Music (the
   intended destination) can't import OGG, and an AAC/`.m4a` remux via ffmpeg
