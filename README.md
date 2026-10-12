@@ -49,11 +49,6 @@ This page is just the overview.
   dropdown to choose which service the star button uses. See
   [KB §12 — Spotify and Deezer playlist integration](KB.md#12-spotify-and-deezer-playlist-integration).
 
-- **Record tracks (admins)** — a record button saves the live stream as
-  tagged per-track MP3s you can download and add to your music library, cut
-  at each track change. MP3 streams only. See
-  [KB §14 — Recording tracks](KB.md#14-recording-tracks-admin-only).
-
 ## Stack
 
 - Backend: FastAPI (Python, async)
@@ -139,7 +134,6 @@ See [`KB.md`](KB.md) for the full deployment reference:
 - [KB §11 — Analytics](KB.md#11-analytics)
 - [KB §12 — Spotify and Deezer playlist integration](KB.md#12-spotify-and-deezer-playlist-integration)
 - [KB §13 — Curated station genres](KB.md#13-curated-station-genres)
-- [KB §14 — Recording tracks](KB.md#14-recording-tracks-admin-only)
 
 ---
 

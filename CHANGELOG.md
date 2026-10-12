@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.32.0] - 2026-10-12
+
+Removed the admin-only track recording added in 1.31.0 (record button,
+Recordings list, `recorder.py`, `routers/recordings.py`, the `recording`
+WebSocket event, the `mutagen` dependency, and its strings in every language
+file). Stations keep the song title during ad breaks, so recorded "tracks"
+came out as song plus commercials, and trimming to a catalog (Deezer) length
+turned out unreliable because radio plays shorter edits than the album
+versions. Code is back to 1.30.0 behavior. Recordings already saved under
+`/data/users/<id>/recordings/` are user data and are not deleted by this
+release.
+
 ## [1.31.0] - 2026-10-11
 
 Admin-only track recording. A round record button next to Play/Reconnect

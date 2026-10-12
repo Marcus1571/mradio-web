@@ -14,7 +14,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 
-from .. import history, nowplaying, recorder, stations
+from .. import history, nowplaying, stations
 from ..deps import get_active_user
 from ..icy import IcyDemuxer, parse_metaint
 from ..models import ClientStreamEventRequest
@@ -168,16 +168,6 @@ async def stream(request: Request,
             "has_icy": metaint is not None,
         })
 
-    if sid:
-        # A new connection (station switch, reconnect) always starts with
-        # recording off — the admin re-arms it from the player.
-        if sid in recorder.ARMED:
-            recorder.ARMED.discard(sid)
-            nowplaying.publish(sid, {"type": "recording", "on": False, "saved": 0})
-        recorder.STREAMS[sid] = {
-            "user_id": user["id"], "gen": gen,
-            "recordable": bool(metaint) and "mpeg" in content_type.lower()}
-
     history_row_id: int | None = None
     if tracked_name:
         client_ip = request.client.host if request.client else None
@@ -197,16 +187,10 @@ async def stream(request: Request,
             await history.end_session(history_row_id)
         if sid:
             nowplaying.session_ended(sid)
-            if (recorder.STREAMS.get(sid) or {}).get("gen") == gen:
-                recorder.STREAMS.pop(sid, None)
-                if sid in recorder.ARMED:
-                    recorder.ARMED.discard(sid)
-                    nowplaying.publish(sid, {"type": "recording", "on": False, "saved": 0})
         await upstream.aclose()
         await client.aclose()
 
     async def body():
-        rec = None
         try:
             if metaint:
                 demux = IcyDemuxer(metaint)
@@ -249,27 +233,12 @@ async def stream(request: Request,
                         logger.info("no usable title sid=%s station=%r — "
                                     "station sends empty StreamTitle", sid, tracked_name)
                         nowplaying.publish(sid, {"type": "no_title"})
-                    if sid in recorder.ARMED and (recorder.STREAMS.get(sid) or {}).get("gen") == gen:
-                        if rec is None:
-                            rec = recorder.Recorder(
-                                user["id"], tracked_name, recorder.parse_kbps(icy_br))
-                        if rec.feed(audio, title) or title:
-                            nowplaying.publish(sid, {
-                                "type": "recording", "on": True,
-                                "saved": rec.saved, "current": rec.title})
-                    elif rec is not None:
-                        rec.discard()
-                        nowplaying.publish(sid, {
-                            "type": "recording", "on": False, "saved": rec.saved})
-                        rec = None
                     if audio:
                         yield audio
             else:
                 async for chunk in upstream.aiter_bytes():
                     yield chunk
         finally:
-            if rec is not None:
-                rec.discard()
             # A client disconnect closes this generator via GeneratorExit at
             # whatever await point it's suspended on — any `await` written
             # directly in this `finally` can get cut off mid-cleanup (e.g.

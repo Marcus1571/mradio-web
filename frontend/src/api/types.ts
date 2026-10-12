@@ -267,16 +267,6 @@ export interface TriviaHistoryEntry {
   created_at: string
 }
 
-export interface Recording {
-  name: string
-  title: string
-  artist: string
-  station: string
-  seconds: number
-  size: number
-  mtime: number
-}
-
 export type WsMessage =
   | {
       type: 'station'
@@ -289,5 +279,4 @@ export type WsMessage =
   | { type: 'now_playing'; raw_title: string; artist: string; title: string; performer: string }
   | { type: 'enrichment'; raw_title: string; item: EnrichmentItem }
   | { type: 'no_title' }
-  | { type: 'recording'; on: boolean; saved: number; current?: string | null }
   | { type: 'ping' }

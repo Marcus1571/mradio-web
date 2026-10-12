@@ -23,16 +23,16 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
-- **v1.31.0 — admin-only track recording, tagged, released, and deployed
-  to LT 2026-10-11.** Record button in the player
-  controls, per-track MP3 files with ID3 tags, Recordings list with
-  download/delete (see `KB.md` §14). MP3-only by design: Apple Music (the
-  intended destination) can't import OGG, and an AAC/`.m4a` remux via ffmpeg
-  was deliberately left out of v1 — a probe of the 144 curated stations found
-  117 MP3, 18 AAC, 2 HLS, 7 dead, 0 OGG, so MP3-only covers ~81%. Verified
-  with a real ~3.5-minute recording off a live public MP3 station (valid
-  file, correct tags, clean decode), the download/delete/403/409 paths, and
-  Playwright screenshots of the armed, idle and saved states.
+- **v1.32.0 — admin-only track recording (added in v1.31.0) removed,
+  2026-10-12.** It cut the proxied MP3 stream into tagged per-track files at
+  each ICY title change, but stations keep the song's title during ad breaks,
+  so files came out as song plus commercials. A fix that trims to the
+  catalog (Deezer) length was prototyped and rejected after testing against
+  live data: radio plays shorter edits than catalog versions (e.g. 3:29 played
+  vs 4:20 listed), so it would leave most ad tails in and could cut good songs
+  on a fuzzy match. Code is back to v1.30.0 behavior; the v1.31.0 tag and
+  release remain in history. Recordings already saved under
+  `/data/users/<id>/recordings/` are user data and were left alone.
 - **v1.30.0 tagged, released, and deployed to LT 2026-09-22.** Adds
   `GET /api/public/now-playing` — a public, unauthenticated list of
   currently-listening sessions (`display_name`, `station`, `artist`,

@@ -43,23 +43,6 @@ export function MuteIcon({ className }: IconProps) {
   )
 }
 
-export function RecordIcon({ className }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <circle cx="8" cy="8" r="6" />
-      <circle className="rec-dot" cx="8" cy="8" r="3" fill="currentColor" stroke="none" />
-    </svg>
-  )
-}
-
-export function DownloadIcon({ className }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <path d="M8 2v8M4.5 7 8 10.5 11.5 7M2.5 13.5h11" />
-    </svg>
-  )
-}
-
 export function RefreshIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">

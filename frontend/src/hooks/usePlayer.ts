@@ -29,9 +29,6 @@ export interface PlayerState {
   // uses this as a dependency to know when to refetch, since the actual
   // history list itself doesn't live here anymore.
   triviaHistoryVersion: number
-  // Admin-only track recording (see recorder.py) — driven by the server's
-  // `recording` ws events, so it also flips off by itself on station switch.
-  recording: { on: boolean; saved: number; current: string | null }
 }
 
 const INITIAL_STATE: PlayerState = {
@@ -54,7 +51,6 @@ const INITIAL_STATE: PlayerState = {
   format: null,
   bufferedAhead: 0,
   triviaHistoryVersion: 0,
-  recording: { on: false, saved: 0, current: null },
 }
 
 /** Wires an <audio> element, the /api/stream proxy, and the /api/ws
@@ -236,11 +232,6 @@ export function usePlayer(initialVolume?: number) {
           // StreamTitle='' forever) — same dead-end for the listener as no
           // ICY support at all, so it collapses onto the same UI state.
           setState((s) => (s.rawTitle ? s : { ...s, hasIcy: false }))
-        } else if (msg.type === 'recording') {
-          setState((s) => ({
-            ...s,
-            recording: { on: msg.on, saved: msg.saved, current: msg.current ?? null },
-          }))
         } else if (msg.type === 'enrichment') {
           setState((s) => {
             if (s.rawTitle !== msg.raw_title) return s
@@ -262,18 +253,6 @@ export function usePlayer(initialVolume?: number) {
       unmountedRef.current = true
       if (reconnectTimerRef.current !== null) window.clearTimeout(reconnectTimerRef.current)
       wsRef.current?.close()
-    }
-  }, [])
-
-  /** Admin-only: arm/disarm recording on the current stream. Returns an
-   * error message (e.g. "only MP3 streams...") or null on success. */
-  const setRecording = useCallback(async (on: boolean): Promise<string | null> => {
-    try {
-      await api.post('/api/record', { sid: sidRef.current, on })
-      setState((s) => ({ ...s, recording: { on, saved: 0, current: null } }))
-      return null
-    } catch (e) {
-      return e instanceof Error ? e.message : String(e)
     }
   }, [])
 
@@ -470,5 +449,5 @@ export function usePlayer(initialVolume?: number) {
     wsRef.current?.send(JSON.stringify({ type: 'reenrich', force }))
   }, [state.rawTitle])
 
-  return { state, play, stop, reconnect, setRecording, setVolume, applySavedVolume, toggleMute, reenrich, selectStation }
+  return { state, play, stop, reconnect, setVolume, applySavedVolume, toggleMute, reenrich, selectStation }
 }

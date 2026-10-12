@@ -129,8 +129,6 @@ export function Dashboard() {
             setVolume={player.setVolume}
             toggleMute={player.toggleMute}
             reenrich={player.reenrich}
-            setRecording={player.setRecording}
-            isAdmin={!!user?.is_admin}
             t={t}
           />
           <StationBrowserPanel currentUrl={player.state.station?.url ?? null} onPlay={onPlay} t={t} />
