@@ -32,14 +32,14 @@ async def count_users() -> int:
 
 async def get_by_username(username: str) -> dict | None:
     db = get_db()
-    cur = await db.execute("SELECT * FROM users WHERE username = ?", (username,))
+    cur = await db.execute("SELECT * FROM users WHERE username = ? COLLATE NOCASE", (username.strip(),))
     row = await cur.fetchone()
     return dict(row) if row else None
 
 
 async def get_by_email(email: str) -> dict | None:
     db = get_db()
-    cur = await db.execute("SELECT * FROM users WHERE email = ?", (email,))
+    cur = await db.execute("SELECT * FROM users WHERE email = ? COLLATE NOCASE", (email.strip(),))
     row = await cur.fetchone()
     return dict(row) if row else None
 

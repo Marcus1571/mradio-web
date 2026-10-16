@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.32.1] - 2026-10-16
+
+Fixed login failing on iPhone Safari. The username field was auto-capitalised
+by iOS ("Lisa" for a `lisa` account) and the username/email lookup was
+case-sensitive, so the login returned "invalid username or password". The
+login field now sets `autocapitalize`/`autocorrect` off, and username and
+email lookups ignore case and surrounding whitespace. Creating a username
+that differs from an existing one only by case is now refused (the existing
+duplicate check covers it). Checked against production data first: no
+existing usernames collide by case.
+
 ## [1.32.0] - 2026-10-12
 
 Removed the admin-only track recording added in 1.31.0 (record button,

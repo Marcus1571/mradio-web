@@ -23,6 +23,11 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.32.1 — case-insensitive login, deployed 2026-10-16.** A friend's
+  account worked on a laptop but not iPhone Safari (iOS capitalised the
+  username; lookup was case-sensitive). Server logs showed repeated 401s on
+  `/api/auth/login` but don't record the username typed, so the cause is
+  inferred from the code, not proven.
 - **v1.32.0 — admin-only track recording (added in v1.31.0) removed,
   2026-10-12.** It cut the proxied MP3 stream into tagged per-track files at
   each ICY title change, but stations keep the song's title during ad breaks,
