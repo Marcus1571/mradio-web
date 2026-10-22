@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.32.2] - 2026-10-22
+
+Security/dependency update from an audit of the backend (prompted by the
+PHP2Shell disclosure — this app runs no PHP and is not affected by it).
+`pip-audit` found known advisories in two packages; both are fixed:
+
+- `fastapi` 0.115.6 -> 0.159.1, which moves Starlette 0.41.3 -> 1.9.0.
+  Fixes, among others, a quadratic-time `Range` header parse in
+  `FileResponse` reachable by an unauthenticated request to the frontend.
+  (I could not reproduce the slowdown on the old stack with test payloads;
+  the advisory is fixed upstream regardless.)
+- `cryptography` 44.0.0 -> 50.0.2 (only used for Fernet at-rest token
+  encryption; the advisories concern parts the app doesn't use, so this is
+  hygiene). `pip-audit` now reports no known vulnerabilities.
+
+Also hardened `email_sender.base_url()`: password-reset and invite links are
+built from the request's `Host`/`X-Forwarded-Host` when no `public_url` is
+configured, and forgot-password is unauthenticated, so a forged `Host` on a
+direct request to the container could point a victim's reset link at another
+domain. The host must now be a plain `host[:port]` and the scheme `http` or
+`https`, otherwise no base URL is used. Setting `public_url` on the Email
+settings page remains the complete fix.
+
 ## [1.32.1] - 2026-10-16
 
 Fixed login failing on iPhone Safari. The username field was auto-capitalised

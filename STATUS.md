@@ -23,6 +23,14 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.32.2 — dependency and reset-link hardening, deployed 2026-10-22.**
+  After the PHP2Shell news, audited the backend: this app has no PHP and is
+  unaffected, but `pip-audit` flagged starlette and cryptography. Upgraded
+  fastapi (pulls starlette 1.x) and cryptography, then re-tested login, the
+  static frontend, the stream proxy, the WebSocket, and Fernet on the new
+  stack. Not audited: the frontend's npm packages and the bundled
+  opencode/codex binaries. Recommended follow-up: set `public_url` on the
+  Email settings page.
 - **v1.32.1 — case-insensitive login, deployed 2026-10-16.** A friend's
   account worked on a laptop but not iPhone Safari (iOS capitalised the
   username; lookup was case-sensitive). Server logs showed repeated 401s on

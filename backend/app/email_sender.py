@@ -4,6 +4,7 @@ new-account welcome/invite email, and the Email settings page's
 test-send button."""
 
 import asyncio
+import re
 import smtplib
 from email.message import EmailMessage
 
@@ -11,23 +12,31 @@ from fastapi import Request
 
 from . import smtp_settings
 
+_HOST_RE = re.compile(r"[A-Za-z0-9.-]+(:\d{1,5})?|\[[0-9A-Fa-f:]+\](:\d{1,5})?")
+
 
 def base_url(request: Request, override: str) -> str:
     """Whichever domain a listener actually used to reach the app is the
     one that should come back in an emailed link — so this prefers the
     live request's own forwarded host over a fixed admin setting, which
     would be wrong for every domain except the one typed in. The admin's
-    `public_url` override exists only as a fallback for an unusual proxy
-    setup that doesn't forward Host/X-Forwarded-Host reliably. Shared by
-    both the forgot-password and new-account-invite flows — moved here
-    (rather than staying private to routers/auth.py) once a second
-    caller (routers/users.py) needed it too."""
+    `public_url` override exists as a fallback for an unusual proxy setup
+    that doesn't forward Host/X-Forwarded-Host reliably — and as the fix
+    for host-header poisoning: forgot-password is unauthenticated, so a
+    forged Host on a direct hit to the container (bypassing the reverse
+    proxy, which would overwrite it) would otherwise point a victim's
+    reset link at an attacker's domain. Shared by both the
+    forgot-password and new-account-invite flows."""
     if override:
         return override.rstrip("/")
     host = request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
-    if not host:
+    # Reject anything that isn't a plain host[:port] — userinfo, paths,
+    # spaces and the like are how a forged Host smuggles in another target.
+    if not _HOST_RE.fullmatch(host):
         return ""
     scheme = request.headers.get("x-forwarded-proto", "https")
+    if scheme not in ("http", "https"):
+        scheme = "https"
     return f"{scheme}://{host}"
 
 
