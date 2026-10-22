@@ -124,7 +124,14 @@ export function TopBar({
             </div>
           )}
         </div>
-        <span className="app-version">v{__APP_VERSION__}</span>
+        <a
+          className="app-version"
+          href="https://github.com/Marcus1571/mradio-web/blob/main/CHANGELOG.md"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          v{__APP_VERSION__}
+        </a>
         {page !== 'dashboard' && (
           <button className="text-btn" type="button" onClick={() => onNavigate('dashboard')}>
             {t('topbar.backToPlayer')}

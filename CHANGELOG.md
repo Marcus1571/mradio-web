@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.32.3] - 2026-10-22
+
+The version number in the top bar (e.g. `v1.32.3`) is now a link: clicking it
+opens the repository's `CHANGELOG.md` on GitHub in a new tab. Frontend only —
+`TopBar.tsx` renders an `<a>` (`rel="noopener noreferrer"`) in place of the
+`<span>`, with a hover underline in `dashboard.css`; layout is unchanged, and
+it is still hidden on narrow screens as before. No new user-facing text, so no
+translation changes.
+
 ## [1.32.2] - 2026-10-22
 
 Security/dependency update from an audit of the backend (prompted by the

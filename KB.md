@@ -711,6 +711,12 @@ Rebuilding also refreshes the geolocation database used by Analytics
 (§11) — there's no separate scheduled update for it, since it's just a
 downloaded data file, not a version pin to review.
 
+To confirm which version is running, look at the version number in the top
+bar (e.g. `v1.32.3`). It is a link: clicking it opens this repository's
+`CHANGELOG.md` on GitHub in a new tab, so you can see what changed since the
+version you had before. (Hidden on narrow phone screens, like the "player"
+subtitle next to the logo.)
+
 ## 11. Analytics
 
 Admin-only page (user menu → Analytics) — live sessions, a world map of

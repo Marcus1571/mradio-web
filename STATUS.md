@@ -23,6 +23,10 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.32.3 — version number in the top bar links to the changelog,
+  deployed 2026-10-22.** `TopBar.tsx` / `dashboard.css` only. Verified with a
+  Playwright run (correct `href`, `target="_blank"`, opens
+  `CHANGELOG.md`) and before/after screenshots of the bar.
 - **v1.32.2 — dependency and reset-link hardening, deployed 2026-10-22.**
   After the PHP2Shell news, audited the backend: this app has no PHP and is
   unaffected, but `pip-audit` flagged starlette and cryptography. Upgraded
