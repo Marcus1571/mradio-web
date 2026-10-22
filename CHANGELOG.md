@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.32.4] - 2026-10-22
+
+The top-bar version link (added in 1.32.3) now opens the repository's GitHub
+Releases page (`/releases`) instead of `CHANGELOG.md` — newest first with
+short release notes and a "Latest" badge, easier to scan than the full
+changelog file, and it can't 404. One-line URL change in `TopBar.tsx`;
+`CHANGELOG.md` remains the complete record. No user-facing text, no
+translation changes.
+
 ## [1.32.3] - 2026-10-22
 
 The version number in the top bar (e.g. `v1.32.3`) is now a link: clicking it

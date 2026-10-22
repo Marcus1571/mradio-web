@@ -23,6 +23,11 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.32.4 — top-bar version link now opens GitHub Releases, deployed
+  2026-10-22.** Switched from `CHANGELOG.md` (v1.32.3) to `/releases` at the
+  operator's request. Note this makes the Releases page the thing users see,
+  so every version must have a GitHub Release created (AGENTS.md release
+  process) or the page lags behind the running version.
 - **v1.32.3 — version number in the top bar links to the changelog,
   deployed 2026-10-22.** `TopBar.tsx` / `dashboard.css` only. Verified with a
   Playwright run (correct `href`, `target="_blank"`, opens

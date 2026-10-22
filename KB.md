@@ -712,10 +712,10 @@ Rebuilding also refreshes the geolocation database used by Analytics
 downloaded data file, not a version pin to review.
 
 To confirm which version is running, look at the version number in the top
-bar (e.g. `v1.32.3`). It is a link: clicking it opens this repository's
-`CHANGELOG.md` on GitHub in a new tab, so you can see what changed since the
-version you had before. (Hidden on narrow phone screens, like the "player"
-subtitle next to the logo.)
+bar (e.g. `v1.32.4`). It is a link: clicking it opens this repository's
+Releases page on GitHub in a new tab (newest first, with release notes), so
+you can see what changed since the version you had before. (Hidden on narrow
+phone screens, like the "player" subtitle next to the logo.)
 
 ## 11. Analytics
 

@@ -126,7 +126,7 @@ export function TopBar({
         </div>
         <a
           className="app-version"
-          href="https://github.com/Marcus1571/mradio-web/blob/main/CHANGELOG.md"
+          href="https://github.com/Marcus1571/mradio-web/releases"
           target="_blank"
           rel="noopener noreferrer"
         >
