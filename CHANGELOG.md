@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.32.5] - 2026-10-26
+
+CI only, no app behavior change: disabled the weekly schedule on
+`.github/workflows/bump-opencode.yml`. Every scheduled run since at least
+2026-09-21 failed with "GitHub Actions is not permitted to create or approve
+pull requests" (a repository setting), sending a failure email each Monday.
+Manual `workflow_dispatch` runs remain, and the file's header comment explains
+how to re-enable. Consequence: the pinned `OPENCODE_VERSION` in the Dockerfile
+no longer gets automatic bump PRs and must be updated by hand.
+
 ## [1.32.4] - 2026-10-22
 
 The top-bar version link (added in 1.32.3) now opens the repository's GitHub

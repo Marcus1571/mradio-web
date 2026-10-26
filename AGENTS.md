@@ -167,6 +167,9 @@ mradio-web specifics:
   docker compose build
   docker compose up -d
   ```
+- `.github/workflows/bump-opencode.yml`'s weekly schedule is **disabled**
+  (2026-10-26) for the same class of reason: its PR step was refused by the
+  repo's "Actions can't create PRs" setting on every run. Manual dispatch only.
 - `.github/workflows/deploy.yml`'s push-to-main auto-trigger is **disabled**
   (2026-09-14) — its `DEPLOY_HOST`/`PORT`/`USER`/`KEY` secrets were never
   configured, so every push-triggered run failed (`missing server host`,

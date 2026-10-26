@@ -7,9 +7,16 @@ name: Bump opencode version
 # it only opens a PR, so a real upgrade of an AI-agent CLI with LAN access
 # always gets a human look before it ships.
 
+# The weekly schedule is DISABLED (2026-10-26): every run since at least
+# 2026-09-21 failed at "Open a PR" with "GitHub Actions is not permitted to
+# create or approve pull requests" (repo setting, Settings > Actions >
+# General > Workflow permissions), generating a failure email each Monday.
+# To re-enable: tick "Allow GitHub Actions to create and approve pull
+# requests" in that setting, verify with a manual workflow_dispatch run, then
+# restore the cron below. Until then the Dockerfile pin is bumped by hand.
 on:
-  schedule:
-    - cron: "0 6 * * 1" # Monday 06:00 UTC
+  # schedule:
+  #   - cron: "0 6 * * 1" # Monday 06:00 UTC
   workflow_dispatch: {}
 
 permissions:

@@ -23,6 +23,12 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.32.5 — `bump-opencode.yml` schedule disabled, deployed 2026-10-26.**
+  Same failure mode as `deploy.yml` earlier: weekly runs failed since at least
+  2026-09-21 because the repo doesn't allow Actions to open PRs. Trigger is
+  now manual-only. The opencode pin (and the codex pin, which never had a bump
+  workflow) are updated by hand; to restore the automation, enable the repo
+  setting named in the workflow's header comment and re-add the cron.
 - **v1.32.4 — top-bar version link now opens GitHub Releases, deployed
   2026-10-22.** Switched from `CHANGELOG.md` (v1.32.3) to `/releases` at the
   operator's request. Note this makes the Releases page the thing users see,
