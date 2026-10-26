@@ -23,6 +23,11 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.32.6 — `bump-codex.yml` schedule disabled too, deployed 2026-10-26.**
+  Found by listing workflows after v1.32.5: it had the identical
+  "can't create PRs" failure. Corrects v1.32.5's claim that the Codex pin had
+  no bump workflow. No scheduled workflows remain; both Dockerfile pins are
+  manual.
 - **v1.32.5 — `bump-opencode.yml` schedule disabled, deployed 2026-10-26.**
   Same failure mode as `deploy.yml` earlier: weekly runs failed since at least
   2026-09-21 because the repo doesn't allow Actions to open PRs. Trigger is

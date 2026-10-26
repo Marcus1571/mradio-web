@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.32.6] - 2026-10-26
+
+CI only: the same fix as 1.32.5, applied to the second affected workflow.
+`.github/workflows/bump-codex.yml` was also failing every Monday (since at
+least 2026-09-28) on "GitHub Actions is not permitted to create or approve
+pull requests"; its weekly schedule is now disabled too, manual dispatch
+remains. Correction to 1.32.5's notes: the Codex pin did have a bump
+workflow — it just never worked. Both Dockerfile pins (`OPENCODE_VERSION`,
+`CODEX_VERSION`) are now bumped by hand. `deploy.yml` stays disabled; no
+scheduled workflows remain.
+
 ## [1.32.5] - 2026-10-26
 
 CI only, no app behavior change: disabled the weekly schedule on
