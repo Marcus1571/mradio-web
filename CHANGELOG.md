@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.33.0] - 2026-11-04
+
+Runtime upgrade, no app behavior change: all three Node build stages in the `Dockerfile` (frontend build, opencode fetch,
+Codex helper) move from `node:22-slim` to `node:24-slim`, and the two manual bump workflows use Node 24. Node 22 reaches
+end of life on 2027-04-30 (flagged by LT's vulnerability scan); Node 24 is the current LTS. The only Node code that runs in
+production is the Codex login helper, so the runtime now ships Node 24.22.x. Verified before release: the image builds
+(`npm ci` + `npm run build` on Node 24), and a test container against a copy of the real data served the frontend,
+loaded the same FastAPI/Starlette/cryptography versions, and ran `opencode` 1.18.28 and `codex` 0.153.4. Rollback:
+LT keeps the previous image as `app-mradio-web:rollback-v1.32.7`.
+
 ## [1.32.7] - 2026-11-04
 
 Build/deploy hardening, no app behavior change. `docker-compose.yml` now sets `build.pull: true`, so every

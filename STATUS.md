@@ -23,6 +23,10 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.33.0 — Node 22 -> Node 24 in all build stages, deployed 2026-11-04.**
+  Node 22 hits end of life on 2027-04-30. The Dockerfile's three `node:*-slim` stages and the two manual bump
+  workflows now use Node 24 (LTS). Tested before release against a copy of the production data; the previous image is
+  kept on LT as `app-mradio-web:rollback-v1.32.7`.
 - **v1.32.7 — builds always pull fresh base images, deployed 2026-11-04.**
   LT's vulnerability scan showed the 2026-10-26 image still carried Node 22.23.2 (a stale cached `node:22-slim`
   layer; the Python dependency fixes from v1.32.2 were fine). `docker-compose.yml` now has `build.pull: true`,

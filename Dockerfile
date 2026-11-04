@@ -1,4 +1,4 @@
-FROM node:22-slim AS frontend-build
+FROM node:24-slim AS frontend-build
 WORKDIR /frontend
 COPY frontend/package*.json ./
 RUN npm ci
@@ -10,7 +10,7 @@ RUN npm run build
 # @latest, so builds stay reproducible — .github/workflows/bump-opencode.yml
 # opens a PR when a newer release is published, instead of the image silently
 # changing between builds.
-FROM node:22-slim AS opencode-build
+FROM node:24-slim AS opencode-build
 ARG OPENCODE_VERSION=1.18.28
 RUN npm install --global opencode-ai@${OPENCODE_VERSION}
 
@@ -27,7 +27,7 @@ RUN npm install --global opencode-ai@${OPENCODE_VERSION}
 # platform, e.g. @openai/codex@<version>-linux-x64) — no separate
 # package name needed. Version pinned for the same reproducibility
 # reason as opencode above.
-FROM node:22-slim AS codex-build
+FROM node:24-slim AS codex-build
 ARG CODEX_VERSION=0.153.4
 RUN npm install --global @openai/codex@${CODEX_VERSION}
 
