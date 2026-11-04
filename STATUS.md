@@ -23,6 +23,11 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.32.7 — builds always pull fresh base images, deployed 2026-11-04.**
+  LT's vulnerability scan showed the 2026-10-26 image still carried Node 22.23.2 (a stale cached `node:22-slim`
+  layer; the Python dependency fixes from v1.32.2 were fine). `docker-compose.yml` now has `build.pull: true`,
+  so `docker compose build` refreshes the Node and Python base images every time. Node is only the Codex
+  login helper's runtime here; the CVE it contained (Brotli, CVE-2026-111497) is fixed from Node 22.23.4.
 - **v1.32.6 — `bump-codex.yml` schedule disabled too, deployed 2026-10-26.**
   Found by listing workflows after v1.32.5: it had the identical
   "can't create PRs" failure. Corrects v1.32.5's claim that the Codex pin had

@@ -39,8 +39,10 @@ docker compose up -d
 `docker compose build` builds the image locally (multi-stage: builds the
 React frontend, fetches the pinned `opencode` binary, installs the Python
 backend, bundles all three into one image — see the `Dockerfile`). First
-build takes a few minutes; nothing is pulled from a registry, everything is
-built from this repo.
+build takes a few minutes; the base images (`node`, `python`) are pulled from
+the registry on every build (`build.pull: true` in the compose file, so a cached
+months-old base layer never ends up in a rebuild), everything else is built from
+this repo.
 
 The container listens on port 8000 (`ports: - "8000:8000"` in the compose
 file — change the host side if 8000 is already taken by something else on

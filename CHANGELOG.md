@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.32.7] - 2026-11-04
+
+Build/deploy hardening, no app behavior change. `docker-compose.yml` now sets `build.pull: true`, so every
+`docker compose build` fetches fresh base images instead of reusing whatever is cached on the host. Found by LT's
+vulnerability scan: the running image (built 2026-10-26, with the v1.32.2 FastAPI/Starlette/cryptography fixes
+intact) still contained **Node 22.23.2 dated Jul 28**, because the build reused a cached `node:22-slim` layer.
+That Node binary is only the Codex login helper's runtime (the app itself is Python), but 22.23.2 bundles the
+Brotli decoder with CVE-2026-111497 (CISA KEV, CVSS 9.2), fixed in Node 22.23.4. Rebuilding with `--pull` brings
+the Node binary, the Python base image and the Debian packages up to date. KB.md updated: the build now pulls
+base images from the registry.
+
 ## [1.32.6] - 2026-10-26
 
 CI only: the same fix as 1.32.5, applied to the second affected workflow.

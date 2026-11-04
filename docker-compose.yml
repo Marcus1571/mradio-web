@@ -1,6 +1,10 @@
 services:
   mradio-web:
-    build: .
+    build:
+      context: .
+      # Always fetch fresh base images (node, python). Without this, a cached base layer that is weeks or months old
+      # silently ends up in every rebuild: 2026-11-04 the image still carried Node 22.23.2 (Jul 28) after 22.23.4 existed.
+      pull: true
     container_name: mradio-web
     ports:
       - "8000:8000"
