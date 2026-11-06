@@ -5,7 +5,8 @@ current status lives (see `STATUS.md`), where research findings live (see
 `findings.md`), or where per-provider AI strategy lives (see `AI.md`).
 
 This file is part of the operator's cross-project governance system — see
-`~/governance/GOVERNANCE.md` for how it fits together, and `~/governance/USER.md`
+`GOVERNANCE.md` for how it fits together, and `USER.md` (both live in the operator's
+Obsidian vault on the home server; read them at the start of every session)
 for rules that apply here *and* on every other project (do not duplicate those
 here; if a rule from `USER.md` seems relevant, just follow it, don't restate it).
 
@@ -151,7 +152,7 @@ committed file, not just `KB.md`/`README.md`.
 ## Release process
 
 Follow the universal release and deploy posting sequence in
-`~/governance/USER.md`. All changes that touch shipped behavior go through it,
+`USER.md`. All changes that touch shipped behavior go through it,
 regardless of perceived size — a data-only addition, a one-line bug fix, and a
 multi-file feature all go through the same steps.
 
