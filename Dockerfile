@@ -34,7 +34,8 @@ RUN npm install --global @openai/codex@${CODEX_VERSION}
 FROM python:3.11-slim AS backend
 WORKDIR /app
 COPY backend/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# pip and setuptools are only needed to build; removing them keeps their vendored copies (wheel, jaraco, ...) out of the image
+RUN pip install --no-cache-dir -r requirements.txt && pip uninstall -y pip setuptools
 COPY backend/app ./app
 COPY --from=frontend-build /frontend/dist ./static
 COPY --from=opencode-build /usr/local/lib/node_modules/opencode-ai/bin/opencode.exe /usr/local/bin/opencode

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.33.1] - 2026-11-07
+
+Security maintenance, no app behavior change: backend dependencies moved to their current releases (fastapi 0.159.1 ->
+0.162.1 with starlette 1.10, uvicorn 0.34 -> 0.54, websockets 14.1 -> 17.4, aiosqlite 0.20 -> 0.22.1; httpx, geoip2 and
+cryptography were already current), and pip/setuptools are removed from the runtime image after the install (their
+vendored `wheel` and `jaraco.context` copies were the last fixable HIGH CVEs). Verified before release: a candidate
+image built on fresh base images and run against a copy of the production data answered nine API routes byte-identically
+to the live v1.33.0 (including the 401 auth refusals); Trivy: 0 fixable HIGH/CRITICAL (was 2 HIGH). Rollback: LT keeps
+the previous image as `app-mradio-web:rollback-v1.33.0`.
+
 ## [1.33.0] - 2026-11-04
 
 Runtime upgrade, no app behavior change: all three Node build stages in the `Dockerfile` (frontend build, opencode fetch,

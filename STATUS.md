@@ -23,6 +23,9 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.33.1 — backend dependencies updated (fastapi 0.162 / starlette 1.10, uvicorn 0.54, websockets 17.4,
+  aiosqlite 0.22.1), pip/setuptools removed from the runtime image; deployed 2026-11-07.** No behavior change; 0 fixable
+  HIGH/CRITICAL CVEs. Rollback image `app-mradio-web:rollback-v1.33.0` on LT.
 - **v1.33.0 — Node 22 -> Node 24 in all build stages, deployed 2026-11-04.**
   Node 22 hits end of life on 2027-04-30. The Dockerfile's three `node:*-slim` stages and the two manual bump
   workflows now use Node 24 (LTS). Tested before release against a copy of the production data; the previous image is
