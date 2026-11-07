@@ -53,5 +53,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && apt-get purge -y --auto-remove curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Run as Unraid's nobody:users instead of root. ./data must be owned by 99:100 on the host.
+# opencode keeps its state under $HOME, so give it a writable one (ephemeral, as /root was).
+RUN mkdir -p /home/app && chown 99:100 /home/app
+ENV HOME=/home/app
+USER 99:100
+
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips=*"]

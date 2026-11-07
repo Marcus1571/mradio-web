@@ -25,6 +25,12 @@ Edit `docker-compose.yml`:
 
 - Change the volume line from `./data:/data` to your appdata path, e.g.
   `/mnt/cache/appdata/mradio-web/data:/data`.
+- The container runs as uid/gid `99:100` (Unraid's `nobody:users`), not
+  root, since v1.33.2: the data folder must be owned by it. Once, before
+  the first start (or when upgrading from an older, root-run version):
+  `chown -R 99:100 /mnt/cache/appdata/mradio-web/data`. opencode keeps its
+  state under the container's own `HOME=/home/app` (not persisted, as
+  before with `/root`); Codex keeps its login in `/data/codex_home`.
 - Optionally change `MRADIO_ADMIN_USERNAME` / `MRADIO_ADMIN_PASSWORD` —
   these only matter on the very first run (see below); leaving the
   defaults is fine since you're forced to change the password immediately.

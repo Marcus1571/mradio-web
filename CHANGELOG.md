@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.33.2] - 2026-11-07
+
+Security hardening, no app behavior change: the container now runs as uid/gid 99:100 (Unraid's nobody:users) instead of root, with its own writable `HOME=/home/app` for opencode's state. The data volume must be owned by 99:100 (`chown -R 99:100` once, see [KB.md](KB.md#2-build-and-run)). Verified on a candidate against a copy of the data: identical responses on every public route, file and SQLite writes, `opencode serve` and `codex` both start.
+
 ## [1.33.1] - 2026-11-07
 
 Security maintenance, no app behavior change: backend dependencies moved to their current releases (fastapi 0.159.1 ->
