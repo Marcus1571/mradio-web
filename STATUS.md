@@ -23,6 +23,9 @@ not a wrapper around the terminal app. Read `README.md` for the pitch,
 
 ## Status
 
+- **v1.33.3 — the image installs Debian security updates at build time; deployed 2026-11-08.** No behavior change:
+  clears two HIGH zlib vulnerabilities fixed in Debian before the official python image caught up. Rollback image
+  `app-mradio-web:rollback-v1.33.2` on LT.
 - **v1.33.2 — the container runs as uid/gid 99:100 instead of root; deployed 2026-11-07.** No behavior change.
   The LT data folder was chowned to 99:100 once. Rollback image `app-mradio-web:rollback-v1.33.1` on LT.
 - **v1.33.1 — backend dependencies updated (fastapi 0.162 / starlette 1.10, uvicorn 0.54, websockets 17.4,

@@ -33,6 +33,8 @@ RUN npm install --global @openai/codex@${CODEX_VERSION}
 
 FROM python:3.11-slim AS backend
 WORKDIR /app
+# The official python image can lag Debian security fixes by days: take them at build time
+RUN apt-get update && apt-get -y upgrade && rm -rf /var/lib/apt/lists/*
 COPY backend/requirements.txt ./
 # pip and setuptools are only needed to build; removing them keeps their vendored copies (wheel, jaraco, ...) out of the image
 RUN pip install --no-cache-dir -r requirements.txt && pip uninstall -y pip setuptools
